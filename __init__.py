@@ -77,7 +77,7 @@ def unregister():
 
     tools.settings.stop_apply_settings_threads()
 
-    print("### Unloaded CATS successfully!\n")
+    print("### Unloaded Tuxedo successfully!\n")
 
 
 if __name__ == '__main__':

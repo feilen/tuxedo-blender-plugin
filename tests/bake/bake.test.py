@@ -394,14 +394,14 @@ class TestAddon(unittest.TestCase):
     def reset_stage(self):
         for colname in ['VRChat Desktop Excellent', 'VRChat Quest Excellent', 'VRChat Quest Good',
                         'Second Life', 'VRChat Desktop Good', 'VRChat Quest Medium']:
-            bpy.data.collections.remove(bpy.data.collections["CATS Bake " + colname],
+            bpy.data.collections.remove(bpy.data.collections["Tuxedo Bake " + colname],
                                         do_unlink=True)
 
         bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
     def test_bake_button(self):
         bpy.context.scene.cats_is_unittest = True
-        bpy.ops.cats_bake.preset_all()
+        bpy.ops.tuxedo_bake.preset_all()
         bpy.context.scene.bake_pass_displacement = False
         test_name = bpy.path.basename(bpy.context.blend_data.filepath)
 
@@ -413,7 +413,7 @@ class TestAddon(unittest.TestCase):
         for filter_img in [False, True]:
             bpy.context.scene.bake_denoise = filter_img
             bpy.context.scene.bake_sharpen = filter_img
-            result = bpy.ops.cats_bake.bake()
+            result = bpy.ops.tuxedo_bake.bake()
 
             # take a random sampling of each image result, confirm it's what we expect
             self.assertTrue(test_name in sampling_lookup)
@@ -438,21 +438,21 @@ class TestAddon(unittest.TestCase):
                                             "{} != {} ({})".format(color, foundcolor, foundraw))
             test_collection_names = {
                 'bake.bakematerialtest.blend': [
-                    'CATS Bake Second Life',
-                    'CATS Bake VRChat Desktop Excellent',
-                    'CATS Bake VRChat Desktop Good',
-                    'CATS Bake VRChat Quest Excellent',
-                    'CATS Bake VRChat Quest Good',
-                    'CATS Bake VRChat Quest Medium',
+                    'Tuxedo Bake Second Life',
+                    'Tuxedo Bake VRChat Desktop Excellent',
+                    'Tuxedo Bake VRChat Desktop Good',
+                    'Tuxedo Bake VRChat Quest Excellent',
+                    'Tuxedo Bake VRChat Quest Good',
+                    'Tuxedo Bake VRChat Quest Medium',
                     'Collection',
                 ],
                 'bake.eyetest.blend': [
-                    'CATS Bake Second Life',
-                    'CATS Bake VRChat Desktop Excellent',
-                    'CATS Bake VRChat Desktop Good',
-                    'CATS Bake VRChat Quest Excellent',
-                    'CATS Bake VRChat Quest Good',
-                    'CATS Bake VRChat Quest Medium',
+                    'Tuxedo Bake Second Life',
+                    'Tuxedo Bake VRChat Desktop Excellent',
+                    'Tuxedo Bake VRChat Desktop Good',
+                    'Tuxedo Bake VRChat Quest Excellent',
+                    'Tuxedo Bake VRChat Quest Good',
+                    'Tuxedo Bake VRChat Quest Medium',
                     'Collection',
                 ]
             }
