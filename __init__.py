@@ -1,4 +1,8 @@
-import sys
+import bpy
+from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
+from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation
+from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, OptimizeStaticShapekeys, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest
+from .properties import register_properties
 
 bl_info = {
     'name': 'Tuxedo Blender Plugin',
@@ -13,71 +17,86 @@ bl_info = {
     'warning': '',
 }
 
-if "bpy" not in locals():
-    import bpy
-    from . import bake
-    from . import bake_ui
-else:
-    import importlib
-    importlib.reload(bake)
-    importlib.reload(bake_ui)
-
 def register():
-    print("\n### XXX: Loading Tuxedo-blender-plugin")
+    # Auto decimate fns
+    bpy.utils.register_class(AutoDecimatePresetGood)
+    bpy.utils.register_class(AutoDecimatePresetExcellent)
+    bpy.utils.register_class(AutoDecimatePresetQuest)
 
-    # Register all classes
-    count = 0
-    tools.register.order_classes()
-    for cls in tools.register.__bl_classes:
-        try:
-            bpy.utils.register_class(cls)
-            count += 1
-        except ValueError:
-            pass
-    if count < len(tools.register.__bl_classes):
-        print('Skipped', len(tools.register.__bl_classes) - count, ' classes.')
+    # Bake fns
+    bpy.utils.register_class(BakeAddCopyOnly)
+    bpy.utils.register_class(BakeAddProp)
+    bpy.utils.register_class(BakeButton)
+    bpy.utils.register_class(BakePresetAll)
+    bpy.utils.register_class(BakePresetDesktop)
+    bpy.utils.register_class(BakePresetGmod)
+    bpy.utils.register_class(BakePresetGmodPhong)
+    bpy.utils.register_class(BakePresetQuest)
+    bpy.utils.register_class(BakePresetSecondlife)
+    bpy.utils.register_class(BakeRemoveCopyOnly)
+    bpy.utils.register_class(BakeRemoveProp)
+    bpy.utils.register_class(BakeTutorialButton)
 
-    # Register Scene types
-    extentions.register()
+    # UI
+    bpy.utils.register_class(ToolPanel)
+    bpy.utils.register_class(BakePanel)
+    bpy.utils.register_class(Bake_Lod_Delete)
+    bpy.utils.register_class(Bake_Lod_New)
+    bpy.utils.register_class(Bake_Platform_Delete)
+    bpy.utils.register_class(Bake_Platform_List)
+    bpy.utils.register_class(Bake_Platform_New)
+    bpy.utils.register_class(Choose_Steam_Library)
+    bpy.utils.register_class(Open_GPU_Settings)
 
-    # Set preferred Blender options
-    if hasattr(tools.common.get_user_preferences(), 'system') and hasattr(tools.common.get_user_preferences().system, 'use_international_fonts'):
-        tools.common.get_user_preferences().system.use_international_fonts = True
-    elif hasattr(tools.common.get_user_preferences(), 'view') and hasattr(tools.common.get_user_preferences().view, 'use_international_fonts'):
-        tools.common.get_user_preferences().view.use_international_fonts = True
-    else:
-        pass  # From 2.83 on this is no longer needed
-    tools.common.get_user_preferences().filepaths.use_file_compression = True
-    bpy.context.window_manager.addon_support = {'OFFICIAL', 'COMMUNITY', 'TESTING'}
+    # Utilities
+    bpy.utils.register_class(ConvertToSecondlifeButton)
+    bpy.utils.register_class(FitClothes)
+    bpy.utils.register_class(GenerateTwistBones)
+    bpy.utils.register_class(OptimizeStaticShapekeys)
+    bpy.utils.register_class(TwistTutorialButton)
+    bpy.utils.register_class(SmartDecimation)
 
-    print("### Loaded Tuxedo-blender-plugin successfully!\n")
-
+    # Properties
+    register_properties()
 
 def unregister():
-    print("### XXX: Unloading Tuxedo-blender-plugin")
+    # Autodecimate fns
+    bpy.utils.register_class(AutoDecimatePresetGood)
+    bpy.utils.register_class(AutoDecimatePresetExcellent)
+    bpy.utils.register_class(AutoDecimatePresetQuest)
 
-    # Unregister updater
-    updater.unregister()
+    # Bake fns
+    bpy.utils.unregister_class(BakeAddCopyOnly)
+    bpy.utils.unregister_class(BakeAddProp)
+    bpy.utils.unregister_class(BakeButton)
+    bpy.utils.unregister_class(BakePresetAll)
+    bpy.utils.unregister_class(BakePresetDesktop)
+    bpy.utils.unregister_class(BakePresetGmod)
+    bpy.utils.unregister_class(BakePresetGmodPhong)
+    bpy.utils.unregister_class(BakePresetQuest)
+    bpy.utils.unregister_class(BakePresetSecondlife)
+    bpy.utils.unregister_class(BakeRemoveCopyOnly)
+    bpy.utils.unregister_class(BakeRemoveProp)
+    bpy.utils.unregister_class(BakeTutorialButton)
 
-    # Unload all classes in reverse order
-    count = 0
-    for cls in reversed(tools.register.__bl_ordered_classes):
-        try:
-            bpy.utils.unregister_class(cls)
-            count += 1
-        except ValueError:
-            pass
-        except RuntimeError:
-            pass
-    print('Unregistered', count, ' classes.')
+    # UI
+    bpy.utils.unregister_class(BakePanel)
+    bpy.utils.unregister_class(Bake_Lod_Delete)
+    bpy.utils.unregister_class(Bake_Lod_New)
+    bpy.utils.unregister_class(Bake_Platform_Delete)
+    bpy.utils.unregister_class(Bake_Platform_List)
+    bpy.utils.unregister_class(Bake_Platform_New)
+    bpy.utils.unregister_class(Choose_Steam_Library)
+    bpy.utils.unregister_class(Open_GPU_Settings)
+    bpy.utils.unregister_class(ToolPanel)
 
-    # Remove folder from sys path
-    if file_dir in sys.path:
-        sys.path.remove(file_dir)
-
-    tools.settings.stop_apply_settings_threads()
-
-    print("### Unloaded Tuxedo successfully!\n")
+    # Utilities
+    bpy.utils.unregister_class(ConvertToSecondlifeButton)
+    bpy.utils.unregister_class(FitClothes)
+    bpy.utils.unregister_class(GenerateTwistBones)
+    bpy.utils.unregister_class(OptimizeStaticShapekeys)
+    bpy.utils.unregister_class(TwistTutorialButton)
+    bpy.utils.unregister_class(SmartDecimation)
 
 
 if __name__ == '__main__':

@@ -1,10 +1,10 @@
-from .tools.translations import t
-
 from bpy.types import Scene, PropertyGroup
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-def register():
+from .tools import t
+
+def register_properties():
     # Bake
     Scene.bake_use_draft_quality = BoolProperty(
         name='Draft Quality',
@@ -357,6 +357,12 @@ def register():
         default=True
     )
 
+    Scene.bake_pass_detail = BoolProperty(
+        name="Detail (Experimental)",
+        description="Bake a detail map for use with the detail shader. See documentation for more info.",
+        default=False
+    )
+
     Scene.bake_normal_apply_trans = BoolProperty(
         name=t('Scene.bake_normal_apply_trans.label'),
         description=t('Scene.bake_normal_apply_trans.desc'),
@@ -487,3 +493,20 @@ def register():
         default=False
     )
 
+    Scene.tuxedo_max_tris = IntProperty(
+        name=t('Scene.tuxedo_max_tris.label'),
+        description=t('Scene.tuxedo_max_tris.desc'),
+        default=7500,
+        min=1,
+        max=70000
+    )
+
+    Scene.tuxedo_is_unittest = BoolProperty(
+        default=False
+    )
+
+    Scene.decimation_remove_doubles = BoolProperty(
+        name=t('Scene.decimation_remove_doubles.label'),
+        description=t('Scene.decimation_remove_doubles.desc'),
+        default=True
+    )

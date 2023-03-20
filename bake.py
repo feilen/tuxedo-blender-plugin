@@ -1,26 +1,4 @@
-# MIT License
-
-# Copyright (c) 2020 Feilen
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the 'Software'), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-# Code author: Feilen
+# GPL License
 
 import os
 import bpy
@@ -31,17 +9,9 @@ import subprocess
 import shutil
 import threading
 
-from .register import register_wrap
-from .translations import t
-from . import fbx_patch as Fbx_patch
-from tools import get_tricount
+from .tools import t, patch_fbx_exporter
+from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive
 
-def get_meshes_objects(check=False):
-    print("TODO")
-def is_hidden(obj):
-    print("TODO")
-
-@register_wrap
 class BakeTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.tutorial'
     bl_label = t('tuxedo_bake.tutorial_button.label')
@@ -49,9 +19,10 @@ class BakeTutorialButton(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
-        webbrowser.open(t('tuxedo_bake.tutorial_button.URL'))
+        #webbrowser.open(t('tuxedo_bake.tutorial_button.URL'))
 
-        self.report({'INFO'}, t('tuxedo_bake.tutorial_button.success'))
+        #TODO
+        #self.report({'INFO'}, t('tuxedo_bake.tutorial_button.success'))
         return {'FINISHED'}
 
 # Convienience filter function for retrieving objects
@@ -68,8 +39,8 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
     # Autodetect passes based on BSDF node inputs
     bsdf_nodes = []
     output_mat_nodes = []
-    objects = get_objects(get_meshes_objects(check=False), filter_func=lambda obj:
-                          not is_hidden(obj) or not context.scene.bake_ignore_hidden)
+    objects = get_objects(get_meshes_objects(context), filter_func=lambda obj:
+                          not obj.hide_get() or not context.scene.bake_ignore_hidden)
     for obj in objects:
         for slot in obj.material_slots:
             if slot.material:
@@ -114,7 +85,9 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
     # Displacement: if any displacement is linked to the output for material output nodes
     context.scene.bake_pass_displacement = any(node.inputs["Displacement"].is_linked for node in output_mat_nodes)
 
-    if any("Target" in obj.data.uv_layers for obj in get_meshes_objects(check=False)):
+    context.scene.bake_pass_detail = False
+
+    if any("Target" in obj.data.uv_layers for obj in get_meshes_objects()):
         context.scene.bake_uv_overlap_correction = 'MANUAL'
     elif any(plat.use_decimation for plat in context.scene.bake_platforms) and context.scene.bake_pass_normal:
         context.scene.bake_uv_overlap_correction = 'UNMIRROR'
@@ -235,7 +208,6 @@ def nparray_channels_to_img(image_name, nparr):
     assert(nparr.shape[1] == image.size[0] * image.size[1])
     image.pixels.foreach_set(np.ravel(nparr, order='F'))
 
-@register_wrap
 class BakePresetDesktop(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_desktop'
     bl_label = t('tuxedo_bake.preset_desktop.label')
@@ -251,7 +223,6 @@ class BakePresetDesktop(bpy.types.Operator):
         autodetect_passes(self, context, itemgood, 70000, "DESKTOP")
         return {'FINISHED'}
 
-@register_wrap
 class BakePresetQuest(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_quest'
     bl_label = t('tuxedo_bake.preset_quest.label')
@@ -272,7 +243,6 @@ class BakePresetQuest(bpy.types.Operator):
         context.scene.bake_animation_weighting = True
         return {'FINISHED'}
 
-@register_wrap
 class BakePresetSecondlife(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_secondlife'
     bl_label = 'Second Life'
@@ -285,7 +255,6 @@ class BakePresetSecondlife(bpy.types.Operator):
         autodetect_passes(self, context, item, 21844, "SECONDLIFE")
         return {'FINISHED'}
 
-@register_wrap
 class BakePresetGmod(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod'
     bl_label = "GMod Metallic (Experimental)"
@@ -298,7 +267,6 @@ class BakePresetGmod(bpy.types.Operator):
         autodetect_passes(self, context, item, 10000, "GMOD")
         return {'FINISHED'}
 
-@register_wrap
 class BakePresetGmodPhong(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod_phong'
     bl_label = "GMod Organic (Experimental)"
@@ -311,7 +279,6 @@ class BakePresetGmodPhong(bpy.types.Operator):
         autodetect_passes(self, context, item, 10000, "GMOD", use_phong=True)
         return {'FINISHED'}
 
-@register_wrap
 class BakePresetAll(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_all'
     bl_label = "Autodetect All"
@@ -324,7 +291,6 @@ class BakePresetAll(bpy.types.Operator):
         bpy.ops.tuxedo_bake.preset_secondlife()
         return {'FINISHED'}
 
-@register_wrap
 class BakeAddCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_copyonly'
     bl_label = "Set CopyOnly"
@@ -340,7 +306,6 @@ class BakeAddCopyOnly(bpy.types.Operator):
             obj['bakeCopyOnly'] = True
         return {'FINISHED'}
 
-@register_wrap
 class BakeRemoveCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_copyonly'
     bl_label = "Unset CopyOnly"
@@ -356,7 +321,6 @@ class BakeRemoveCopyOnly(bpy.types.Operator):
             obj['bakeCopyOnly'] = False
         return {'FINISHED'}
 
-@register_wrap
 class BakeAddProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_prop'
     bl_label = "Set Prop"
@@ -372,7 +336,6 @@ class BakeAddProp(bpy.types.Operator):
             obj['generatePropBones'] = True
         return {'FINISHED'}
 
-@register_wrap
 class BakeRemoveProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_prop'
     bl_label = "Unset Prop"
@@ -388,7 +351,6 @@ class BakeRemoveProp(bpy.types.Operator):
             obj['generatePropBones'] = False
         return {'FINISHED'}
 
-@register_wrap
 class BakeButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.bake'
     bl_label = t('tuxedo_bake.bake.label')
@@ -397,10 +359,10 @@ class BakeButton(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        for obj in get_meshes_objects(check=False):
+        for obj in get_meshes_objects(context):
             if obj.name not in context.view_layer.objects:
                 continue
-            if is_hidden(obj):
+            if obj.hide_get():
                 continue
             for slot in obj.material_slots:
                 if slot.material:
@@ -652,6 +614,7 @@ class BakeButton(bpy.types.Operator):
         context.scene.render.bake.use_pass_emit = "EMIT" in bake_pass_filter
         if bpy.app.version >= (2, 92, 0):
             context.scene.render.bake.target = "VERTEX_COLORS" if "VERTEX_COLORS" in bake_pass_filter else "IMAGE_TEXTURES"
+        if bpy.app.version <= (3, 0, 0):
             context.scene.render.bake.use_pass_ambient_occlusion = "AO" in bake_pass_filter
         context.scene.cycles.samples = bake_samples
         context.scene.render.bake.use_clear = clear and bake_type == 'NORMAL'
@@ -718,7 +681,7 @@ class BakeButton(bpy.types.Operator):
         # copy ob
         copy = ob.copy()
         if not 'tuxedoForcedExportName' in ob:
-            copy['tuxedoForcedExportName'] = ob.name[:-4] if ob.name[-4] == '.' else ob.name
+            copy['tuxedoForcedExportName'] = ob.name[:-4] if len(ob.name) >= 4 and ob.name[-4] == '.' else ob.name
         else:
             copy['tuxedoForcedExportName'] = ob['tuxedoForcedExportName']
         copy.data = ob.data.copy()
@@ -734,7 +697,7 @@ class BakeButton(bpy.types.Operator):
         def recurse(ob, parent, depth, ignore_hidden, view_layer=None):
             if depth > levels:
                 return
-            if is_hidden(ob) and ob.type != 'ARMATURE' and ignore_hidden:
+            if ob.hide_get() and ob.type != 'ARMATURE' and ignore_hidden:
                 return
             if view_layer and ob.name not in view_layer.objects:
                 return
@@ -752,12 +715,12 @@ class BakeButton(bpy.types.Operator):
         return recurse(ob, ob.parent, 0, ignore_hidden, view_layer=view_layer)
 
     def execute(self, context):
-        if not get_objects(get_meshes_objects(check=False), filter_func=lambda obj:
-                           not is_hidden(obj) or not context.scene.bake_ignore_hidden):
+        if not get_objects(get_meshes_objects(context), filter_func=lambda obj:
+                           not obj.hide_get() or not context.scene.bake_ignore_hidden):
             self.report({'ERROR'}, t('tuxedo_bake.error.no_meshes'))
             return {'FINISHED'}
-        if any(obj.hide_render and not is_hidden(obj)
-               for obj in get_armature().children
+        if any(obj.hide_render and not obj.hide_get()
+               for obj in get_armature(context).children
                if obj.name in context.view_layer.objects):
             self.report({'ERROR'}, t('tuxedo_bake.error.render_disabled'))
             return {'FINISHED'}
@@ -775,9 +738,7 @@ class BakeButton(bpy.types.Operator):
             context.scene.cycles.device = 'CPU'
 
         # Change decimate settings, run bake, change them back
-        decimation_mode = context.scene.decimation_mode
-        max_tris = context.scene.max_tris
-        decimate_fingers = context.scene.decimate_fingers
+        tuxedo_max_tris = context.scene.tuxedo_max_tris
         decimation_remove_doubles = context.scene.decimation_remove_doubles
         decimation_animation_weighting = context.scene.decimation_animation_weighting
         decimation_animation_weighting_factor = context.scene.decimation_animation_weighting_factor
@@ -786,13 +747,9 @@ class BakeButton(bpy.types.Operator):
         context.scene.decimation_animation_weighting_factor = context.scene.bake_animation_weighting_factor
         context.scene.decimation_animation_weighting_include_shapekeys = context.scene.bake_animation_weighting_include_shapekeys
 
-        context.scene.decimation_mode = "SMART"
-        context.scene.decimate_fingers = False
         self.perform_bake(context)
 
-        context.scene.decimation_mode = decimation_mode
-        context.scene.max_tris = max_tris
-        context.scene.decimate_fingers = decimate_fingers
+        context.scene.tuxedo_max_tris = tuxedo_max_tris
         context.scene.decimation_remove_doubles = decimation_remove_doubles
         context.scene.decimation_animation_weighting = decimation_animation_weighting
         context.scene.decimation_animation_weighting_factor = decimation_animation_weighting_factor
@@ -848,6 +805,7 @@ class BakeButton(bpy.types.Operator):
         prioritize_face = context.scene.bake_prioritize_face
         prioritize_factor = context.scene.bake_face_scale
         uv_overlap_correction = context.scene.bake_uv_overlap_correction
+        pack_uvs = (not uv_overlap_correction == "MANUALNOPACK")
         margin = 0.0078125 # we want a 1-pixel margin around each island at 256x256, so 1/256, and since it's the space between islands we multiply it by two
         quick_compare = True
         apply_keys = context.scene.bake_apply_keys
@@ -870,6 +828,7 @@ class BakeButton(bpy.types.Operator):
         pass_alpha = context.scene.bake_pass_alpha
         pass_metallic = context.scene.bake_pass_metallic
         pass_displacement = context.scene.bake_pass_displacement
+        pass_detail = context.scene.bake_pass_detail
         pass_thickness = False
 
         # Pass options
@@ -890,7 +849,7 @@ class BakeButton(bpy.types.Operator):
         optimize_solid_materials = optimize_solid_materials and (not any(plat.use_decimation for plat in context.scene.bake_platforms)) and (not pass_ao) and (not pass_normal)
 
         # Save reference to original armature
-        armature = get_armature()
+        armature = get_armature(context)
         orig_armature_name = armature.name
 
         # Create an output collection
@@ -900,10 +859,10 @@ class BakeButton(bpy.types.Operator):
         # Make note of the original object name, then name it a placeholder
         orig_largest_obj_name = sorted(get_objects(armature.children, {"MESH"},
                                                    filter_func=lambda obj:
-                                                   not is_hidden(obj)),
+                                                   not obj.hide_get()),
             key=lambda obj: obj.dimensions.x * obj.dimensions.y * obj.dimensions.z,
             reverse=True)[0].name
-        if orig_largest_obj_name[-4] == '.':
+        if len(orig_largest_obj_name) >= 4 and orig_largest_obj_name[-4] == '.':
             orig_largest_obj_name = orig_largest_obj_name[:-4]
 
         # Tree-copy all meshes - exclude copy-only, and copy them just before export
@@ -934,12 +893,12 @@ class BakeButton(bpy.types.Operator):
             if obj.type == "MESH":
                 obj.select_set(True)
                 context.view_layer.objects.active = obj
-                bpy.ops.object.mode_set('WEIGHT_PAINT')
+                bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
                 # Unity maxes out at 4 deforms, remove here
                 bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM')
                 # Remove insiginificant weights
                 bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM', limit=0.00001)
-                bpy.ops.object.mode_set('OBJECT')
+                bpy.ops.object.mode_set(mode='OBJECT')
                 obj['tuxedoForcedExportName'] = orig_largest_obj_name
 
         # Copy default values from the largest diffuse BSDF
@@ -1057,7 +1016,7 @@ class BakeButton(bpy.types.Operator):
                         idx = obj.data.uv_layers.active_index
                         bpy.ops.object.select_all(action='DESELECT')
                         obj.data.uv_layers[layer].active = True
-                        bpy.ops.object.mode_set('EDIT')
+                        bpy.ops.object.mode_set(mode='EDIT')
                         for matindex,material in enumerate(obj.data.materials):
                             #select each material individually and unwrap. The averaging and packing will take care of overlaps. - @989onan
                             bpy.ops.mesh.select_all(action='DESELECT')
@@ -1066,7 +1025,7 @@ class BakeButton(bpy.types.Operator):
 
                             bpy.ops.uv.select_all(action='SELECT')
                             bpy.ops.uv.smart_project(angle_limit=unwrap_angle, island_margin=margin)
-                        bpy.ops.object.mode_set('OBJECT')
+                        bpy.ops.object.mode_set(mode='OBJECT')
                         obj.data.uv_layers.active_index = idx
                 elif uv_overlap_correction == "UNMIRROR":
                     # TODO: issue a warning if any source images don't use 'wrap'
@@ -1098,7 +1057,7 @@ class BakeButton(bpy.types.Operator):
                                 print("processing solid material: \""+material.name+"\" on layer: \""+layer+"\" on object: \""+obj.name+"\"")
                                 idx = obj.data.uv_layers.active_index
                                 obj.data.uv_layers[layer].active = True
-                                bpy.ops.object.mode_set('EDIT')
+                                bpy.ops.object.mode_set(mode='EDIT')
                                 #deselect all geometry and uv, select material that we are on that is solid, and then select all on visible UV. This will isolate the solid material UV's on this layer and object.
 
                                 bpy.ops.mesh.select_all(action='SELECT') #select all mesh
@@ -1116,7 +1075,7 @@ class BakeButton(bpy.types.Operator):
                                 def Scale2D( v, s, p ):
                                     return ( p[0] + s[0]*(v[0] - p[0]), p[1] + s[1]*(v[1] - p[1]) )
 
-                                bpy.ops.object.mode_set('OBJECT')#idk why this has to be here but it breaks without it - @989onan
+                                bpy.ops.object.mode_set(mode='OBJECT')#idk why this has to be here but it breaks without it - @989onan
                                 index = solidmaterialnames[material.name]
 
                                 #Thanks to @Sacred#9619 on discord for this one.
@@ -1131,28 +1090,29 @@ class BakeButton(bpy.types.Operator):
                                         if uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
                                             #Here we scale the UV's down to 0 starting at the bottom left corner and going up row by row of solid materials.
                                             uv_layer[loop].uv = Scale2D( uv_layer[loop].uv, (0,0), ((X/resolution),(Y/resolution))  )
-                                bpy.ops.object.mode_set('EDIT')
+                                bpy.ops.object.mode_set(mode='EDIT')
                                 #deselect UV's and hide mesh for scaling uv's out the way later. this also prevents the steps for averaging islands and prioritizing head size from going bad later.
                                 bpy.ops.uv.select_all(action='DESELECT')
                                 bpy.ops.mesh.hide(unselected=False)
 
             # Select all meshes. Select all UVs. Average islands scale
-            bpy.ops.object.mode_set('OBJECT')
+            bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.select_all(action='DESELECT')
             for layer in tuxedo_uv_layers:
-                bpy.ops.object.mode_set('OBJECT')
-                for obj in get_objects(collection.all_objects, {"MESH"}):
-                    obj.data.uv_layers.active = obj.data.uv_layers[layer]
-                    context.view_layer.objects.active = obj
-                    obj.select_set(True)
-                bpy.ops.object.mode_set('EDIT')
-                bpy.ops.mesh.select_all(action='SELECT')
-                bpy.ops.uv.select_all(action='SELECT')
-                bpy.ops.uv.average_islands_scale()  # Use blender average so we can make our own tweaks.
-                bpy.ops.object.mode_set('OBJECT')
+                bpy.ops.object.mode_set(mode='OBJECT')
+                if pack_uvs:
+                    for obj in get_objects(collection.all_objects, {"MESH"}):
+                        obj.data.uv_layers.active = obj.data.uv_layers[layer]
+                        context.view_layer.objects.active = obj
+                        obj.select_set(True)
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='SELECT')
+                    bpy.ops.uv.select_all(action='SELECT')
+                    bpy.ops.uv.average_islands_scale()  # Use blender average so we can make our own tweaks.
+                    bpy.ops.object.mode_set(mode='OBJECT')
 
             # Scale up textures most likely to be looked closer at (in this case, eyes)
-            if prioritize_face:
+            if prioritize_face and pack_uvs:
                 for obj in get_objects(collection.all_objects, {"MESH"}):
                     # Build set of relevant vertices
                     affected_vertices = set()
@@ -1177,51 +1137,53 @@ class BakeButton(bpy.types.Operator):
                 for obj in get_objects(collection.all_objects, {"MESH"}):
                     obj.data.uv_layers.active = obj.data.uv_layers[layer]
                     obj.select_set(True)
-                bpy.ops.object.mode_set('EDIT')
+                bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.reveal()
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.uv.select_all(action='SELECT')
                 # have a UI-able toggle, if UVP is detected, to keep lock overlapping in place
                 # otherwise perform blender pack here
-                if not context.scene.uvp_lock_islands:
-                    bpy.ops.uv.pack_islands(rotate=True, margin=margin)
 
-                # detect if UVPackMaster installed and configured: apparently UVP doesn't always
-                # self-initialize? So just force it
-                # if 'uvpm3_props' in context.scene:
-                try:
-                    context.scene.uvpm3_props.normalize_islands = False
-                    # Tuxedo UV Super is where we do the World normal bake, so it must be totally
-                    # non-overlapping.
-                    context.scene.uvpm3_props.lock_overlapping_enable = layer != 'Tuxedo UV Super'
-                    context.scene.uvpm3_props.lock_overlapping_mode = '2'
-                    context.scene.uvpm3_props.pack_to_others = False
-                    context.scene.uvpm3_props.margin = margin
-                    context.scene.uvpm3_props.simi_threshold = 3
-                    context.scene.uvpm3_props.precision = 1000
-                    context.scene.uvpm3_props.rotation_enable = True
-                    context.scene.uvpm3_props.rotation_step = 90
-                    # Give UVP a static number of iterations to do TODO: make this configurable?
-                    for _ in range(1, 3):
-                        bpy.ops.uvpackmaster3.pack(mode_id='pack.single_tile')
-                except:
+                if pack_uvs:
+                    if not context.scene.uvp_lock_islands:
+                        bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+
+                    # detect if UVPackMaster installed and configured: apparently UVP doesn't always
+                    # self-initialize? So just force it
+                    # if 'uvpm3_props' in context.scene:
                     try:
-                        context.scene.uvp2_props.normalize_islands = False
-                        context.scene.uvp2_props.lock_overlapping_mode = ('0' if
-                                                                          layer == 'Tuxedo UV Super' else
-                                                                          '2')
-                        context.scene.uvp2_props.pack_to_others = False
-                        context.scene.uvp2_props.margin = margin
-                        context.scene.uvp2_props.similarity_threshold = 3
-                        context.scene.uvp2_props.precision = 1000
+                        context.scene.uvpm3_props.normalize_islands = False
+                        # Tuxedo UV Super is where we do the World normal bake, so it must be totally
+                        # non-overlapping.
+                        context.scene.uvpm3_props.lock_overlapping_enable = layer != 'Tuxedo UV Super'
+                        context.scene.uvpm3_props.lock_overlapping_mode = '2'
+                        context.scene.uvpm3_props.pack_to_others = False
+                        context.scene.uvpm3_props.margin = margin
+                        context.scene.uvpm3_props.simi_threshold = 3
+                        context.scene.uvpm3_props.precision = 1000
+                        context.scene.uvpm3_props.rotation_enable = True
+                        context.scene.uvpm3_props.rotation_step = 90
                         # Give UVP a static number of iterations to do TODO: make this configurable?
                         for _ in range(1, 3):
-                            bpy.ops.uvpackmaster2.uv_pack()
+                            bpy.ops.uvpackmaster3.pack(mode_id='pack.single_tile')
                     except:
-                        bpy.ops.uv.pack_islands(rotate=True, margin=margin)
-                        pass
+                        try:
+                            context.scene.uvp2_props.normalize_islands = False
+                            context.scene.uvp2_props.lock_overlapping_mode = ('0' if
+                                                                              layer == 'Tuxedo UV Super' else
+                                                                              '2')
+                            context.scene.uvp2_props.pack_to_others = False
+                            context.scene.uvp2_props.margin = margin
+                            context.scene.uvp2_props.similarity_threshold = 3
+                            context.scene.uvp2_props.precision = 1000
+                            # Give UVP a static number of iterations to do TODO: make this configurable?
+                            for _ in range(1, 3):
+                                bpy.ops.uvpackmaster2.uv_pack()
+                        except:
+                            bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+                            pass
 
-                bpy.ops.object.mode_set('OBJECT')
+                bpy.ops.object.mode_set(mode='OBJECT')
 
             if optimize_solid_materials:
                 #unhide geometry from step before pack islands that fixed solid material uvs, then scale uv's to be short enough to avoid color squares at top right. - @989onan
@@ -1229,7 +1191,7 @@ class BakeButton(bpy.types.Operator):
                     for layer in tuxedo_uv_layers:
                         idx = obj.data.uv_layers.active_index
                         obj.data.uv_layers[layer].active = True
-                        bpy.ops.object.mode_set('EDIT')
+                        bpy.ops.object.mode_set(mode='EDIT')
 
                         bpy.ops.mesh.select_all(action='SELECT')
                         bpy.ops.uv.select_all(action='SELECT')
@@ -1246,7 +1208,7 @@ class BakeButton(bpy.types.Operator):
                         n = int( resolution/squaremargin )
                         Y = squaremargin/2 + squaremargin * int( last_index / n )
 
-                        bpy.ops.object.mode_set('OBJECT')#idk why this has to be here but it breaks without it - @989onan
+                        bpy.ops.object.mode_set(mode='OBJECT')#idk why this has to be here but it breaks without it - @989onan
                         for poly in obj.data.polygons:
                             for loop in poly.loop_indices:
                                 uv_layer = obj.data.uv_layers[layer].data
@@ -1258,11 +1220,11 @@ class BakeButton(bpy.types.Operator):
                     for layer in tuxedo_uv_layers:
                         idx = obj.data.uv_layers.active_index
                         obj.data.uv_layers[layer].active = True
-                        bpy.ops.object.mode_set('EDIT')
+                        bpy.ops.object.mode_set(mode='EDIT')
                         bpy.ops.mesh.select_all(action='SELECT')
                         bpy.ops.uv.select_all(action='SELECT')
                         bpy.ops.mesh.reveal(select=True)
-                        bpy.ops.object.mode_set('OBJECT') #below will error if it isn't in object because of poll error
+                        bpy.ops.object.mode_set(mode='OBJECT') #below will error if it isn't in object because of poll error
 
             #lastly make our target UV map active
             for obj in get_objects(collection.all_objects, {"MESH"}):
@@ -1280,6 +1242,7 @@ class BakeButton(bpy.types.Operator):
                  (pass_alpha, "alpha", "DIFFUSE", {"COLOR"}, [1, 1, 1, 1.], {"Alpha": "Alpha"}, False, False),
                  (pass_metallic, "metallic", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], {"Metallic": "Metallic"}, False, True),
                  (pass_emit and not emit_indirect, "emission", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
+                 (pass_detail, "detail", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
         ]:
             # TODO: Linearity will be determined by end channel. Alpha is linear, RGB is sRGB
             if bake_conditions:
@@ -1369,15 +1332,15 @@ class BakeButton(bpy.types.Operator):
         # Option to apply current shape keys, otherwise normals bake weird
         # If true, apply all shapekeys and remove '_bake' keys
         # Otherwise, only apply '_bake' keys
-        bpy.ops.object.mode_set('EDIT')
-        bpy.ops.object.mode_set('OBJECT')
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         for name in [ob.name for ob in collection.all_objects]:
             obj = collection.all_objects[name]
             if obj.type == "MESH" and has_shapekeys(obj):
                 obj.select_set(True)
                 context.view_layer.objects.active = obj
                 bpy.ops.object.shape_key_add(from_mix=True)
-                bpy.ops.cats_shapekey.shape_key_to_basis()
+                shape_key_to_basis()
                 obj.active_shape_key_index = 0
                 # Ensure all keys are now set to 0.0
                 for key in obj.data.shape_keys.key_blocks:
@@ -1496,15 +1459,15 @@ class BakeButton(bpy.types.Operator):
                             if mod.show_viewport and mod.type == 'MASK'}
             for group in vgroup_idxes:
                 print("Deleting vertices from {} on obj {}".format(group, obj.name))
-            bpy.ops.object.mode_set("EDIT")
+            bpy.ops.object.mode_set(mode="EDIT")
             bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.mode_set("OBJECT")
+            bpy.ops.object.mode_set(mode="OBJECT")
             for vert in obj.data.vertices:
                 vert.select = any(group.group in vgroup_idxes and group.weight > 0. for group in vert.groups)
 
-            bpy.ops.object.mode_set("EDIT")
+            bpy.ops.object.mode_set(mode="EDIT")
             bpy.ops.mesh.delete(type="VERT")
-            bpy.ops.object.mode_set("OBJECT")
+            bpy.ops.object.mode_set(mode="OBJECT")
 
         ########### BEGIN PLATFORM SPECIFIC CODE ###########
         for platform_number, platform in enumerate(context.scene.bake_platforms):
@@ -1630,10 +1593,9 @@ class BakeButton(bpy.types.Operator):
             # Optionally cleanup bones if we're not going to use them
             if merge_twistbones:
                 print("merging bones")
-                context.scene.keep_merged_bones = False
                 bpy.ops.object.select_all(action='DESELECT')
                 context.view_layer.objects.active = plat_arm_copy
-                bpy.ops.object.mode_set("EDIT")
+                bpy.ops.object.mode_set(mode="EDIT")
                 bpy.ops.armature.select_all(action="DESELECT")
                 bone_children = dict()
                 for editbone in context.visible_bones:
@@ -1651,43 +1613,73 @@ class BakeButton(bpy.types.Operator):
                                    if not 'twist' in otherbone.lower()):
                                 editbone.select = False
                 if context.selected_editable_bones:
-                    bpy.ops.cats_manual.merge_weights()
-                bpy.ops.object.mode_set("OBJECT")
+                    merge_bone_weights_to_respective_parents(context, plat_arm_copy, [bone.name for bone in context.selected_editable_bones])
+                bpy.ops.object.mode_set(mode="OBJECT")
 
             if prop_bone_handling == "GENERATE":
                 # Find any mesh that's weighted to a single bone, duplicate and rename that bone, move mesh's vertex group to the new bone
                 all_path_strings = dict()
+                vgroup_deforms_meshes = dict()
+                mesh_has_vertex_groups = dict()
+                for obj in get_objects(plat_collection.objects, {"MESH"}):
+                    # Create a dict of vgroup: [meshnames..]
+                    orig_obj_name = obj.name[:-4] if len(obj.name) >= 4 and obj.name[-4] == '.' else obj.name
+                    found_vertex_groups = set([vgp.group for vertex in obj.data.vertices
+                                                for vgp in vertex.groups if vgp.weight > 0.00001])
+
+                    vgroup_lookup = dict([(vgp.index, vgp.name) for vgp in obj.vertex_groups])
+
+                    if orig_obj_name not in mesh_has_vertex_groups:
+                        mesh_has_vertex_groups[orig_obj_name] = set()
+                    mesh_has_vertex_groups[orig_obj_name].update(found_vertex_groups)
+
+                    for idx in found_vertex_groups:
+                        if vgroup_lookup[idx] not in vgroup_deforms_meshes:
+                            vgroup_deforms_meshes[vgroup_lookup[idx]] = set()
+                        vgroup_deforms_meshes[vgroup_lookup[idx]].add(orig_obj_name)
+
                 for obj in get_objects(plat_collection.objects, {"MESH"}):
                     if 'generatePropBones' not in obj or not obj['generatePropBones']:
                         continue
-                    found_vertex_groups = set([vgp.group for vertex in obj.data.vertices
-                                                for vgp in vertex.groups if vgp.weight > 0.00001])
+                    orig_obj_name = obj.name[:-4] if len(obj.name) >= 4 and obj.name[-4] == '.' else obj.name
+                    found_vertex_groups = mesh_has_vertex_groups[orig_obj_name]
                     if len(found_vertex_groups) == 0:
                         continue
 
-                    orig_obj_name = obj.name[:-4] if obj.name[-4] == '.' else obj.name
                     vgroup_lookup = dict([(vgp.index, vgp.name) for vgp in obj.vertex_groups])
                     for vgp in found_vertex_groups:
+                        if vgp not in vgroup_lookup:
+                            continue
                         vgroup_name = vgroup_lookup[vgp]
+                        if vgroup_name not in vgroup_deforms_meshes:
+                            continue
                         #if not plat_arm_copy.data.bones[vgroup_name].children:
                         #    #TODO: this doesn't account for props attached to something which has existing attachments
-                        #    bpy.ops.object.mode_set("OBJECT")
+                        #    bpy.ops.object.mode_set(mode="OBJECT")
                         #    print("Object " + obj.name + " already has no children, skipping")
                         #    continue
 
-                        print("Object " + obj.name + " is an eligible prop on " + vgroup_name + "! Creating prop bone...")
+                        # if the prop is the ONLY mesh weighted to that bone, don't create a duplicate, just create the animations
+                        only_deformed_mesh_for_bone = len(vgroup_deforms_meshes[vgroup_name]) == 1
+
                         # If the obj has ".001" or similar, trim it
-                        newbonename = "~" + vgroup_name + "_Prop_" + orig_obj_name
+                        if only_deformed_mesh_for_bone:
+                            print("Object " + obj.name + " is an eligible prop on " + vgroup_name + " and is the sole deformed mesh.")
+                            newbonename = vgroup_name
+                        else:
+                            print("Object " + obj.name + " is an eligible prop on " + vgroup_name + "! Creating prop bone...")
+                            newbonename = "~" + vgroup_name + "_Prop_" + orig_obj_name
+
                         if newbonename not in obj.vertex_groups:
                             obj.vertex_groups[vgroup_name].name = newbonename
-                        else:
+                        elif not only_deformed_mesh_for_bone:
                             # if newbonename already exists as a name, merge new vgroup with existing
                             # this means "Obj" and "Obj.001" will get the same bone
                             mix_weights(obj, obj.vertex_groups[vgroup_name], obj.vertex_groups[newbonename])
                             obj.vertex_groups.remove(vgroup_name)
 
                         context.view_layer.objects.active = plat_arm_copy
-                        bpy.ops.object.mode_set("EDIT")
+                        bpy.ops.object.mode_set(mode="EDIT")
                         if not vgroup_name in plat_arm_copy.data.edit_bones:
                             continue
                         orig_bone = plat_arm_copy.data.edit_bones[vgroup_name]
@@ -1706,7 +1698,7 @@ class BakeButton(bpy.types.Operator):
                             if orig_obj_name not in all_path_strings:
                                 all_path_strings[orig_obj_name] = set()
                             all_path_strings[orig_obj_name].add(path_string)
-                            bpy.ops.object.mode_set("OBJECT")
+                            bpy.ops.object.mode_set(mode="OBJECT")
 
                 for orig_obj_name, path_strings in all_path_strings.items():
                     # A bit of a hacky string manipulation, just create a curve for each bone based on the editor path. Output file is YAML
@@ -1884,6 +1876,14 @@ class BakeButton(bpy.types.Operator):
                             obj.data.uv_layers.remove(obj.data.uv_layers[layer])
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
                     obj.data.uv_layers.active = obj.data.uv_layers["Tuxedo UV"]
+                # Ensure 'Detail Map' is at the end, if it exists here
+                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
+                    if "Detail Map" in obj.data.uv_layers:
+                        context.view_layer.objects.active = obj
+                        obj.data.uv_layers["Detail Map"].active = True
+                        bpy.ops.mesh.uv_texture_add()
+                        obj.data.uv_layers.remove(obj.data.uv_layers["Detail Map"])
+                        obj.data.uv_layers[-1].name = 'Detail Map'
 
             print("Decimating")
             context.scene.decimation_remove_doubles = platform.remove_doubles
@@ -1898,8 +1898,8 @@ class BakeButton(bpy.types.Operator):
                 new_arm = self.tree_copy(plat_arm_copy, None, plat_collection, ignore_hidden, view_layer=context.view_layer)
                 for obj in get_objects(new_arm.children):
                     obj.display_type = "WIRE"
-                context.scene.max_tris = int(platform.max_tris * physmodel_lod)
-                bpy.ops.tuxedo.smart_decimate(armature_name=new_arm.name, preserve_seams=False, seperate_materials=False)
+                context.scene.tuxedo_max_tris = int(platform.max_tris * physmodel_lod)
+                bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=False)
                 for obj in get_objects(new_arm.children):
                     obj.name = "LODPhysics"
                 new_arm.name = "ArmatureLODPhysics"
@@ -1908,8 +1908,8 @@ class BakeButton(bpy.types.Operator):
             if use_lods:
                 for idx, lod in enumerate(lods):
                     new_arm = self.tree_copy(plat_arm_copy, None, plat_collection, ignore_hidden, view_layer=context.view_layer)
-                    context.scene.max_tris = int(platform.max_tris * lod)
-                    bpy.ops.tuxedo.smart_decimate(armature_name=new_arm.name, preserve_seams=preserve_seams, seperate_materials=False)
+                    context.scene.tuxedo_max_tris = int(platform.max_tris * lod)
+                    bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=preserve_seams)
                     for obj in get_objects(new_arm.children):
                         obj.name = "LOD" + str(idx + 1)
                     new_arm.name = "ArmatureLOD" + str(idx + 1)
@@ -1917,11 +1917,11 @@ class BakeButton(bpy.types.Operator):
 
             if use_decimation:
                 # Decimate. If 'preserve seams' is selected, forcibly preserve seams (seams from islands, deselect seams)
-                context.scene.max_tris = int(platform.max_tris)
-                bpy.ops.tuxedo.smart_decimate(armature_name=plat_arm_copy.name, preserve_seams=preserve_seams, seperate_materials=False)
+                context.scene.tuxedo_max_tris = int(platform.max_tris)
+                bpy.ops.tuxedo.smart_decimation(armature_name=plat_arm_copy.name, preserve_seams=preserve_seams)
             else:
                 # join meshes here if we didn't decimate
-                join_meshes(armature_name=plat_arm_copy.name, repair_shape_keys=False)
+                join_meshes(armature_name=plat_arm_copy.name)
 
             # Remove all other materials if we've done at least one bake pass
             for obj in get_objects(plat_collection.all_objects):
@@ -2026,7 +2026,10 @@ class BakeButton(bpy.types.Operator):
                 if obj.data.vertex_colors is not None and len(obj.data.vertex_colors) > 0:
                     while len(obj.data.vertex_colors) > 0:
                         context.view_layer.objects.active = obj
-                        bpy.ops.mesh.vertex_color_remove()
+                        if bpy.app.version < (3, 4, 0):
+                            bpy.ops.mesh.vertex_color_remove()
+                        else:
+                            bpy.ops.geometry.color_attribute_remove()
 
             # Update generated material to preview all of our passes
             if pass_normal:
@@ -2201,10 +2204,10 @@ class BakeButton(bpy.types.Operator):
                 plat_arm_copy.rotation_euler = armature.rotation_euler
 
                 context.view_layer.objects.active = plat_arm_copy
-                bpy.ops.object.mode_set("EDIT")
+                bpy.ops.object.mode_set(mode="EDIT")
                 # Performing these changes in edit mode avoids a scene update issue, but may not be totally neccesary.
                 plat_arm_copy.data.transform(armature.matrix_basis.inverted())
-                bpy.ops.object.mode_set("OBJECT")
+                bpy.ops.object.mode_set(mode="OBJECT")
                 for obj in get_objects(plat_collection.all_objects):
                     if obj.type == 'MESH':
                         obj.data.transform(armature.matrix_basis.inverted(), shape_keys=True)
@@ -2234,7 +2237,7 @@ class BakeButton(bpy.types.Operator):
                     obj.select_set(True)
 
                 # Join to save on skinned mesh renderers
-                join_meshes(armature_name=plat_arm_copy.name, repair_shape_keys=False, mode=1)
+                join_meshes(armature_name=plat_arm_copy.name)
                 for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
                                        filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
                     obj['tuxedoForcedExportName'] = orig_largest_obj_name
@@ -2250,7 +2253,7 @@ class BakeButton(bpy.types.Operator):
                         obj.select_set(True)
                 if export_format == "FBX":
                     # Monkeypatch the FBX exporter to use 'tuxedoForcedExportName' instead of obj.name
-                    Fbx_patch.patch_fbx_exporter()
+                    patch_fbx_exporter()
                     bpy.ops.export_scene.fbx(filepath=bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + export_group[0] + ".fbx"), check_existing=False, filter_glob='*.fbx',
                                              use_selection=True,
                                              use_active_collection=False, global_scale=1., apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
@@ -2275,8 +2278,9 @@ class BakeButton(bpy.types.Operator):
                                               export_animation_transformation_type=0, open_sim=False,
                                               limit_precision=False, keep_bind_info=False)
                 elif export_format == "GMOD":
+                    print("TODO")
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
-                    bpy.ops.cats_importer.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
+                    # TODO: bpy.ops.cats_importer.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
             # Reapply tuxedo material
             if export_format != "GMOD":
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
@@ -2288,7 +2292,7 @@ class BakeButton(bpy.types.Operator):
                                 slot.material = mat
 
             if optimize_static:
-                with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/BakeFixer.cs", 'r') as infile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + "/BakeFixer.cs", 'r') as infile:
                     with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/") + "BakeFixer.cs", 'w') as outfile:
                         for line in infile:
                             outfile.write(line.replace("{BODYNAME}", orig_largest_obj_name)
