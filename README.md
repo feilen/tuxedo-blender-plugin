@@ -1,6 +1,6 @@
 ## This is a non-destructive way to produce a Quest variant of (almost) any avatar. One click to optimize your model for Quest or Desktop!
 
-**Made by Feilen**
+[Questions? Join us on Discord!](https://discord.gg/meYbVvvxNN)
 
 <img src="images/quest-anim.gif" width="500" />
 
