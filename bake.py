@@ -1398,8 +1398,6 @@ class BakeButton(bpy.types.Operator):
                         if ('ambient' in key.name.lower() and 'occlusion' in key.name.lower()) or key.name[-3:] == '_ao':
                             key.value = 1.0
 
-                assert(False)
-
                 # If conditions are met, move eyes up by 25m (so they don't get shadows)
                 if displace_eyes:
                     # Add modifiers that prevent LeftEye and RightEye being baked

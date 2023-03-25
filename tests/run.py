@@ -12,7 +12,6 @@ import os
 import itertools
 from subprocess import Popen, PIPE
 from optparse import OptionParser
-from termcolor import colored
 from collections import namedtuple
 
 # Test whether a path exists.  Returns False for broken symbolic links
@@ -55,20 +54,7 @@ scripts_executed = []
 
 def show_time(time):
     rounded = round(time)
-    string = str(rounded)
-    color = 'grey'
-
-    if rounded > 0:
-        color = 'green'
-
-    if rounded > 10:
-        color = 'yellow'
-
-    if rounded > 20:
-        color = 'red'
-
-    return colored(string, color, attrs=['bold'])
-
+    return str(rounded)
 
 spinner = itertools.cycle(['-', '/', '|', '\\'])
 
@@ -76,9 +62,9 @@ spinner = itertools.cycle(['-', '/', '|', '\\'])
 def exit_test():
     end_message = ' > '
     if exit_code != 0 or (error_continue != 0 and error_code != 0):
-        end_message += 'Test ' + colored('FAILED', 'red', attrs=['bold'])
+        end_message += 'Test ' + 'FAILED'
     else:
-        end_message += 'Test ' + colored('PASSED', 'green', attrs=['bold'])
+        end_message += 'Test ' + 'PASSED'
     end_message += ' in ' + str(round((time.time() - start_time))) + ' seconds'
     print(end_message)
     sys.exit(error_code if error_code != 0 else exit_code)
