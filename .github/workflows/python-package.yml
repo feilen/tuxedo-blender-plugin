@@ -41,6 +41,7 @@ jobs:
         ln -s ${PWD} ${HOME}/.config/blender/3.3/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.4/scripts/addons/tuxedo-blender-plugin
     - name: run unit tests for all versions
+      run: |
         python3 ./tests/run.py --blend=blender_293 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_30 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_31 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
