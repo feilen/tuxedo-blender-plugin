@@ -25,6 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Blender versions with snap
       run: |
+        sudo snap set system experimental.parallel-instances=true
         sudo snap install blender_293 --channel 2.93lts/stable --classic
         sudo snap install blender_30 --channel 3.0/stable --classic
         sudo snap install blender_31 --channel 3.1/stable --classic
