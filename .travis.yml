@@ -1,0 +1,52 @@
+# GPL2 License
+
+language: python
+cache:
+  apt: true
+  pip: true
+
+python:
+  # Use the Python version that comes with blender 2.93lts
+  - "3.9.2"
+
+before_install:
+  - sudo apt-get update -qq
+  # install blender from official sources.
+  - sudo apt-get install blender
+  # install snap versions of blender for various supported versions
+  - sudo snap install blender_293 --channel 2.93lts/stable --classic
+  - sudo snap install blender_30 --channel 3.0/stable --classic
+  - sudo snap install blender_31 --channel 3.1/stable --classic
+  - sudo snap install blender_32 --channel 3.2/stable --classic
+  - sudo snap install blender_33 --channel 3.3lts/stable --classic
+  - sudo snap install blender_34 --channel 3.4/stable --classic
+
+install:
+
+  # install tuxedo plugin for various versions
+  - mkdir -p ${HOME}/.config/blender/{2.93,3.0,3.1,3.2,3.3,3.4}/scripts/addons
+  - ln -s ${PWD} ${HOME}/.config/blender/2.93/scripts/addons/tuxedo-blender-plugin
+  - ln -s ${PWD} ${HOME}/.config/blender/3.0/scripts/addons/tuxedo-blender-plugin
+  - ln -s ${PWD} ${HOME}/.config/blender/3.1/scripts/addons/tuxedo-blender-plugin
+  - ln -s ${PWD} ${HOME}/.config/blender/3.2/scripts/addons/tuxedo-blender-plugin
+  - ln -s ${PWD} ${HOME}/.config/blender/3.3/scripts/addons/tuxedo-blender-plugin
+  - ln -s ${PWD} ${HOME}/.config/blender/3.4/scripts/addons/tuxedo-blender-plugin
+
+# Start unit testing
+script:
+  - python3 ./tests/run.py --blend=blender_293 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+  - python3 ./tests/run.py --blend=blender_30 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+  - python3 ./tests/run.py --blend=blender_31 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+  - python3 ./tests/run.py --blend=blender_32 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+  - python3 ./tests/run.py --blend=blender_33 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+  - python3 ./tests/run.py --blend=blender_34 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+
+#notifications:
+#  webhooks:
+#    urls:
+#      - http://159.89.91.52:7778/webhook
+#    on_success: always # default: always
+#    on_failure: always # default: always
+#    on_start: always   # default: never
+#    on_cancel: always # default: always
+#    on_error: always # default: always

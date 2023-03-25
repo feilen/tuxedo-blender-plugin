@@ -87,7 +87,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
 
     context.scene.bake_pass_detail = False
 
-    if any("Target" in obj.data.uv_layers for obj in get_meshes_objects()):
+    if any("Target" in obj.data.uv_layers for obj in get_meshes_objects(context)):
         context.scene.bake_uv_overlap_correction = 'MANUAL'
     elif any(plat.use_decimation for plat in context.scene.bake_platforms) and context.scene.bake_pass_normal:
         context.scene.bake_uv_overlap_correction = 'UNMIRROR'
@@ -617,6 +617,7 @@ class BakeButton(bpy.types.Operator):
         if bpy.app.version <= (3, 0, 0):
             context.scene.render.bake.use_pass_ambient_occlusion = "AO" in bake_pass_filter
         context.scene.cycles.samples = bake_samples
+        context.scene.render.image_settings.color_mode = 'RGB'
         context.scene.render.bake.use_clear = clear and bake_type == 'NORMAL'
         context.scene.render.bake.use_selected_to_active = (bake_active != None)
         context.scene.render.bake.margin = bake_margin
@@ -1392,11 +1393,12 @@ class BakeButton(bpy.types.Operator):
                 if world_color:
                      tuxedo_world.color = world_color
                 # Enable all AO keys
-                for obj in get_objects(collection.all_objects):
-                    if has_shapekeys(obj):
-                        for key in obj.data.shape_keys.key_blocks:
-                            if ('ambient' in key.name.lower() and 'occlusion' in key.name.lower()) or key.name[-3:] == '_ao':
-                                key.value = 1.0
+                for obj in get_objects(collection.all_objects, filter_func=lambda obj: has_shapekeys(obj)):
+                    for key in obj.data.shape_keys.key_blocks:
+                        if ('ambient' in key.name.lower() and 'occlusion' in key.name.lower()) or key.name[-3:] == '_ao':
+                            key.value = 1.0
+
+                assert(False)
 
                 # If conditions are met, move eyes up by 25m (so they don't get shadows)
                 if displace_eyes:
@@ -1704,27 +1706,27 @@ class BakeButton(bpy.types.Operator):
                     # A bit of a hacky string manipulation, just create a curve for each bone based on the editor path. Output file is YAML
                     # {EDITOR_VALUE} = 1
                     # {SCALE_VALUE} = {x: 1, y: 1, z: 1}
-                    with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/enable.anim", 'r') as infile:
+                    with open(os.path.dirname(os.path.abspath(__file__)) + "/enable.anim", 'r') as infile:
                         newname = "Enable " + orig_obj_name
                         editor_curves = ""
                         scale_curves = ""
                         for path_string in sorted(path_strings):
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/m_ScaleCurves.anim.part", 'r') as infilepart:
+                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_ScaleCurves.anim.part", 'r') as infilepart:
                                 scale_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{SCALE_VALUE}", "{x: 1, y: 1, z: 1}") for line in infilepart])
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/m_EditorCurves.anim.part", 'r') as infilepart:
+                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_EditorCurves.anim.part", 'r') as infilepart:
                                 editor_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{EDITOR_VALUE}", "1") for line in infilepart])
 
                         with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + newname + ".anim"), 'w') as outfile:
                             for line in infile:
                                 outfile.write(line.replace("{NAME_STRING}", newname).replace("{EDITOR_CURVES}", editor_curves).replace("{SCALE_CURVES}", scale_curves))
-                    with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/disable.anim", 'r') as infile:
+                    with open(os.path.dirname(os.path.abspath(__file__)) + "/disable.anim", 'r') as infile:
                         newname = "Disable " + orig_obj_name
                         editor_curves = ""
                         scale_curves = ""
                         for path_string in sorted(path_strings):
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/m_ScaleCurves.anim.part", 'r') as infilepart:
+                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_ScaleCurves.anim.part", 'r') as infilepart:
                                 scale_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{SCALE_VALUE}", "{x: 0, y: 0, z: 0}") for line in infilepart])
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/../extern_tools/m_EditorCurves.anim.part", 'r') as infilepart:
+                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_EditorCurves.anim.part", 'r') as infilepart:
                                 editor_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{EDITOR_VALUE}", "0") for line in infilepart])
 
                         with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + newname + ".anim"), 'w') as outfile:
@@ -1733,6 +1735,12 @@ class BakeButton(bpy.types.Operator):
 
             if translate_bone_names == "SECONDLIFE":
                 bpy.ops.tuxedo.convert_to_secondlife()
+
+            if pass_alpha:
+                # Ensure baked alpha is RGB-only, changed in 3.3
+                pixel_buffer = img_channels_as_nparray("SCRIPT_alpha.png")
+                pixel_buffer[3:] = 1.0
+                nparray_channels_to_img("SCRIPT_alpha.png", pixel_buffer)
 
             # Blend diffuse and AO to create Quest Diffuse (if selected)
             # Overlay emission onto diffuse, dodge metallic if specular
@@ -1921,7 +1929,7 @@ class BakeButton(bpy.types.Operator):
                 bpy.ops.tuxedo.smart_decimation(armature_name=plat_arm_copy.name, preserve_seams=preserve_seams)
             else:
                 # join meshes here if we didn't decimate
-                join_meshes(armature_name=plat_arm_copy.name)
+                join_meshes(context, armature_name=plat_arm_copy.name)
 
             # Remove all other materials if we've done at least one bake pass
             for obj in get_objects(plat_collection.all_objects):
@@ -2120,7 +2128,10 @@ class BakeButton(bpy.types.Operator):
             if pass_diffuse and diffuse_vertex_colors:
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
                     context.view_layer.objects.active = obj
-                    bpy.ops.mesh.vertex_color_add()
+                    if bpy.app.version < (3, 4, 0):
+                        bpy.ops.mesh.vertex_color_add()
+                    else:
+                        bpy.ops.geometry.color_attribute_add()
 
                 self.genericize_bsdfs(get_objects(plat_collection.all_objects, {"MESH"}),
                                       {"Base Color": "Base Color"})
@@ -2237,7 +2248,7 @@ class BakeButton(bpy.types.Operator):
                     obj.select_set(True)
 
                 # Join to save on skinned mesh renderers
-                join_meshes(armature_name=plat_arm_copy.name)
+                join_meshes(context, armature_name=plat_arm_copy.name)
                 for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
                                        filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
                     obj['tuxedoForcedExportName'] = orig_largest_obj_name

@@ -61,9 +61,9 @@ def register():
 
 def unregister():
     # Autodecimate fns
-    bpy.utils.register_class(AutoDecimatePresetGood)
-    bpy.utils.register_class(AutoDecimatePresetExcellent)
-    bpy.utils.register_class(AutoDecimatePresetQuest)
+    bpy.utils.unregister_class(AutoDecimatePresetGood)
+    bpy.utils.unregister_class(AutoDecimatePresetExcellent)
+    bpy.utils.unregister_class(AutoDecimatePresetQuest)
 
     # Bake fns
     bpy.utils.unregister_class(BakeAddCopyOnly)

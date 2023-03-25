@@ -1,28 +1,4 @@
-# MIT License
-
-# Copyright (c) 2017 GiveMeAllYourCats
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the 'Software'), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-# Code author: GiveMeAllYourCats
-# Repo: https://github.com/michaeldegroot/cats-blender-plugin
-# Edits by: GiveMeAllYourCats
+# GPL Licence
 
 import unittest
 import sys
@@ -400,7 +376,7 @@ class TestAddon(unittest.TestCase):
         bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
     def test_bake_button(self):
-        bpy.context.scene.cats_is_unittest = True
+        bpy.context.scene.tuxedo_is_unittest = True
         bpy.ops.tuxedo_bake.preset_all()
         bpy.context.scene.bake_pass_displacement = False
         test_name = bpy.path.basename(bpy.context.blend_data.filepath)
@@ -435,9 +411,9 @@ class TestAddon(unittest.TestCase):
                         for i in range(4):
                             # Wide margins, since sharpening actually does change it (on purpose)
                             self.assertTrue(color[i] - 40 <= foundcolor[i] <= color[i] + 40,
-                                            "{} != {} ({})".format(color, foundcolor, foundraw))
+                                            "{}: {} != {} ({})".format(bakename, color, foundcolor, foundraw))
             test_collection_names = {
-                'bake.bakematerialtest.blend': [
+                'bake.bakematerialtest.blend': set([
                     'Tuxedo Bake Second Life',
                     'Tuxedo Bake VRChat Desktop Excellent',
                     'Tuxedo Bake VRChat Desktop Good',
@@ -445,8 +421,8 @@ class TestAddon(unittest.TestCase):
                     'Tuxedo Bake VRChat Quest Good',
                     'Tuxedo Bake VRChat Quest Medium',
                     'Collection',
-                ],
-                'bake.eyetest.blend': [
+                ]),
+                'bake.eyetest.blend': set([
                     'Tuxedo Bake Second Life',
                     'Tuxedo Bake VRChat Desktop Excellent',
                     'Tuxedo Bake VRChat Desktop Good',
@@ -454,9 +430,9 @@ class TestAddon(unittest.TestCase):
                     'Tuxedo Bake VRChat Quest Good',
                     'Tuxedo Bake VRChat Quest Medium',
                     'Collection',
-                ]
+                ])
             }
-            self.assertEqual([o.name for o in bpy.data.collections], test_collection_names[test_name])
+            self.assertEqual(set([o.name for o in bpy.data.collections]), test_collection_names[test_name])
             self.reset_stage()
         # TODO: test each of:
         # Scene.bake_cleanup_shapekeys = BoolProperty(

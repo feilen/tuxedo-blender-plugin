@@ -184,7 +184,10 @@ def get_bid_name(bid):
 def get_meshes_objects(context, armature_name=None):
     arm = get_armature(context, armature_name)
     if arm:
-        return [obj for obj in arm.children if obj.type == "MESH"]
+        return [obj for obj in arm.children if
+                obj.type == "MESH" and
+                not obj.hide_get() and
+                obj.name in context.view_layer.objects]
     return []
 
 def t(str_key):
@@ -218,19 +221,19 @@ def apply_modifier(mod):
     bpy.context.view_layer.objects.active = mod.id_data
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
-def join_meshes(armature_name):
+def join_meshes(context, armature_name):
     armature = bpy.data.objects[armature_name]
-    meshes = [obj for obj in armature.children if obj.type == "MESH"]
+    meshes = get_meshes_objects(context, armature_name)
     if not meshes:
         return
-    bpy.context.view_layer.objects.active = meshes[0]
+    context.view_layer.objects.active = meshes[0]
     bpy.ops.object.select_all(action='DESELECT')
     for mesh in meshes:
         mesh.select_set(True)
     bpy.ops.object.join()
 
 def has_shapekeys(obj):
-    return obj.data and 'shape_keys' in obj.data and 'key_blocks' in obj.data.shape_keys
+    return obj.type == 'MESH' and obj.data and obj.data.shape_keys and len(obj.data.shape_keys.key_blocks) > 1
 
 # Remove doubles using bmesh
 def remove_doubles(mesh, margin):
@@ -362,8 +365,10 @@ class SmartDecimation(bpy.types.Operator):
         animation_weighting = context.scene.decimation_animation_weighting
         animation_weighting_factor = context.scene.decimation_animation_weighting_factor
         tuxedo_max_tris = context.scene.tuxedo_max_tris
-        meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
         armature = get_armature(context, armature_name=self.armature_name)
+        join_meshes(context, armature.name)
+        meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
+
         if len(meshes_obj) == 0:
             self.report({'INFO'}, "No meshes found.")
             return {'FINISHED'}
