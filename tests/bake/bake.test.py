@@ -6,6 +6,25 @@ import bpy
 
 # Lookup table of expected samples. Bear in mind that these are linear colorspace!
 sampling_lookup = {
+    'bake.AOtest.blend': {
+        'SCRIPT_ao.png': {
+            (64,64): (0,0,0,255),
+            (178,55): (0,0,0,255),
+            (32,222): (255,255,255,255),
+            #(178,200): (255,255,255,255),
+            #(0,0): (255,255,255,255),
+            (215,40): (255,255,255,255),
+            (215,7): (255,255,255,255),
+            (215,24): (255,255,255,255),
+            (200,40): (0,0,0,255),
+            (232,40): (255,255,255,255),
+            (215,56): (255,255,255,255),
+            (96,32): (0,0,0,255),
+            (96,96): (0,0,0,255),
+            (96,160): (0,0,0,255),
+            (96,220): (255,255,255,255),
+        }
+    },
     'bake.eyetest.blend': {
         'SCRIPT_diffuse.png': {
             # For some reason Blender 2.93 ends up with values off-by-one (but not alpha)
@@ -418,7 +437,11 @@ class TestAddon(unittest.TestCase):
                         for i in range(4):
                             # Wide margins, since sharpening actually does change it (on purpose)
                             self.assertTrue(color[i] - 40 <= foundcolor[i] <= color[i] + 40,
-                                            "{}: {} != {} ({})".format(bakename, color, foundcolor, foundraw))
+                                         "{}@({}, {}): {} != {} ({})".format(bakename,
+                                                                             coordinate[0],
+                                                                             coordinate[1],
+                                                                             color, foundcolor,
+                                                                             foundraw))
             test_collection_names = {
                 'bake.bakematerialtest.blend': set([
                     'Tuxedo Bake Second Life',
@@ -430,6 +453,15 @@ class TestAddon(unittest.TestCase):
                     'Collection',
                 ]),
                 'bake.eyetest.blend': set([
+                    'Tuxedo Bake Second Life',
+                    'Tuxedo Bake VRChat Desktop Excellent',
+                    'Tuxedo Bake VRChat Desktop Good',
+                    'Tuxedo Bake VRChat Quest Excellent',
+                    'Tuxedo Bake VRChat Quest Good',
+                    'Tuxedo Bake VRChat Quest Medium',
+                    'Collection',
+                ]),
+                'bake.AOtest.blend': set([
                     'Tuxedo Bake Second Life',
                     'Tuxedo Bake VRChat Desktop Excellent',
                     'Tuxedo Bake VRChat Desktop Good',
@@ -453,6 +485,12 @@ class TestAddon(unittest.TestCase):
                 'CubeHips',
                 'CubeLeftEye',
                 'CubeRightEye'
+            ],
+            'bake.AOtest.blend': [
+                'Armature',
+                'Sphere',
+                'Sphere.001',
+                'Sphere.002'
             ]
         }
         self.assertEqual([o.name for o in bpy.data.objects], test_object_names[test_name])
