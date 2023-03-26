@@ -44,7 +44,7 @@ For most people, all you'll have to do is:
 <img src="images/bake-run-bake.png"/>
 3. Once you've looked over the results, locate the 'Tuxedo Bake' output directory, inside your current project directory.
 4. Import the whole folder into your unity project.
-   * For Quest, you'll want to make a duplicate of your unity project and click "Switch to Android platform" in the VRC control panel.  
+   * For Quest, you'll want to make a duplicate of your unity project and click "Switch to Android platform" in the VRC control panel.
    * Reccomended: For each texture, edit the texture settings as shown in [Reccomended Texture Settings](https://github.com/feilen/tuxedo-blender-plugin/README.md#reccomended-texture-settings)
 5. Setup your rig as usual (humanoid, map bones) and add to your scene.
 6. Copy your existing avatar's properties (and blueprint ID) to the new avatar.
@@ -65,7 +65,9 @@ For most people, all you'll have to do is:
    * Emission: `SCRIPT_emission.png`
    	 * Make sure to check 'Enable Emission' and set 'Emission Color' to #FFFFFF if you're using this!
 9. Drop the new material onto your avatar in the scene, or onto 'Body' in the 'Hierarchy' view.
+
 ![](assets/markdown-img-paste-2023032519151396.png)
+
 10. Upload through the VRChat control panel!
 
 ### Common issues:
