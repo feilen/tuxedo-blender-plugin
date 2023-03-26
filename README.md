@@ -39,9 +39,13 @@ For most people, all you'll have to do is:
 0. Make sure your project is saved as a .blend somewhere.
 1. Click the Autodetect button, confirm the resulting platforms make sense for you.
    * Optional: check 'Ambient Occlusion' for more shadow detail, as it's not detected by auto-detect.
+
    <img src="images/bake-ambient.png"/>
+
 2. Click 'Copy and Bake (SLOW!)', and wait for it to complete (may take a while)
+
 <img src="images/bake-run-bake.png"/>
+
 3. Once you've looked over the results, locate the 'Tuxedo Bake' output directory, inside your current project directory.
 4. Import the whole folder into your unity project.
    * For Quest, you'll want to make a duplicate of your unity project and click "Switch to Android platform" in the VRC control panel.
