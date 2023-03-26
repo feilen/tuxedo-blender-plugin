@@ -544,9 +544,9 @@ class BakePanel(bpy.types.Panel):
                 col.separator()
                 row = col.row(align=True)
                 row.prop(context.scene, 'bake_pass_displacement', expand=True)
+                col.separator()
                 row = col.row(align=True)
                 row.prop(context.scene, 'bake_pass_detail', expand=True)
-                col.separator()
 
                 row = col.row(align=True)
         ### END ADVANCED GENERAL OPTIONS
