@@ -8,20 +8,21 @@ import bpy
 sampling_lookup = {
     'bake.AOtest.blend': {
         'SCRIPT_ao.png': {
-            (64,64): (0,0,0,255),
-            (178,55): (0,0,0,255),
+            # Blender 3.4 changed the packing ever so slightly in a way that affects AOtest
+            (15,145) if bpy.app.version >= (3, 4, 0) else (145,15): (0,0,0,255),
+            (178,55): (255,255,255,255),
             (32,222): (255,255,255,255),
             #(178,200): (255,255,255,255),
             #(0,0): (255,255,255,255),
             (215,40): (255,255,255,255),
             (215,7): (255,255,255,255),
             (215,24): (255,255,255,255),
-            (200,40): (0,0,0,255),
+            (200,40): (255,255,255,255),
             (232,40): (255,255,255,255),
             (215,56): (255,255,255,255),
-            (96,32): (0,0,0,255),
-            (96,96): (0,0,0,255),
-            (96,160): (0,0,0,255),
+            (96,32): (255,255,255,255),
+            (96,96): (255,255,255,255),
+            (96,160): (255,255,255,255),
             (96,220): (255,255,255,255),
         }
     },
@@ -494,6 +495,14 @@ class TestAddon(unittest.TestCase):
             ]
         }
         self.assertEqual([o.name for o in bpy.data.objects], test_object_names[test_name])
+
+        # TODO: tests props
+
+        # TODO: test copyonly
+
+        # TODO: test resulting names
+
+        # TODO: test twist bone removal
 
         # TODO: custom normal tests
         self.assertTrue(result == {'FINISHED'})
