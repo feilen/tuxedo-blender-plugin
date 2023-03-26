@@ -717,12 +717,12 @@ class OptimizeStaticShapekeys(bpy.types.Operator):
 
 class TwistTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo.twist_tutorial'
-    bl_label = t('tuxedo.tutorial_button.label')
+    bl_label = "Twistbones Tutorial"
     bl_description = "This will open a basic tutorial on how to setup and use these constraints. You can skip to the Unity section."
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
-        webbrowser.open("https://web.archive.org/web/20211014084533/https://vrcat.club/threads/tutorial-guide-twist-bones-what-are-they-and-how-do-you-use-them.3622/")
+        webbrowser.open("https://github.com/feilen/tuxedo-blender-plugin/wiki/5-Minute-Twistbones")
         return {'FINISHED'}
 
 def get_tricount(obj):

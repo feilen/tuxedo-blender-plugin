@@ -1,4 +1,4 @@
-## This is a non-destructive way to produce a Quest variant of (almost) any avatar. One click to optimize your model for Quest or Desktop!
+## Tuxedo Blender Plugin - a Blender plugin to make importing character models into various game engines painless and fast.
 
 [Questions? Join us on Discord!](https://discord.gg/meYbVvvxNN)
 
@@ -16,44 +16,36 @@ _Up/Left: 'Good' 10000 tri version of model, running on Quest 1. Up/Right: 'Exce
 
 _Down/Left: Nearly the same model, but running in Garry's Mod. Down/Right: Same model, but in Second Life._
 
-<img src="images/bake-overview.png" width="800" />
-
-<img src="images/bake-overview-wireframe.png" width="800" />
-
-- Material atlassing, but better!
-- Instantly duplicate and decimate any model, without affecting the original
-- Bake the original in Object coordinates, decimate, then rebake to Tangent coordinates, making the copy shade much like the original
-- Combines all meshes into one UV space, so the resulting mesh is setup to use a single material
-  - Optionally enlarges all vertex groups from the "Head" bone and all children, so the face looks detailed even only baking to 1024x1024 textures
+- **Support every platform at once** - TBP currently supports Unity (Desktop), Unity (Quest - VRChat), Second Life, Garry's Mod (organic setup), and Garry's Mod (metallic setup)
+  - All supported platforms (besides Gmod) can be baked to at once, with little added bake time.
+- **Material atlassing, but better!** - TBP can bake all of your meshes into one UV space, reducing your material count to 1 (or 2, if optimizing for shapekeys)
+  - Optionally enlarges all vertex groups from the Eye bones and all children, so irises are never blurry
   - Uses UVPackmaster where available for extra efficient UVMaps
-- 'Autodetect' buttons for Desktop and Quest, which look through all materials in all meshes in your model and selects which bake passes are relevant to your model (not including Ambient Occlusion)
-  - Once passes are determined, organizes the Alpha pack settings to have the most efficient possible configuration
-  - Also sets texture resolution and tri counts to meet 'Excellent' ratings on their relevant platforms
-- Bake almost every pass supported by the Standard shader
-- Uses the new 'Smart' decimation mode, preserving visemes/blend shapes
-- Creates a new material setup to show you how the new textures are supposed to be plugged into Unity
+- **Go beyond optimization** - Bake in ambient occlusion, reflected diffuse light, and reflected emission for an ultra-detailed look!
+- **Non-destructive** - Instantly duplicate and decimate any model, without affecting the original
+- **Preserves high-detail normals** - Bake the original in Object coordinates, decimate, then rebake to Tangent coordinates, making the copy shade much like the original
+- **Automatic detection** - 'Autodetect' buttons for Desktop and Quest, which look through all materials in all meshes in your model and selects which bake passes are relevant to your model (not including Ambient Occlusion)
+- **Efficiently packed** - Once passes are determined, organizes the Alpha pack settings to have the most efficient possible configuration
+- **Fully PBR** - Bake almost every pass supported by the Standard shader
+- **Preserves shapekeys** - Uses the new 'Smart' decimation mode, preserving visemes/blend shapes
+- **Full previews** - Creates a new material setup to show you how the new textures are supposed to be plugged into Unity
+- **Bone-capable props** - Add props to your VRChat avatar without incurring an extra performance penalty. Props are created by moving the resulting geometry to extra bones which are shrunk out of sight - adding a tiny skinning cost, instead of adding more draw calls.
+
+![](assets/markdown-img-paste-20230325190736861.png)
 
 ### Quick start:
 For most people, all you'll have to do is:
 
 0. Make sure your project is saved as a .blend somewhere.
-   - As of Cats 0.18.0, the 'Prioritize Head/Eyes' option can be a bit overzealous by default and result in very low quality textures on the body. Turn it off for now.
-1. Click one of the 'Autodetect' buttons for what platform you're targetting, Desktop or Quest.
-   <img src="images/bake-autodetect.png"/>
+1. Click the Autodetect button, confirm the resulting platforms make sense for you.
    * Optional: check 'Ambient Occlusion' for more shadow detail, as it's not detected by auto-detect.
    <img src="images/bake-ambient.png"/>
 2. Click 'Copy and Bake (SLOW!)', and wait for it to complete (may take a while)
 <img src="images/bake-run-bake.png"/>
-3. Once you've looked over the results, locate the 'CATS Bake' output directory, inside your current project directory.
-
-<img src="images/bake-in-folder.png"/>
-
+3. Once you've looked over the results, locate the 'Tuxedo Bake' output directory, inside your current project directory.
 4. Import the whole folder into your unity project.
-
-<img src="images/bake-imported.png"/>
-
    * For Quest, you'll want to make a duplicate of your unity project and click "Switch to Android platform" in the VRC control panel.  
-   * Reccomended: For each texture, edit the texture settings as shown in [Reccomended Texture Settings](https://github.com/GiveMeAllYourCats/cats-blender-plugin/wiki/Bake#reccomended-texture-settings)
+   * Reccomended: For each texture, edit the texture settings as shown in [Reccomended Texture Settings](https://github.com/feilen/tuxedo-blender-plugin/README.md#reccomended-texture-settings)
 5. Setup your rig as usual (humanoid, map bones) and add to your scene.
 6. Copy your existing avatar's properties (and blueprint ID) to the new avatar.
    * [Pumkin's Avatar Tools](https://github.com/rurre/PumkinsAvatarTools) can help you do this quickly.
@@ -73,9 +65,7 @@ For most people, all you'll have to do is:
    * Emission: `SCRIPT_emission.png`
    	 * Make sure to check 'Enable Emission' and set 'Emission Color' to #FFFFFF if you're using this!
 9. Drop the new material onto your avatar in the scene, or onto 'Body' in the 'Hierarchy' view.
-
-<img src="images/bake-scene.png"/>
-
+![](assets/markdown-img-paste-2023032519151396.png)
 10. Upload through the VRChat control panel!
 
 ### Common issues:
@@ -99,70 +89,65 @@ For most people, all you'll have to do is:
 
 #### General options
 
-- Resolution: The width and height of the resulting textures.
-	- Reccomended: 2048 for Desktop, 1024 for quest.
-- Decimate: Whether to reduce the triangle count. Reccomended if you don't already have an optimized tri count.
+- **Resolution**: The width and height of the resulting textures.
+	- Reccomended: see below
+- **Decimate**: Whether to reduce the triangle count. Reccomended if you don't already have an optimized tri count.
 	- Tris: The number of tris to reduce to. Lower is better, experiment with even lower than the set limits if you can.
 		- On Desktop, this should either be 32000 (Excellent) or 70000 (Good).
 		- On Quest, this should either be 7500 (Excellent), 10000 (Good), or 15000 (Medium).
 			- While you can still upload at up to 20000 on Quest, people will be unable to see your avatar by default.
-- Generate UVMap: Produces a new, non-overlapping UVMap. Neccesary for Normal maps to be produced correctly. Only disable if your UVMap doesn't overlap.
-	- Prioritize Head/Eyes: Scales the islands for Head/Eyes up by a given factor, letting them be extra detailed.
-	- Overlap correction: The method used to ensure islands don't self-intersect. Use 'unmirror' if your islands self-intersect only across the middle of the X axis, 'Reproject' if you have any other unusual situation. 'None' is fine if none of your islands are self-intersecting. 'Manual' can be used if you have specific needs, this will use any UVMap named 'Target' when baking.
-- Quick Compare: Move the resulting model over on the X axis so you can quickly compare it against the original.
-- Optimize static shapekeys: This will split your model into two meshes, one with all shapekey-affected geometry and one with everything else. This can considerably decrease GPU cost and model size, especially when many shapekeys are active, at the cost of adding a slight CPU cost.
+- **Generate UVMap**: Produces a new, non-overlapping UVMap. Neccesary for Normal maps to be produced correctly. Only disable if your UVMap doesn't overlap.
+	- **Prioritize Eyes**: Scales the islands for Eyes up by a given factor, letting them be extra detailed.
+	- **Overlap correction**: The method used to ensure islands don't self-intersect. Use 'unmirror' if your islands self-intersect only across the middle of the X axis, 'Reproject' if you have any other unusual situation. 'None' is fine if none of your islands are self-intersecting. 'Manual' can be used if you have specific needs, this will use any UVMap named 'Target' when baking.
+- **Optimize static shapekeys**: This will split your model into two meshes, one with all shapekey-affected geometry and one with everything else. This can considerably decrease GPU cost and model size, especially when many shapekeys are active, at the cost of adding a slight CPU cost.
 	- This fixes your edge normals in place when separating, preventing any visible seams, but requires the lighting anchor per mesh in your Unity scene to be set to one of your avatar's bones. The script put into the output folder 'BakeFixer.cs' takes care of this for you!
-- Ignore hidden objects: Useful if you want to make multiple outfits or versions of an avatar, this will ignore any mesh which is currently hidden when baking. Important, don't hide your armature when this is selected!
-- Apply current shapekey mix: This will update your basis to match the current state of your shapekeys. This is useful if you have 'body shape' shapekeys or similar, as having them constantly-active is hugely detrimental to performance.
-- Cleanup shapekeys - This will remove common extra shapekeys generated by Blender and cats. This includes 'Reverted' and '\_old' shapekeys. Keys ending in '\_bake' will always be applied and removed.
-- Merge twistbones - Merges twistbones to their origin bones on export, if doing so won't affect the alphabetical hierarchy. Quest doesn't support constraints, so this makes things a little more performant there.
+- **Apply current shapekey mix**: This will update your basis to match the current state of your shapekeys. This is useful if you have 'body shape' shapekeys or similar, as having them constantly-active is hugely detrimental to performance.
+- **Cleanup shapekeys** - This will remove common extra shapekeys generated by Blender. This includes 'Reverted' and '\_old' shapekeys. Keys ending in '\_bake' will always be applied and removed.
+- **Merge twistbones** - Merges twistbones to their origin bones on export, if doing so won't affect the alphabetical hierarchy. Quest doesn't support constraints, so this makes things a little more performant there.
 
-#### Passes
+#### More info on PBR passes
 
-- Diffuse (Color): The un-lit color of your model. Most models will use this.
+- **Diffuse (Color)**: The un-lit color of your model. Most models will use this.
 	- Bake to vertex colors: If your model has relatively simple coloring, use this to completely avoid having any textures.
 	- Alpha: What to pack to the Alpha channel. The Autodetect button will automatically pick the most efficient setup for this.
 
 	<img src="images/All.png" width="250"/>
 	<img src="images/nodiffuse.png" width="250"/>
 	<img src="images/onlydiffuse.png" width="250"/>
-- Normal (Bump): Allows your model to mimic more detailed geometry and surface detail, by shading as if certain areas are facing another direction. HIGHLY reccomended if you're decimating, as the Bake panel takes advantage of this to preserve a lot of detail.
-	- Apply transformations: Applies all transformations when baking. Can avoid some unusual issues.
+- **Normal (Bump)**: Allows your model to mimic more detailed geometry and surface detail, by shading as if certain areas are facing another direction. HIGHLY reccomended if you're decimating, as the Bake panel takes advantage of this to preserve a lot of detail.
 
 	<img src="images/All.png" width="250"/>
 	<img src="images/nonormal.png" width="250"/>
 	<img src="images/onlynormal.png" width="250"/>
 
 	![By Banlu Kemiyatorn - Own work, Public Domain, https://commons.wikimedia.org/w/index.php?curid=5798875](https://upload.wikimedia.org/wikipedia/commons/9/9a/%E0%B9%80%E0%B8%9B%E0%B8%A3%E0%B8%B5%E0%B8%A2%E0%B8%9A%E0%B9%80%E0%B8%97%E0%B8%B5%E0%B8%A2%E0%B8%9A%E0%B9%82%E0%B8%A1%E0%B9%80%E0%B8%94%E0%B8%A5%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B9%83%E0%B8%8A%E0%B9%89_normal_map.png)
-- Smoothness: The smoothness detail of your avatar. Can create shiny or matte areas, great for increasing detail. Created by inverting the 'Roughness' that Blender uses.
-
+- **Smoothness**: The smoothness detail of your avatar. Can create shiny or matte areas, great for increasing detail. Created by inverting the 'Roughness' that Blender uses.
 
 	<img src="images/All.png" width="250"/>
 	<img src="images/nosmoothness.png" width="250"/>
 	<img src="images/onlysmoothness.png" width="250"/>
-- Ambient Occlusion: Shadows caused by light reflecting between the object and itself. Adds a great amount of detail in corners, reccomended if it doesn't cause artifacts with your avatar. Can be messy if your avatar animates areas that are still when baking.
+- **Ambient Occlusion**: Shadows caused by light reflecting between the object and itself. Adds a great amount of detail in corners, reccomended if it doesn't cause artifacts with your avatar. Can be messy if your avatar animates areas that are still when baking.
 	- Set eyes to full brightness: Since eyes animate, you probably want this. Without it, the shadow of your eye sockets will be projected onto the surface of your eyes.
-
 
 	<img src="images/All.png" width="250"/>
 	<img src="images/noao.png" width="250"/>
 	<img src="images/onlyao.png" width="250"/>
-- Quest Diffuse: Quest does not support Ambient Occlusion natively, but it's possible to get the same level of detail by pre-multiplying the Ambient bake pass into the Diffuse color. Use if you're targetting Quest and want AO.
-	- AO Opacity: The multiplier for the shadow into the map. 0.75 is forgiving while still being fairly dark. Should match the 'AO' slider for Desktop in unity.
-- Transparency: Self-explanatory. Not a native pass in Blender, so may be prone to issues.
-- Metallic: How 'metal' a material is, generally '0' for non-metals and '1' for metals. Affects whether light reflected will be exactly the color of the material beneath or not..
+- **Transparency**: Self-explanatory. Not a native pass in Blender, so may be prone to issues.
+- **Metallic**: How 'metal' a material is, generally '0' for non-metals and '1' for metals. Affects whether light reflected will be exactly the color of the material beneath or not.
+
 	<img src="images/All.png" width="250"/>
 	<img src="images/nometallic.png" width="250"/>
 	<img src="images/onlymetallic.png" width="250"/>
-- Emit: The color of light emitted, used for anything that glows.
+- **Emit**: The color of light emitted, used for anything that glows.
 	- Bake Projected Light: Performs a full render instead of just copying the light value over. Causes lights to project onto neighboring surfaces, for a 'fake realtime' effect, fully Quest-compatible.
-
 
 	<img src="images/all1.png" width="250"/>
 	<img src="images/noemission1.png" width="250"/>
 	<img src="images/onlyemission1.png" width="250"/>
-### Reccomended Texture Settings
 
+- **Displacement**: Produces maps capable of being rendered by the 'Height' map in Unity, adding a real stereo effect to surfaces for fine detail.
+- **Detail**: Advanced users only. When a model is configured with a detail UV map named "Detail Map", this can be manually configured to allow for baking the detail mask, letting you have astonishing levels of detail with almost no VRAM overhead. Tutorial TBD!
+### Reccomended Texture Settings
 
 
 <img src="images/bake-kaiser.png"/>
@@ -230,6 +215,7 @@ For most people, all you'll have to do is:
 
 * Same as above, but typically safe to go twice the texture resolution for each. (though 2048x2048 is usually fine for Diffuse)
 * Main difference is that you will want to set Anisotropic Filtering to 8x or 16x, for more texture clarity at angles.
+
 ### How can I see what it'll look like on the Quest?
 
 Almost all Quest worlds use baked lighting settings and a gradient, single-color, or skybox environment lighting. Disable all directional or realtime lights in your avatar scene, and then in the Lighting panel (Window->Rendering->Lighting) see what your model looks like with Source set to Gradient, Single Color (set to white) and Skybox lighting.
@@ -247,8 +233,8 @@ Bake can be easily called from the command line, if your model is already reason
 
 ```
 > blender Feilen.blend -b --python-expr "import bpy
-bpy.ops.cats_bake.preset_quest()
-bpy.ops.cats_bake.bake()
+bpy.ops.tuxedo.preset_quest()
+bpy.ops.tuxedo.bake()
 exit()"
 ```
 
