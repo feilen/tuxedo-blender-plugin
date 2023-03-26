@@ -70,7 +70,7 @@ For most people, all you'll have to do is:
    	 * Make sure to check 'Enable Emission' and set 'Emission Color' to #FFFFFF if you're using this!
 9. Drop the new material onto your avatar in the scene, or onto 'Body' in the 'Hierarchy' view.
 
-![](assets/markdown-img-paste-2023032519151396.png)
+![](assets/markdown-img-paste-20230325194634619.png)
 
 10. Upload through the VRChat control panel!
 
@@ -153,6 +153,9 @@ For most people, all you'll have to do is:
 
 - **Displacement**: Produces maps capable of being rendered by the 'Height' map in Unity, adding a real stereo effect to surfaces for fine detail.
 - **Detail**: Advanced users only. When a model is configured with a detail UV map named "Detail Map", this can be manually configured to allow for baking the detail mask, letting you have astonishing levels of detail with almost no VRAM overhead. Tutorial TBD!
+
+![](assets/markdown-img-paste-20230325194750778.png)
+
 ### Reccomended Texture Settings
 
 
