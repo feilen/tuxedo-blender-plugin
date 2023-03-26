@@ -248,11 +248,3 @@ exit()"
 ![image](https://cdn.discordapp.com/attachments/790488253764730920/791146826774216744/unknown.png)
 
 _'Dawn' model by [@zombies_in_soup](https://twitter.com/zombies_in_soup)_
-
-<img src="images/bake-emission-furality.jpg" width="800" />
-
-Future development:
-- I'd like to add an option to simplify the armature by merging weights to parents for all non-Humanoid bones, so the Quest version produced is always Excellent-rated (for any non-AV3 avatar)
-- 'Advanced' submenu exposing things like sample count, custom passes, etc
-- Detail mask baking (will have to be a more manual process)
-- Method to bake diffuse (and/or AO) to vertex colors, since quest shaders support those without needing an extra texture
