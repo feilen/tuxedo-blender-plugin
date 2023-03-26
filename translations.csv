@@ -50,9 +50,6 @@ Scene.bake_pass_normal.desc,"Bakes a normal (bump) map. Allows you to keep the s
 the geometry of a simple object. If you have selected 'Decimate', it will create a map
 that makes the low res output look like the high res input.
 Will not work well if you have self-intersecting islands",,
-Scene.bake_normal_apply_trans.label,Apply transforms,,변환 적용
-Scene.bake_normal_apply_trans.desc,"Applies offsets while baking normals. Neccesary if your model has many materials with different normal maps
-Turn this off if applying location causes problems with your model",,
 Scene.bake_pass_ao.label,Ambient Occlusion,,
 Scene.bake_pass_ao.desc,"Bakes Ambient Occlusion, non-projected shadows. Adds a significant amount of detail to your model.
 Reccomended for non-toon style avatars.

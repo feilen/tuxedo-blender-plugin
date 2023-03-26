@@ -10,7 +10,7 @@ import shutil
 import threading
 
 from .tools import t, patch_fbx_exporter
-from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive
+from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
 class BakeTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.tutorial'
@@ -1330,18 +1330,16 @@ class BakeButton(bpy.types.Operator):
                             shapekey_values[key.name] = key.value
                             key.value = 0.0
 
+        # TODO: this seems to be kinda flaky
         # Option to apply current shape keys, otherwise normals bake weird
         # If true, apply all shapekeys and remove '_bake' keys
         # Otherwise, only apply '_bake' keys
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
-        for name in [ob.name for ob in collection.all_objects]:
-            obj = collection.all_objects[name]
-            if obj.type == "MESH" and has_shapekeys(obj):
-                obj.select_set(True)
-                context.view_layer.objects.active = obj
-                bpy.ops.object.shape_key_add(from_mix=True)
-                shape_key_to_basis()
+        if apply_keys:
+            for obj in get_objects(collection.all_objects, filter_func=lambda obj: has_shapekeys(obj)):
+                add_shapekey(obj, "Tuxedo applykey", True)
+                shape_key_to_basis(context, obj, "Tuxedo applykey")
                 obj.active_shape_key_index = 0
                 # Ensure all keys are now set to 0.0
                 for key in obj.data.shape_keys.key_blocks:

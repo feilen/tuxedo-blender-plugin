@@ -380,6 +380,13 @@ class TestAddon(unittest.TestCase):
         bpy.ops.tuxedo_bake.preset_all()
         bpy.context.scene.bake_pass_displacement = False
         test_name = bpy.path.basename(bpy.context.blend_data.filepath)
+        # TODO: test each of:
+        bpy.context.scene.bake_cleanup_shapekeys = True
+        bpy.context.scene.bake_apply_keys = True
+        # bpy.context.scene.bake_unwrap_angle = FloatProperty(
+        # bpy.context.scene.bake_optimize_solid_materials = BoolProperty(
+        # bpy.context.scene.bake_uv_overlap_correction = EnumProperty(
+        # bpy.context.scene.bake_generate_uvmap = BoolProperty(
 
         bpy.context.scene.bake_resolution = 256
         if 'bake.eyetest.blend' == test_name:
@@ -434,15 +441,6 @@ class TestAddon(unittest.TestCase):
             }
             self.assertEqual(set([o.name for o in bpy.data.collections]), test_collection_names[test_name])
             self.reset_stage()
-        # TODO: test each of:
-        # Scene.bake_cleanup_shapekeys = BoolProperty(
-        # Scene.bake_unwrap_angle = FloatProperty(
-        # Scene.bake_optimize_solid_materials = BoolProperty(
-        # Scene.bake_ignore_hidden = BoolProperty(
-        # Scene.bake_apply_keys = BoolProperty(
-        # Scene.bake_normal_apply_trans = BoolProperty(
-        # Scene.bake_uv_overlap_correction = EnumProperty(
-        # Scene.bake_generate_uvmap = BoolProperty(
         test_object_names = {
             'bake.bakematerialtest.blend': [
                 'Armature',

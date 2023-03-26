@@ -363,12 +363,6 @@ def register_properties():
         default=False
     )
 
-    Scene.bake_normal_apply_trans = BoolProperty(
-        name=t('Scene.bake_normal_apply_trans.label'),
-        description=t('Scene.bake_normal_apply_trans.desc'),
-        default=True
-    )
-
     Scene.bake_apply_keys = BoolProperty(
         name=t("apply_current_shapekey_mix"),
         description=t("when_selected_currently_active_shape_keys_will_be_applied_to_the_basis_this_is_extremely_beneficial_to_performance_if_your_avatar_is_intended_to_default_to_one_shapekey_mix_as_having_active_shapekeys_all_the_time_is_expensive_keys_ending_in_bake_are_always_applied_to_the_basis_and_removed_completely_regardless_of_this_option"),

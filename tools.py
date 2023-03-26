@@ -193,6 +193,10 @@ def get_meshes_objects(context, armature_name=None):
 def t(str_key):
     return str_key if str_key not in translation_dictionary else translation_dictionary[str_key]
 
+def add_shapekey(obj, shapekey_name, from_mix=False):
+    if not has_shapekeys(obj) or shapekey_name not in obj.data.shape_keys.key_blocks:
+        shape_key = obj.shape_key_add(name=shapekey_name, from_mix=from_mix)
+
 def get_armature(context, armature_name=None):
     if armature_name:
         obj = bpy.data.objects[armature_name]
@@ -382,6 +386,7 @@ class SmartDecimation(bpy.types.Operator):
             if context.scene.decimation_remove_doubles:
                 remove_doubles(mesh, 0.00001)
             tris_count += get_tricount(mesh.data.polygons)
+            add_shapekey(mesh, 'Tuxedo Basis', False)
 
         if tris_count == 0:
             self.report({'INFO'}, "No tris found.")
@@ -400,7 +405,6 @@ class SmartDecimation(bpy.types.Operator):
             for mesh in meshes_obj:
                 newweights = self.get_animation_weighting(context, mesh, armature)
 
-                # TODO: ignore shape keys which move very little?
                 context.view_layer.objects.active = mesh
                 bpy.ops.object.vertex_group_add()
                 mesh.vertex_groups[-1].name = "Tuxedo Animation"
