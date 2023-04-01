@@ -3,7 +3,7 @@ import addon_utils
 
 from . import bake as Bake
 from .tools import t, get_meshes_objects, get_armature
-from .tools import OptimizeStaticShapekeys, GenerateTwistBones, TwistTutorialButton, SmartDecimation
+from .tools import OptimizeStaticShapekeys, GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
 from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import FitClothes
 
@@ -157,6 +157,10 @@ class ToolPanel(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = button_height
         row.operator(OptimizeStaticShapekeys.bl_idname, icon='MESH_DATA')
+
+        row = col.row(align=True)
+        row.scale_y = button_height
+        row.operator(RepairShapekeys.bl_idname, icon='MESH_DATA')
 
         col.separator()
         col.separator()

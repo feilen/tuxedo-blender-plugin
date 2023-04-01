@@ -201,7 +201,7 @@ DecimationPanel.preset.excellent.description,The maximum number of tris you can 
 DecimationPanel.preset.good.label,Good,良い,
 DecimationPanel.preset.good.description,The maximum number of tris you can have for a Good rating.,あなたが良い評価のために持つことができるトリスの最大数,당신의 아바타가 Good 등급을 받을 수 있는 최대 삼각폴리곤(Tris) 개수입니다.
 DecimationPanel.preset.quest.label,Quest,,
-DecimationPanel.preset.quest.description,"The recommended number of tris for Quest avatars.
+DecimationPanel.preset.quest.description,"The recommended number of tris for Quest avatars.",,
 Scene.decimation_animation_weighting.label,Animation weighting,,
 Scene.decimation_animation_weighting.desc,"Weight decimation based on shape keys and vertex group overlap
 Results in better animating topology by trading off overall shape accuracy

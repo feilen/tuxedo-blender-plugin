@@ -191,7 +191,11 @@ def get_meshes_objects(context, armature_name=None):
     return []
 
 def t(str_key):
-    return str_key if str_key not in translation_dictionary else translation_dictionary[str_key]
+    if str_key not in translation_dictionary:
+        print("Warning: couldn't find translation for \"" + str_key + "\"")
+        return str_key
+    else:
+        return translation_dictionary[str_key]
 
 def add_shapekey(obj, shapekey_name, from_mix=False):
     if not has_shapekeys(obj) or shapekey_name not in obj.data.shape_keys.key_blocks:
@@ -349,6 +353,81 @@ def triangulate_mesh(mesh):
     bm.to_mesh(mesh.data)
     bm.free()
     mesh.data.update()
+
+class RepairShapekeys(bpy.types.Operator):
+    bl_idname = 'cats_manual.repair_shapekeys'
+    bl_label = 'Repair Broken Shapekeys'
+    bl_description = "Attempt to repair messed up shapekeys caused by some Blender operations"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        if obj and obj.type == 'MESH':
+            return True
+
+        meshes = Common.get_meshes_objects(check=False)
+        return meshes
+
+    def execute(self, context):
+        saved_data = Common.SavedData()
+
+        objs = [context.active_object]
+        if not objs[0] or (objs[0] and (objs[0].type != 'MESH' or objs[0].data.shape_keys is None)):
+            Common.unselect_all()
+            meshes = Common.get_meshes_objects()
+            if len(meshes) == 0:
+                saved_data.load()
+                return {'FINISHED'}
+            objs = meshes
+
+        for obj in objs:
+            if obj.data.shape_keys is None:
+                continue
+            Common.unselect_all()
+            Common.set_active(obj)
+            Common.switch('EDIT')
+            Common.switch('EDIT')
+            points = []
+            # For each vertex index...
+            for vert_idx in range(0, len(obj.data.shape_keys.key_blocks[0].data)):
+                # find the most common version of the point in all the non-basis keys
+                verts = dict()
+                for shape_idx in range(1, len(obj.data.shape_keys.key_blocks)):
+                    vert_coord = obj.data.shape_keys.key_blocks[shape_idx].data[vert_idx]
+                    if not vert_coord in verts:
+                        verts[vert_coord] = 0
+                    verts[vert_coord] += 1
+                found_coord = max(verts.items(), key=operator.itemgetter(1))[0]
+                print(found_coord)
+                points.append(found_coord)
+            # create a new shapekey
+            Common.switch('OBJECT')
+            bpy.ops.object.shape_key_add(from_mix=False)
+            obj.active_shape_key.name = "CATS Antibasis"
+
+            # set it to the most-common points
+            for vert_idx in range(0, len(obj.data.shape_keys.key_blocks[0].data)):
+                obj.active_shape_key.data[vert_idx].co[0] = points[vert_idx].co[0]
+                obj.active_shape_key.data[vert_idx].co[1] = points[vert_idx].co[1]
+                obj.active_shape_key.data[vert_idx].co[2] = points[vert_idx].co[2]
+            # un-apply it to all other shapekeys
+            for idx in range(1, len(obj.data.shape_keys.key_blocks) - 1):
+                obj.active_shape_key_index = idx
+                Common.switch('EDIT')
+                bpy.ops.mesh.select_all(action="SELECT")
+                bpy.ops.mesh.blend_from_shape(shape="CATS Antibasis", blend=-1.0, add=True)
+                Common.switch('OBJECT')
+            obj.shape_key_remove(key=obj.data.shape_keys.key_blocks["CATS Antibasis"])
+            obj.active_shape_key_index = 0
+
+
+        Common.set_default_stage()
+
+        saved_data.load()
+        self.report({'INFO'}, "Repair complete.")
+        return {'FINISHED'}
+
 
 class SmartDecimation(bpy.types.Operator):
     bl_idname = 'tuxedo.smart_decimation'

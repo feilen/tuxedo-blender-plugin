@@ -1,7 +1,7 @@
 import bpy
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
 from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation
-from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, OptimizeStaticShapekeys, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest
+from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, OptimizeStaticShapekeys, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest, RepairShapekeys
 from .properties import register_properties
 
 bl_info = {
@@ -55,6 +55,7 @@ def register():
     bpy.utils.register_class(OptimizeStaticShapekeys)
     bpy.utils.register_class(TwistTutorialButton)
     bpy.utils.register_class(SmartDecimation)
+    bpy.utils.register_class(RepairShapekeys)
 
     # Properties
     register_properties()
@@ -97,6 +98,7 @@ def unregister():
     bpy.utils.unregister_class(OptimizeStaticShapekeys)
     bpy.utils.unregister_class(TwistTutorialButton)
     bpy.utils.unregister_class(SmartDecimation)
+    bpy.utils.unregister_class(RepairShapekeys)
 
 
 if __name__ == '__main__':
