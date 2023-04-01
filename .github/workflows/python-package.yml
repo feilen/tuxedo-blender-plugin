@@ -34,6 +34,7 @@ jobs:
         sudo snap install blender_32 --channel 3.2/stable --classic
         sudo snap install blender_33 --channel 3.3lts/stable --classic
         sudo snap install blender_34 --channel 3.4/stable --classic
+        sudo snap install blender_35 --channel 3.5/stable --classic
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
       run: |
@@ -57,4 +58,5 @@ jobs:
         python3 ./tests/run.py --blend=blender_32 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_33 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_34 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_35 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
