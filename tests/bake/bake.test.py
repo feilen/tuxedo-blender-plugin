@@ -10,7 +10,7 @@ sampling_lookup = {
         'SCRIPT_ao.png': {
             # Blender 3.4 changed the packing ever so slightly in a way that affects AOtest
             # apparently fixed in 3.5?
-            (15,145) if bpy.app.version == (3, 4, 0) else (145,15): (0,0,0,255),
+            (15,145) if (3, 5, 0) > bpy.app.version >= (3, 4, 0) else (145,15): (0,0,0,255),
             (178,55): (255,255,255,255),
             (32,222): (255,255,255,255),
             #(178,200): (255,255,255,255),
