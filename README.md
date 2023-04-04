@@ -33,6 +33,10 @@ _Down/Left: Nearly the same model, but running in Garry's Mod. Down/Right: Same 
 
 ![](assets/markdown-img-paste-20230325190736861.png)
 
+### Installation:
+
+Installation is pretty standard. Grab the latest .zip off the [releases](https://github.com/feilen/tuxedo-blender-plugin/releases) page and install using Blender's addon settings.
+
 ### Quick start:
 For most people, all you'll have to do is:
 
