@@ -52,6 +52,14 @@ jobs:
         ln -s ${PWD} ${HOME}/.config/blender/3.9/scripts/addons/tuxedo-blender-plugin
     - name: run unit tests for all versions
       run: |
+        python3 ./tests/run.py --blend=blender_293 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_30 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_31 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_32 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_33 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_34 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_35 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_latest --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_293 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_30 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_31 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
