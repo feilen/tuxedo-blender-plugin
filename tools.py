@@ -5,9 +5,17 @@ import math
 import os
 import webbrowser
 import operator
+import numpy as np
+import copy
+import time
+import subprocess
+import shutil
+from mathutils import Matrix
 
 from io_scene_fbx import fbx_utils
 from mathutils.geometry import intersect_point_line
+
+
 
 translation_dictionary = dict()
 with open(os.path.dirname(os.path.abspath(__file__)) + "/translations.csv", 'r') as csvfile:
@@ -24,25 +32,25 @@ bone_names = {
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
-    "pinkie_1_r": ["littlefinger1r"],
-    "pinkie_2_r": ["littlefinger2r"],
-    "pinkie_3_r": ["littlefinger3r"],
+    "pinkie_1_r": ["littlefinger1r","pinkie_1_r"],
+    "pinkie_2_r": ["littlefinger2r","pinkie_2_r"],
+    "pinkie_3_r": ["littlefinger3r","pinkie_3_r"],
 
-    "ring_1_r": ["ringfinger1r"],
-    "ring_2_r": ["ringfinger2r"],
-    "ring_3_r": ["ringfinger3r"],
+    "ring_1_r": ["ringfinger1r","ring_1_r"],
+    "ring_2_r": ["ringfinger2r","ring_2_r"],
+    "ring_3_r": ["ringfinger3r","ring_3_r"],
 
-    "middle_1_r": ["middlefinger1r"],
-    "middle_2_r": ["middlefinger2r"],
-    "middle_3_r": ["middlefinger3r"],
+    "middle_1_r": ["middlefinger1r","middle_1_r"],
+    "middle_2_r": ["middlefinger2r","middle_2_r"],
+    "middle_3_r": ["middlefinger3r","middle_3_r"],
 
-    "index_1_r": ["indexfinger1r"],
-    "index_2_r": ["indexfinger2r"],
-    "index_3_r": ["indexfinger3r"],
+    "index_1_r": ["indexfinger1r","index_1_r"],
+    "index_2_r": ["indexfinger2r","index_2_r"],
+    "index_3_r": ["indexfinger3r","index_3_r"],
 
-    "thumb_1_r": ['thumb0r'],
-    "thumb_2_r": ['thumb1r'],
-    "thumb_3_r": ['thumb2r'],
+    "thumb_1_r": ['thumb0r',"thumb_1_r"],
+    "thumb_2_r": ['thumb1r',"thumb_2_r"],
+    "thumb_3_r": ['thumb2r',"thumb_3_r"],
 
     "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "thighr", "rightupperleg", "uplegr", "rupleg"],
     "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rightlowerleg", "lowlegr", "rlowleg"],
@@ -55,25 +63,25 @@ bone_names = {
     "left_wrist": ["leftwrist", "wristl", "rwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
-    "pinkie_1_l": ["littlefinger1l"],
-    "pinkie_2_l": ["littlefinger2l"],
-    "pinkie_3_l": ["littlefinger3l"],
+    "pinkie_1_l": ["littlefinger1l","pinkie_1_l"],
+    "pinkie_2_l": ["littlefinger2l","pinkie_2_l"],
+    "pinkie_3_l": ["littlefinger3l","pinkie_3_l"],
 
-    "ring_1_l": ["ringfinger1l"],
-    "ring_2_l": ["ringfinger2l"],
-    "ring_3_l": ["ringfinger3l"],
+    "ring_1_l": ["ringfinger1l","ring_1_l"],
+    "ring_2_l": ["ringfinger2l","ring_2_l"],
+    "ring_3_l": ["ringfinger3l","ring_3_l"],
 
-    "middle_1_l": ["middlefinger1l"],
-    "middle_2_l": ["middlefinger2l"],
-    "middle_3_l": ["middlefinger3l"],
+    "middle_1_l": ["middlefinger1l","middle_1_l"],
+    "middle_2_l": ["middlefinger2l","middle_2_l"],
+    "middle_3_l": ["middlefinger3l","middle_3_l"],
 
-    "index_1_l": ["indexfinger1l"],
-    "index_2_l": ["indexfinger2l"],
-    "index_3_l": ["indexfinger3l"],
+    "index_1_l": ["indexfinger1l","index_1_l"],
+    "index_2_l": ["indexfinger2l","index_2_l"],
+    "index_3_l": ["indexfinger3l","index_3_l"],
 
-    "thumb_1_l": ['thumb0l'],
-    "thumb_2_l": ['thumb1l'],
-    "thumb_3_l": ['thumb2l'],
+    "thumb_1_l": ['thumb0l',"thumb_1_l"],
+    "thumb_2_l": ['thumb1l',"thumb_2_l"],
+    "thumb_3_l": ['thumb2l',"thumb_3_l"],
 
     "left_leg": ["leftleg", "legl", "rleg", "upperlegl", "thighl", "leftupperleg", "uplegl", "lupleg"],
     "left_knee": ["leftknee", "kneel", "rknee", "lowerlegl", "calfl", "leftlowerleg", 'lowlegl', 'llowleg'],
@@ -89,6 +97,29 @@ bone_names = {
     'left_eye': ["eyeleft", "lefteye", "eyel", "leye"],
     'right_eye': ["eyeright", "righteye", "eyer", "reye"],
 }
+
+# array taken from cats
+dont_delete_these_main_bones = [
+    'Hips', 'Spine', 'Chest', 'Upper Chest', 'Neck', 'Head',
+    'Left leg', 'Left knee', 'Left ankle', 'Left toe',
+    'Right leg', 'Right knee', 'Right ankle', 'Right toe',
+    'Left shoulder', 'Left arm', 'Left elbow', 'Left wrist',
+    'Right shoulder', 'Right arm', 'Right elbow', 'Right wrist',
+    'LeftEye', 'RightEye', 'Eye_L', 'Eye_R',
+    'Left leg 2', 'Right leg 2',
+
+    'Thumb0_L', 'Thumb1_L', 'Thumb2_L',
+    'IndexFinger1_L', 'IndexFinger2_L', 'IndexFinger3_L',
+    'MiddleFinger1_L', 'MiddleFinger2_L', 'MiddleFinger3_L',
+    'RingFinger1_L', 'RingFinger2_L', 'RingFinger3_L',
+    'LittleFinger1_L', 'LittleFinger2_L', 'LittleFinger3_L',
+
+    'Thumb0_R', 'Thumb1_R', 'Thumb2_R',
+    'IndexFinger1_R', 'IndexFinger2_R', 'IndexFinger3_R',
+    'MiddleFinger1_R', 'MiddleFinger2_R', 'MiddleFinger3_R',
+    'RingFinger1_R', 'RingFinger2_R', 'RingFinger3_R',
+    'LittleFinger1_R', 'LittleFinger2_R', 'LittleFinger3_R',
+]
 
 def shape_key_to_basis(context, obj, shape_key_name):
     if shape_key_name not in obj.data.shape_keys.key_blocks:
@@ -152,22 +183,25 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
         if obj.parent != armature:
             continue
         # TODO: this can be MUCH faster.
-        vgroup_lookup = dict([(vgp.index, vgp.name) for vgp in obj.vertex_groups])
-        for v in obj.data.vertices:
-            for g in v.groups:
-                if vgroup_lookup[g.group] in bone_names:
-                    bone = armature.data.bones[vgroup_lookup[g.group]]
-                    if bone.parent and bone.parent.name in obj.vertex_groups:
-                       obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
-
-        for bone_name in bone_names:
-            # remove old bones vertex groups
-            if bone_name in obj.vertex_groups:
-                obj.vertex_groups.remove(obj.vertex_groups[bone_name])
-
+        # TODO: Did I fix it? I did this because it kept throwing egyptian keyerrors at me - @989onan
+        for bone in bone_names:
+            try:
+                mix_weights(obj.data, obj.vertex_groups[bone],  obj.vertex_groups[armature[bone].parent.name], mix_strength=1.0, mix_mode='ADD', delete_old_vg=True)
+            except:
+                obj.vertex_groups.new(name=bone)
+                obj.vertex_groups.new(name=armature.data.bones[bone].parent.name)
+                mix_weights(obj, bone,  armature.data.bones[bone].parent.name, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True)
+    
     # remove old bones
+    try:
+        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        bpy.context.view_layer.objects.active = armature
+        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+    except:
+        print("Oh here comes a crash from the merge bone weights!")
     for bone_name in bone_names:
         armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
+    bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
 def patch_fbx_exporter():
     fbx_utils.get_bid_name = get_bid_name
@@ -367,14 +401,14 @@ class RepairShapekeys(bpy.types.Operator):
         if obj and obj.type == 'MESH':
             return True
 
-        meshes = get_meshes_objects(check=False)
+        meshes = get_meshes_objects(context)
         return meshes
 
     def execute(self, context):
         objs = [context.active_object]
         if not objs[0] or (objs[0] and (objs[0].type != 'MESH' or objs[0].data.shape_keys is None)):
             bpy.ops.object.select_all(action='DESELECT')
-            meshes = get_meshes_objects()
+            meshes = get_meshes_objects(context)
             objs = meshes
 
         for obj in objs:
@@ -399,7 +433,7 @@ class RepairShapekeys(bpy.types.Operator):
             # create a new shapekey
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.shape_key_add(from_mix=False)
-            obj.active_shape_key.name = "CATS Antibasis"
+            obj.active_shape_key.name = "TUXEDO Antibasis"
 
             # set it to the most-common points
             for vert_idx in range(0, len(obj.data.shape_keys.key_blocks[0].data)):
@@ -411,9 +445,9 @@ class RepairShapekeys(bpy.types.Operator):
                 obj.active_shape_key_index = idx
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.select_all(action="SELECT")
-                bpy.ops.mesh.blend_from_shape(shape="CATS Antibasis", blend=-1.0, add=True)
+                bpy.ops.mesh.blend_from_shape(shape="TUXEDO Antibasis", blend=-1.0, add=True)
                 bpy.ops.object.mode_set(mode='OBJECT')
-            obj.shape_key_remove(key=obj.data.shape_keys.key_blocks["CATS Antibasis"])
+            obj.shape_key_remove(key=obj.data.shape_keys.key_blocks["TUXEDO Antibasis"])
             obj.active_shape_key_index = 0
 
         self.report({'INFO'}, "Repair complete.")
@@ -874,6 +908,7 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 
         # Better foot setup
         bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.armature.reveal()
         bpy.ops.armature.select_all(action='DESELECT')
         for bone in context.visible_bones:
             if bone.name == "mToeLeft" or bone.name == "mToeRight":
@@ -923,4 +958,1588 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
             self.report({'INFO'}, 'Translated all bones!')
 
         return {'FINISHED'}
+
+
+# Code below Stolen from Cats Blender Plugin File "common.py", Sorry! But tbf we don't want depenencies. Full credit to the cats blender team!
+# Btw the code it's stolen from is GPL
+
+def delete(obj):
+    if obj.parent:
+        for child in obj.children:
+            child.parent = obj.parent
+
+    objs = bpy.data.objects
+    objs.remove(objs[obj.name], do_unlink=True)
+
+class PoseToRest(bpy.types.Operator):
+    bl_idname = 'tuxedo.pose_to_rest'
+    bl_label = "apply pose as rest pose"
+    bl_description = "Applies armature's pose as rest pose safely, taking shapekeys into account"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+    
+    armature_name: bpy.props.StringProperty(
+        default=''
+    )
+    
+    @classmethod
+    def poll(cls, context):
+        armature = get_armature(context)
+        return armature and armature.mode == 'POSE'
+
+    def execute(self, context):
+    
+        armature_obj = get_armature(context,self.armature_name)
+        mesh_objs = get_meshes_objects(context,armature_name=armature_obj.name)
+        for mesh_obj in mesh_objs:
+            me = mesh_obj.data
+            if me:
+                if me.shape_keys and me.shape_keys.key_blocks:
+                    # The mesh has shape keys
+                    shape_keys = me.shape_keys
+                    key_blocks = shape_keys.key_blocks
+                    if len(key_blocks) == 1:
+                        # The mesh only has a basis shape key, so we can remove it and then add it back afterwards
+                        # Get basis shape key
+                        basis_shape_key = key_blocks[0]
+                        # Save the name of the basis shape key
+                        original_basis_name = basis_shape_key.name
+                        # Remove the basis shape key so there are now no shape keys
+                        mesh_obj.shape_key_remove(basis_shape_key)
+                        # Apply the pose to the mesh
+                        PoseToRest.apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj)
+                        # Add the basis shape key back with the same name as before
+                        mesh_obj.shape_key_add(name=original_basis_name)
+                    else:
+                        # Apply the pose to the mesh, taking into account the shape keys
+                        PoseToRest.apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, context.scene)
+                else:
+                    # The mesh doesn't have shape keys, so we can easily apply the pose to the mesh
+                    PoseToRest.apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj)
+        # Once the mesh and shape keys (if any) have been applied, the last step is to apply the current pose of the
+        # bones as the new rest pose.
+        #
+        # From the poll function, armature_obj must already be in pose mode, but it's possible it might not be the
+        # active object e.g., the user has multiple armatures opened in pose mode, but a different armature is currently
+        # active. We can use an operator override to tell the operator to treat armature_obj as if it's the active
+        # object even if it's not, skipping the need to actually set armature_obj as the active object.
+        bpy.ops.pose.armature_apply({'active_object': armature_obj})
+
+        # Stop pose mode after operation
+        armature = get_armature(context,self.armature_name)
+        context.view_layer.objects.active = armature
+
+        # Make all objects visible
+        for collection in bpy.data.collections:
+            for object in collection.all_objects[:]:
+                object.hide_set(False)
+
+        for pb in armature.data.bones:
+            pb.hide = False
+            pb.select = True
+
+        bpy.ops.pose.rot_clear()
+        bpy.ops.pose.scale_clear()
+        bpy.ops.pose.transforms_clear()
+
+        for pb in armature.data.bones:
+            pb.select = False
+
+        armature = get_armature(context,self.armature_name)
+        # armature.data.pose_position = 'REST'
+
+        for mesh in get_meshes_objects(context,armature_name=self.armature_name):
+            if has_shapekeys(mesh):
+                for shape_key in mesh.data.shape_keys.key_blocks:
+                    shape_key.value = 0
+
+
+
+
+        self.report({'INFO'}, t('PoseToRest.success'))
+        return {'FINISHED'}
+
+    @staticmethod
+    def apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj):
+        armature_mod = mesh_obj.modifiers.new('PoseToRest', 'ARMATURE')
+        armature_mod.object = armature_obj
+        # In the unlikely case that there was already a modifier with the same name as the new modifier, the new
+        # modifier will have ended up with a different name
+        mod_name = armature_mod.name
+        # Context override to let us run the modifier operators on mesh_obj, even if it's not the active object
+        context_override = {'object': mesh_obj}
+        # Moving the modifier to the first index will prevent an Info message about the applied modifier not being
+        # first and potentially having unexpected results.
+        if bpy.app.version >= (2, 90, 0):
+            # modifier_move_to_index was added in Blender 2.90
+            bpy.ops.object.modifier_move_to_index(context_override, modifier=mod_name, index=0)
+        else:
+            # The newly created modifier will be at the bottom of the list
+            armature_mod_index = len(mesh_obj.modifiers) - 1
+            # Move the modifier up until it's at the top of the list
+            for _ in range(armature_mod_index):
+                bpy.ops.object.modifier_move_up(context_override, modifier=mod_name)
+        bpy.ops.object.modifier_apply(context_override, modifier=mod_name)
+
+    @staticmethod
+    def apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, scene):
+        # The active shape key will be changed, so save the current active index, so it can be restored afterwards
+        old_active_shape_key_index = mesh_obj.active_shape_key_index
+
+        # Shape key pinning shows the active shape key in the viewport without blending; effectively what you see when
+        # in edit mode. Combined with an armature modifier, we can use this to figure out the correct positions for all
+        # the shape keys.
+        # Save the current value, so it can be restored afterwards.
+        old_show_only_shape_key = mesh_obj.show_only_shape_key
+        mesh_obj.show_only_shape_key = True
+
+        # Temporarily remove vertex_groups from and disable mutes on shape keys because they affect pinned shape keys
+        me = mesh_obj.data
+        shape_key_vertex_groups = []
+        shape_key_mutes = []
+        key_blocks = me.shape_keys.key_blocks
+        for shape_key in key_blocks:
+            shape_key_vertex_groups.append(shape_key.vertex_group)
+            shape_key.vertex_group = ''
+            shape_key_mutes.append(shape_key.mute)
+            shape_key.mute = False
+
+        # Temporarily disable all modifiers from showing in the viewport so that they have no effect
+        mods_to_reenable_viewport = []
+        for mod in mesh_obj.modifiers:
+            if mod.show_viewport:
+                mod.show_viewport = False
+                mods_to_reenable_viewport.append(mod)
+
+        # Temporarily add a new armature modifier
+        armature_mod = mesh_obj.modifiers.new('PoseToRest', 'ARMATURE')
+        armature_mod.object = armature_obj
+
+        # cos are xyz positions and get flattened when using the foreach_set/foreach_get functions, so the array length
+        # will be 3 times the number of vertices
+        co_length = len(me.vertices) * 3
+        # We can re-use the same array over and over
+        eval_verts_cos_array = np.empty(co_length, dtype=np.single)
+        
+        
+        # depsgraph lets us evaluate objects and get their state after the effect of modifiers and shape keys
+        depsgraph = None
+        evaluated_mesh_obj = None
+
+        def get_eval_cos_array():
+            nonlocal depsgraph
+            nonlocal evaluated_mesh_obj
+            # Get the depsgraph and evaluate the mesh if we haven't done so already
+            if depsgraph is None or evaluated_mesh_obj is None:
+                depsgraph = bpy.context.evaluated_depsgraph_get()
+                evaluated_mesh_obj = mesh_obj.evaluated_get(depsgraph)
+            else:
+                # If we already have the depsgraph and evaluated mesh, in order for the change to the active shape
+                # key to take effect, the depsgraph has to be updated
+                depsgraph.update()
+            # Get the cos of the vertices from the evaluated mesh
+            evaluated_mesh_obj.data.vertices.foreach_get('co', eval_verts_cos_array)
+            return eval_verts_cos_array
+
+        for i, shape_key in enumerate(key_blocks):
+            # As shape key pinning is enabled, when we change the active shape key, it will change the state of the mesh
+            mesh_obj.active_shape_key_index = i
+            # The cos of the vertices of the evaluated mesh include the effect of the pinned shape key and all the
+            # modifiers (in this case, only the armature modifier we added since all the other modifiers are disabled in
+            # the viewport).
+            # This combination gives the same effect as if we'd applied the armature modifier to a mesh with the same
+            # shape as the active shape key, so we can simply set the shape key to the evaluated mesh position.
+            #
+            # Get the evaluated cos
+            evaluated_cos = get_eval_cos_array()
+            # And set the shape key to those same cos
+            shape_key.data.foreach_set('co', evaluated_cos)
+            # If it's the basis shape key, we also have to set the mesh vertices to match, otherwise the two will be
+            # desynced until Edit mode has been entered and exited, which can cause odd behaviour when creating shape
+            # keys with from_mix=False or when removing all shape keys.
+            if i == 0:
+                mesh_obj.data.vertices.foreach_set('co', evaluated_cos)
+
+        # Restore temporarily changed attributes and remove the added armature modifier
+        for mod in mods_to_reenable_viewport:
+            mod.show_viewport = True
+        mesh_obj.modifiers.remove(armature_mod)
+        for shape_key, vertex_group, mute in zip(me.shape_keys.key_blocks, shape_key_vertex_groups, shape_key_mutes):
+            shape_key.vertex_group = vertex_group
+            shape_key.mute = mute
+        mesh_obj.active_shape_key_index = old_active_shape_key_index
+        mesh_obj.show_only_shape_key = old_show_only_shape_key
+
+
+
+def merge_armature_stage_one(context, base_armature_name, merge_armature_name):
+    
+    base_armature = bpy.data.objects[base_armature_name]
+    merge_armature = bpy.data.objects[merge_armature_name]
+    
+    merge_armature_bone_names = [i.name for i in merge_armature.data.bones]
+    base_armature_bone_names = [i.name for i in base_armature.data.bones]
+    
+    
+    
+    context.view_layer.objects.active = base_armature
+    base_armature.select_set(True)
+    bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+    
+    bone_parenting_array = {}
+    
+    print(len(base_armature.data.bones))
+    
+    common_bone_names = list(set(merge_armature_bone_names).intersection(base_armature_bone_names))
+    
+    for bone in common_bone_names:
+        print("bone name :\""+bone+"\"found in both armatures. Merging")
+        base_armature.data.edit_bones[bone].use_connect = False
+        
+        bone_parenting_array[bone] = []
+        for bone_child in base_armature.data.edit_bones[bone].children:
+            if not (bone_child.name in common_bone_names):
+                bone_parenting_array[bone].append(bone_child.name)
+        try:
+            base_armature.data.edit_bones.remove(base_armature.data.edit_bones[bone])
+        except Exception as e:
+            print(e)
+            print("Failed to delete a bone while merging that should be there!")
+            pass # this is probably bad idk - @989onan
+    
+    bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+    merge_armature.select_set(True)
+    base_armature.select_set(True)
+    context.view_layer.objects.active = base_armature
+    bpy.ops.object.join()
+    base_armature = context.object
+    bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+    
+    for bone in bone_parenting_array:
+        for child in bone_parenting_array[bone]:
+            try:
+                base_armature.data.edit_bones[child].use_connect = False
+                base_armature.data.edit_bones[child].parent = base_armature.data.edit_bones[bone]
+            except Exception as e:
+                print(e)
+                print("One of the child bones failed to connect back up to a parent!")
+                
+            
+
+    bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+    return base_armature
+    
+
+def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True):
+    """Mix the weights of two vertex groups on the mesh, optionally removing the vertex group named vg_from.
+
+    Note that as of Blender 3.0+, existing references to vertex groups become invalid when applying certain modifiers,
+    including 'VERTEX_WEIGHT_MIX'. Keeping reference to the vertex groups' attributes such as their names seems ok
+    though. More information on this issue can be found in https://developer.blender.org/T93896"""
+    mesh.active_shape_key_index = 0
+    mod = mesh.modifiers.new("VertexWeightMix", 'VERTEX_WEIGHT_MIX')
+    mod.vertex_group_a = vg_to
+    mod.vertex_group_b = vg_from
+    mod.mix_mode = mix_mode
+    mod.mix_set = 'B'
+    mod.mask_constant = mix_strength
+    apply_modifier(mod)
+    if delete_old_vg:
+        mesh.vertex_groups.remove(mesh.vertex_groups.get(vg_from))
+    mesh.active_shape_key_index = 0  # This line fixes a visual bug in 2.80 which causes random weights to be stuck after being merged
+
+
+
+#end cats blender plugin code block
+
+
+
+
+
+
+######### GMOD SCRIPTS #########
+
+def Copy_to_existing_collection(context,old_coll, new_coll_name="dummy"):
+    try: 
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+    except:
+        pass
+    bpy.ops.object.select_all(action='DESELECT')
+    
+    new_coll = bpy.data.collections.get(new_coll_name)
+    if not new_coll:
+        new_coll = bpy.data.collections.new(new_coll_name)
+    try: 
+        bpy.context.collection.children.link(new_coll)
+    except:
+        pass
+    new_coll = bpy.data.collections[new_coll_name]
+    names = []
+    
+    for obj in old_coll.objects:
+        obj.select_set(True)
+    
+    bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'})
+    
+    for obj in context.selected_objects:
+        print(obj.name)
+        try:
+            old_coll.objects.unlink(obj)
+        except:
+            pass
+        try:
+            bpy.context.collection.objects.unlink(obj)
+        except:
+            pass
+        new_coll.objects.link(obj)
+    
+    return new_coll
+            
+        
+        
+
+
+# @989onan - I'm sorry for the mess below, but at least I refactored it since this is new place for this code. The most permanent solution is a temporary one.
+
+
+class ConvertToValveButton(bpy.types.Operator):
+    bl_idname = 'tuxedo.convert_to_valve'
+    bl_label = 'Convert Bones To Valve'
+    bl_description = 'Converts all main bone names to default valve bone names.' \
+                     '\nMake sure your model has the standard bone names from after using Fix Model'
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    armature_name: bpy.props.StringProperty(
+        default=''
+    )
+
+    @classmethod
+
+    def poll(cls, context):
+        if not get_armature(context):
+            return False
+        return True
+
+    def execute(self, context):
+        translate_bone_fails = 0
+        if self.armature_name == "":
+            armature = get_armature(context,self.armature_name)
+        else:
+            armature = bpy.data.objects[self.armature_name]
+
+        reverse_bone_lookup = dict()
+        for (preferred_name, name_list) in bone_names.items():
+            for name in name_list:
+                reverse_bone_lookup[name] = preferred_name
+
+        valve_translations = {
+            'hips': "ValveBiped.Bip01_Pelvis",
+            'spine': "ValveBiped.Bip01_Spine",
+            'chest': "ValveBiped.Bip01_Spine1",
+            'upper_chest': "ValveBiped.Bip01_Spine2",
+            'neck': "ValveBiped.Bip01_Neck1",
+            'head': "ValveBiped.Bip01_Head1", #head1 is on purpose.
+            'left_leg': "ValveBiped.Bip01_L_Thigh",
+            'left_knee': "ValveBiped.Bip01_L_Calf",
+            'left_ankle': "ValveBiped.Bip01_L_Foot",
+            'left_toe': "ValveBiped.Bip01_L_Toe0",
+            'right_leg': "ValveBiped.Bip01_R_Thigh",
+            'right_knee': "ValveBiped.Bip01_R_Calf",
+            'right_ankle': "ValveBiped.Bip01_R_Foot",
+            'right_toe': "ValveBiped.Bip01_R_Toe0",
+            'left_shoulder': "ValveBiped.Bip01_L_Clavicle",
+            'left_arm': "ValveBiped.Bip01_L_UpperArm",
+            'left_elbow': "ValveBiped.Bip01_L_Forearm",
+            'left_wrist': "ValveBiped.Bip01_L_Hand",
+            'right_shoulder': "ValveBiped.Bip01_R_Clavicle",
+            'right_arm': "ValveBiped.Bip01_R_UpperArm",
+            'right_elbow': "ValveBiped.Bip01_R_Forearm",
+            'right_wrist': "ValveBiped.Bip01_R_Hand",
+            #need finger bones for Gmod Conversion Script
+            'pinkie_1_l': "ValveBiped.Bip01_L_Finger4",
+            'pinkie_2_l': "ValveBiped.Bip01_L_Finger41",
+            'pinkie_3_l': "ValveBiped.Bip01_L_Finger42",
+            'ring_1_l': "ValveBiped.Bip01_L_Finger3",
+            'ring_2_l': "ValveBiped.Bip01_L_Finger31",
+            'ring_3_l': "ValveBiped.Bip01_L_Finger32",
+            'middle_1_l': "ValveBiped.Bip01_L_Finger2",
+            'middle_2_l': "ValveBiped.Bip01_L_Finger21",
+            'middle_3_l': "ValveBiped.Bip01_L_Finger22",
+            'index_1_l': "ValveBiped.Bip01_L_Finger1",
+            'index_2_l': "ValveBiped.Bip01_L_Finger11",
+            'index_3_l': "ValveBiped.Bip01_L_Finger12",
+            'thumb_1_l': "ValveBiped.Bip01_L_Finger0",
+            'thumb_2_l': "ValveBiped.Bip01_L_Finger01",
+            'thumb_3_l': "ValveBiped.Bip01_L_Finger02",
+
+            'pinkie_1_r': "ValveBiped.Bip01_R_Finger4",
+            'pinkie_2_r': "ValveBiped.Bip01_R_Finger41",
+            'pinkie_3_r': "ValveBiped.Bip01_R_Finger42",
+            'ring_1_r': "ValveBiped.Bip01_R_Finger3",
+            'ring_2_r': "ValveBiped.Bip01_R_Finger31",
+            'ring_3_r': "ValveBiped.Bip01_R_Finger32",
+            'middle_1_r': "ValveBiped.Bip01_R_Finger2",
+            'middle_2_r': "ValveBiped.Bip01_R_Finger21",
+            'middle_3_r': "ValveBiped.Bip01_R_Finger22",
+            'index_1_r': "ValveBiped.Bip01_R_Finger1",
+            'index_2_r': "ValveBiped.Bip01_R_Finger11",
+            'index_3_r': "ValveBiped.Bip01_R_Finger12",
+            'thumb_1_r': "ValveBiped.Bip01_R_Finger0",
+            'thumb_2_r': "ValveBiped.Bip01_R_Finger01",
+            'thumb_3_r': "ValveBiped.Bip01_R_Finger02"
+        }
+
+        for bone in armature.data.bones:
+            if simplify_bonename(bone.name) in reverse_bone_lookup and reverse_bone_lookup[simplify_bonename(bone.name)] in valve_translations:
+                bone.name = valve_translations[reverse_bone_lookup[simplify_bonename(bone.name)]]
+            else:
+                translate_bone_fails += 1
+
+        if translate_bone_fails > 0:
+            self.report({'INFO'}, f"Error! Failed to translate {translate_bone_fails} bones! Make sure your model has standard bone names!")
+
+        self.report({'INFO'}, 'Connected all bones!')
+        return {'FINISHED'}
+
+
+
+class ExportGmodPlayermodel(bpy.types.Operator):
+    bl_idname = "tuxedo.export_gmod_addon"
+    bl_label = "Export Gmod Addon"
+    bl_description = "Export as Gmod Playermodel Addon to your addons and make GMA beside Blender file. May not always work."
+    bl_options = {'INTERNAL'}
+
+    steam_library_path: bpy.props.StringProperty(subtype='FILE_PATH', options={'HIDDEN', 'SKIP_SAVE'})
+    gmod_model_name: bpy.props.StringProperty(default = "Missing No")
+    platform_name: bpy.props.StringProperty(default = "Garrys Mod")
+    armature_name: bpy.props.StringProperty(default = "")
+
+    def execute(self, context):
+        print("===============START GMOD EXPORT PROCESS===============")
+
+        model_name = self.gmod_model_name
+        platform_name = self.platform_name
+        sanitized_model_name = ""
+        offical_model_name = ""
+
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        except:
+            pass
+        # this is feilen's code 
+        def sanitized_name(orig_name):
+                #sanitizing name since everything needs to be simple characters and "_"'s
+                sanitized = ""
+                for i in orig_name.lower():
+                    if i.isalnum() or i == "_":
+                        sanitized += i
+                    else:
+                        sanitized += "_"
+                return sanitized.replace("_tga", ".tga")
+        sanitized_model_name = sanitized_name(model_name)
+        sanitized_platform_name = sanitized_name(platform_name)
+        #feilen's code ends here
+        
+        
+        #for name that appears in playermodel selection screen.
+        for i in model_name:
+            if i.isalnum() or i == "_" or i == " ":
+                offical_model_name += i
+            else:
+                offical_model_name += "_"
+
+        print("sanitized model name:"+sanitized_model_name)
+        print("Playermodel Selection Menu Name"+offical_model_name)
+        print("armature name:"+self.armature_name)
+
+
+        steam_librarypath = self.steam_library_path+"steamapps/common/GarrysMod" #add the rest onto it so that we can get garrysmod only.
+        addonpath = steam_librarypath+"/garrysmod/addons/"+sanitized_model_name+"_playermodel/"
+
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        except:
+            pass
+        bpy.ops.object.select_all(action='DESELECT')
+        print("testing if SMD tools exist.")
+        try:
+            bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
+        except AttributeError:
+            #TODO: Replace with tuxedo dialouge, since this is a pretty serious error.
+            #bpy.ops.cats_importer.install_source('INVOKE_DEFAULT') 
+            return
+        #clean imported stuff
+        print("cleaning imported armature")
+        objects = [j.name for j in bpy.context.selected_objects]
+        barneycollection = bpy.data.collections.get("barney_collection")
+        if not barneycollection:
+            barneycollection = bpy.data.collections.new("barney_collection")
+        for obj in objects:
+            newobj = bpy.data.objects.get(obj)
+            if newobj.type == "MESH":
+                bpy.ops.object.select_all(action='DESELECT')
+                context.view_layer.objects.active = newobj
+                bpy.ops.object.delete(use_global=False)
+                continue
+            for collection in bpy.data.collections:
+                try:
+                    collection.objects.unlink(newobj)
+                except:
+                    pass
+            try:
+                bpy.context.collection.objects.unlink(newobj)
+            except:
+                pass
+            barneycollection.objects.link(newobj)
+        bpy.context.collection.children.link(barneycollection)
+        bpy.ops.object.select_all(action='DESELECT')
+
+        if self.armature_name != "":
+            try:
+                context.scene.armature = self.armature_name
+            except:
+                pass 
+        print("translating bones. if you hit an error here please fix your model using fix model!!!!!! If you have, please ignore the error.")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        armature = get_armature(context,self.armature_name)
+        context.view_layer.objects.active = armature
+        bpy.ops.tuxedo.convert_to_valve(armature_name = self.armature_name)
+
+        print("putting armature and objects under reference collection")
+        #putting objects and armature under a better collection.
+        refcoll = bpy.data.collections.get(sanitized_model_name+"_ref")
+        if not refcoll:
+            refcoll = bpy.data.collections.new(sanitized_model_name+"_ref")
+        for obj in armature.children:
+            for collection in bpy.data.collections:
+                try:
+                    collection.objects.unlink(obj)
+                except:
+                    pass
+            try:
+                bpy.context.collection.objects.unlink(obj)
+            except:
+                pass
+            refcoll.objects.link(obj)
+        for collection in bpy.data.collections:
+            try:
+                collection.objects.unlink(armature)
+            except:
+                pass
+        try:
+            bpy.context.collection.objects.unlink(armature)
+        except:
+            pass
+        refcoll.objects.link(armature)
+        bpy.context.collection.children.link(refcoll)
+        
+        
+        for obj in refcoll.objects:
+            objname = obj.name
+            if bpy.data.objects[objname].type == "MESH":
+                print("lowercasing material name for gmod for object "+objname)
+                for material in bpy.data.objects[objname].material_slots:
+                    mat = material.material
+                    sanitized_material_name = ""
+                    for i in mat.name.lower():
+                        if i.isalnum() or i == "_":
+                            sanitized_material_name += i
+                        else:
+                            sanitized_material_name += "_"
+                    mat.name = sanitized_material_name
+
+
+        print("zeroing transforms and then scaling to gmod scale, then applying transforms.")
+        #zero armature position, scale to gmod size, and then apply transforms
+        armature.rotation_euler[0] = 0
+        armature.rotation_euler[1] = 0
+        armature.rotation_euler[2] = 0
+        armature.location[0] = 0
+        armature.location[1] = 0
+        armature.location[2] = 0
+        armature.scale[0] = 52.4934383202 #meters to hammer units
+        armature.scale[1] = 52.4934383202 #meters to hammer units
+        armature.scale[2] = 52.4934383202 #meters to hammer units
+        #apply transforms of all objects in ref collection
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in refcoll.objects:
+            obj.select_set(True)
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        print("getting meshes in ref collection")
+        #clear selection
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        parentobj = None
+        body_armature = None
+        for collection in bpy.data.collections:
+            for object in collection.all_objects[:]:
+                object.hide_set(False)
+        for obj in refcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+                obj.select_set(True)
+            if obj.type == "ARMATURE":
+                body_armature = obj
+
+        if (not body_armature) or (not parentobj):
+            print('Report: Error')
+            print(refcoll.name+" gmod baking failed at this point since bake result didn't have one armature and one mesh!")
+        context.view_layer.objects.active = parentobj
+
+        bpy.ops.object.join()
+
+        # breaks too many models - @989onan
+        #print("clearing bone rolls")
+        #bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        #bpy.ops.object.select_all(action='DESELECT')
+        #context.view_layer.objects.active = body_armature 
+        #bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        #bpy.ops.armature.reveal()
+        #bpy.ops.armature.select_all(action='SELECT')
+        #bpy.ops.armature.roll_clear()
+        #bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+
+        print("a-posing armature")
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+        bpy.ops.object.mode_set(mode='POSE',toggle=False)
+        
+        bpy.ops.pose.select_all(action='SELECT')
+        
+        bpy.ops.pose.reveal(select=True)
+        body_armature.pose.bones["ValveBiped.Bip01_L_UpperArm"].rotation_mode = "XYZ"
+        body_armature.pose.bones["ValveBiped.Bip01_L_UpperArm"].rotation_euler[0] = -45
+        body_armature.pose.bones["ValveBiped.Bip01_R_UpperArm"].rotation_mode = "XYZ"
+        body_armature.pose.bones["ValveBiped.Bip01_R_UpperArm"].rotation_euler[0] = -45
+        print("doing an apply rest pose")
+        bpy.ops.tuxedo.pose_to_rest()
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+
+
+
+        print("grabbing barney armature")
+        barney_armature = None
+        barney_mesh = None
+        barneycollection = bpy.data.collections.get("barney_collection")
+        assert(barneycollection is not None)
+        assert(len(barneycollection.objects) > 0)
+        for obj in barneycollection.objects:
+            if obj.type == "ARMATURE":
+                barney_armature = obj
+                break
+        print("duplicating barney armature")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = barney_armature
+        barney_armature.select_set(True)
+        bpy.ops.object.duplicate({"object" : barney_armature, "selected_objects" : [barney_armature]}, linked=False)
+        barney_armature = context.object
+        
+
+        def children_bone_recursive(parent_bone):
+            child_bones = []
+            child_bones.append(parent_bone)
+            for child in parent_bone.children:
+                child_bones.extend(children_bone_recursive(child))
+            return child_bones
+
+        print("positioning bones for barney armature at your armature's bones PLEASE HAVE A PELVIS BONE")
+        barney_pose_bone_names = [j.name for j in children_bone_recursive(barney_armature.pose.bones["ValveBiped.Bip01_Pelvis"])] #bones are default in order of parent child.
+
+        print("barney bone names in order of hiearchy:" +str(barney_pose_bone_names))
+        armature_matrixes = dict()
+        barney_armature_name = barney_armature.name
+        body_armature_name = body_armature.name
+        
+        for barney_bone_name in barney_pose_bone_names:
+            print("this is a barney bone name:" +barney_bone_name)
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = bpy.data.objects[body_armature_name]
+            bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+            
+            try:
+                obj = bpy.data.objects[barney_armature_name]
+                editbone = bpy.data.objects[body_armature_name].data.edit_bones[barney_bone_name]
+                bone = obj.pose.bones[barney_bone_name]
+                bone.rotation_mode = "XYZ"
+                newmatrix = Matrix.Translation((editbone.matrix[0][3],editbone.matrix[1][3],editbone.matrix[2][3]))
+                bone.matrix = newmatrix
+                bone.rotation_euler = (0,0,0)
+            except Exception as e:
+                print("barney bone above failed!")
+                print(e)
+        
+        print("applying barney pose as rest pose")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        original_scene_armature_name = bpy.context.scene.armature
+        bpy.context.scene.armature = barney_armature_name
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = bpy.data.objects[barney_armature_name]
+        bpy.ops.object.mode_set(mode='POSE',toggle=False)
+        print("doing an apply rest pose")
+        bpy.ops.tuxedo.pose_to_rest()
+        bpy.context.scene.armature = original_scene_armature_name
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        
+        
+        print("putting barney armature bones on your model")
+        merge_armature_stage_one(context, body_armature_name, barney_armature_name)
+        
+
+        print("putting armature back under reference collection")
+        for collection in bpy.data.collections:
+            try:
+                collection.objects.unlink(bpy.data.objects[body_armature_name])
+            except:
+                pass
+        try:
+            bpy.context.collection.objects.unlink(bpy.data.objects[body_armature_name])
+        except:
+            pass
+        refcoll.objects.link(bpy.data.objects[body_armature_name])
+
+        print("Duplicating reference collection to make phys collection")
+        physcoll = Copy_to_existing_collection(context, old_coll = refcoll, new_coll_name=sanitized_model_name+"_phys")
+        
+        
+
+
+        print("making arms collection and copying over from reference")
+        armcoll = Copy_to_existing_collection(context, old_coll = refcoll, new_coll_name=sanitized_model_name+"_arms")
+
+        print("making phys parts")
+        #bone names to make phys parts for. Max of 30 pleasee!!! Gmod cannot handle more than 30 but can do up to and including 30.
+        bone_names_for_phys = [
+        "ValveBiped.Bip01_L_UpperArm",
+        "ValveBiped.Bip01_R_UpperArm",
+        "ValveBiped.Bip01_L_Forearm",
+        "ValveBiped.Bip01_R_Forearm",
+        "ValveBiped.Bip01_L_Hand",
+        "ValveBiped.Bip01_R_Hand",
+        "ValveBiped.Bip01_L_Thigh",
+        "ValveBiped.Bip01_R_Thigh",
+        "ValveBiped.Bip01_L_Calf",
+        "ValveBiped.Bip01_R_Calf",
+        "ValveBiped.Bip01_L_Foot",
+        "ValveBiped.Bip01_R_Foot",
+        "ValveBiped.Bip01_Spine",
+        "ValveBiped.Bip01_Spine1",
+        "ValveBiped.Bip01_Pelvis",
+        "ValveBiped.Bip01_Neck1",
+        "ValveBiped.Bip01_Head1"
+        ]
+        convexobjects = dict()
+        original_object_phys = None
+        phys_armature = None
+        for obj in physcoll.objects:
+            if obj.type == "ARMATURE":
+                phys_armature = obj
+                break
+
+        for obj in physcoll.objects:
+            if obj.type == 'MESH':
+                #deselect all objects and select our obj
+                original_object_phys = obj
+                #delete all bad vertex groups we are not using by merging
+                bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+                bpy.ops.object.select_all(action='DESELECT')
+                context.view_layer.objects.active = obj
+                bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+                bpy.ops.mesh.select_all(action='DESELECT')
+                bones_to_merge_valve = []
+                for index,group in enumerate(obj.vertex_groups):
+                    if "tail" in group.name.lower():
+                        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+                        bpy.ops.object.select_all(action='DESELECT')
+                        context.view_layer.objects.active = obj
+                        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+                        bpy.ops.mesh.select_all(action='DESELECT')
+                        obj.vertex_groups.active_index = index
+                        bpy.ops.object.vertex_group_select()
+                        bpy.ops.object.vertex_group_remove_from()
+                    elif not (group.name in bone_names_for_phys): # we wanna merge bones that aren't being used for physics, so we have a simplifed physics rig - @989onan
+                        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+                        bpy.ops.object.select_all(action='DESELECT')
+                        context.view_layer.objects.active = phys_armature
+                        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+                        bpy.ops.armature.select_all(action='DESELECT')
+                        bone = phys_armature.data.edit_bones.get(group.name)
+                        if bone is not None:
+                            #add to select phys bone list
+                            print("adding \""+bone.name+"\" bone to be merged to it's parent for phys mesh")
+                            bones_to_merge_valve.append(bone.name)
+                        else:
+                            pass #if the group no longer has a bone who cares. usually.... <- wow this was a bad comment by past me. I meant to say groups for bones that no longer exist basically. Like trash weight data - @989onan
+                bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+                bpy.ops.object.select_all(action='DESELECT')
+                
+                #use tuxedo function to yeet dem bones on phys mesh.
+                merge_bone_weights_to_respective_parents(context, phys_armature, bones_to_merge_valve)
+
+                #separating into seperate phys objects to join later.
+                bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+                bpy.ops.object.select_all(action='DESELECT')
+                context.view_layer.objects.active = obj
+                bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+                bpy.ops.mesh.select_all(action='SELECT')
+                bpy.ops.object.vertex_group_clean(group_select_mode='ALL', limit=0.1)
+                bpy.ops.object.vertex_group_quantize(group_select_mode='ALL', steps=1)#this quantize is very important. It makes sure we only have 1 weight assignment per vertex, giving those sharp borders we want to make our convex hulls
+                
+                
+                
+                for bone in bone_names_for_phys:
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    #select vertices belonging to bone
+                    try:
+                        for index,group in enumerate(obj.vertex_groups):
+                            if group.name == bone:
+                                obj.vertex_groups.active_index = index
+                                bpy.ops.object.vertex_group_select()
+                                break
+                    except:
+                        print("failed to find vertex group "+bone+" On phys obj. Skipping.")
+                        continue
+                    #duplicate and make convex hull then separate
+                    try:
+                        bpy.ops.mesh.duplicate_move(MESH_OT_duplicate={"mode":1})
+                        bpy.ops.mesh.convex_hull()
+                        bpy.ops.mesh.faces_shade_smooth()
+                        bpy.ops.mesh.separate(type = 'SELECTED')
+                    except Exception as e:
+                        print("phys joint failed for bone "+bone+". Ignoring!!")
+                        print(e)
+                        continue
+                break
+        selected_objects_memory = context.selected_objects
+        for obj in selected_objects_memory:
+            convexobjects[obj.vertex_groups[obj.vertex_groups.active_index].name+""] = obj
+        #clear selection
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+
+        print("joining phys parts and assigning to vertex groups")
+        #clear vertex groups and assign each object to their corosponding vertex group.
+        for bonename,obj in convexobjects.items():
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = obj
+            bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+            bpy.ops.mesh.select_all(action='SELECT')
+            obj.vertex_groups.clear()
+            obj.vertex_groups.new(name=bonename)
+            obj.vertex_groups.active_index = 0
+            bpy.ops.object.vertex_group_assign()
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+
+        #clear selection
+        bpy.ops.object.select_all(action='DESELECT')
+        #since objects already have their armature modifiers, just join into one
+        for bonename,obj in convexobjects.items():
+            obj.select_set(True)
+        print("if this doesn't work, then you have bad weights!!")
+        context.view_layer.objects.active = list(convexobjects.values())[0]
+        bpy.ops.object.join() #join all objects separated into one.
+        bpy.ops.object.select_all(action='DESELECT')#unselect all and delete original object
+        context.view_layer.objects.active = original_object_phys
+        bpy.ops.object.delete(use_global=False)
+
+        print("deleting rest of mesh for arms collection except arm bones")
+        parentobj = None
+        arms_armature = None
+        for obj in armcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                arms_armature = obj
+        obj = parentobj
+
+
+
+        print("step 1 arms: getting entire arm list of bones for each side.")
+        arm_bone_names = []
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = arms_armature
+        arms_armature.select_set(True)
+        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        #get armature bone names here since we have armature in edit mode.
+        #this is changed later to exlude arm bones
+        arms_armature_bone_names_list = [j.name for j in arms_armature.data.edit_bones]
+        bpy.ops.armature.reveal()
+        bpy.ops.armature.select_all(action='DESELECT')
+        for side in ["L","R"]:
+            upper_arm_name = "ValveBiped.Bip01_"+side+"_UpperArm"
+            #get arm bone for this side
+            bone = arms_armature.data.edit_bones.get(upper_arm_name)
+            if bone is not None:
+                #select arm bone
+                bone.select = True
+                bone.select_head = True
+                bone.select_tail = True
+                arms_armature.data.edit_bones.active = bone
+            else:
+                print("Getting upper arm for side "+side+" Has failed! Exiting!")
+                return
+
+            #select arm bone children and add to list of arm bone names
+            bpy.ops.armature.select_similar(type='CHILDREN')
+            for bone in bpy.context.selected_editable_bones:
+                arm_bone_names.append(bone.name)
+
+        if obj.type == 'MESH': #we know parent obj is a mesh this is just for solidarity.
+            #deselect all objects and select our obj
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = obj
+            bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+
+            bpy.ops.mesh.select_all(action='DESELECT') #deselecting entire mesh so we can select the mesh parts belonging to our arm bones
+
+            #remove arms from armature bone names list
+            for i in arm_bone_names:
+                if i in arms_armature_bone_names_list:
+                    arms_armature_bone_names_list.remove(i)
+
+
+            for bonename in arms_armature_bone_names_list:
+                #select vertices belonging to bone
+                try:
+                    for index,group in enumerate(obj.vertex_groups):
+                        if group.name == bonename:
+                            obj.vertex_groups.active_index = index
+                            bpy.ops.object.vertex_group_select()
+                            break
+                except:
+                    print("failed to find vertex group "+bone+" On arms. Skipping.")
+                    continue
+            bpy.ops.mesh.delete(type='VERT')
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        #select all arm bones and invert selection, then delete bones in edit mode.
+        print("deleting leftover bones for arms and finding chest location.")
+        parentobj = None
+        arms_armature = None
+        for obj in armcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                arms_armature = obj
+        obj = parentobj
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = arms_armature
+        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        chestloc = None
+        bpy.ops.armature.select_all(action='DESELECT')
+        for bone in arms_armature.data.edit_bones:
+            bone.select = False
+            bone.select_head = False
+            bone.select_tail = False
+            for side in ["L","R"]:
+                arm_bone_names = ["ValveBiped.Bip01_"+side+"_UpperArm","ValveBiped.Bip01_"+side+"_Hand","ValveBiped.Bip01_"+side+"_Forearm","ValveBiped.Bip01_"+side+"_Finger4","ValveBiped.Bip01_"+side+"_Finger41","ValveBiped.Bip01_"+side+"_Finger42","ValveBiped.Bip01_"+side+"_Finger3","ValveBiped.Bip01_"+side+"_Finger31","ValveBiped.Bip01_"+side+"_Finger32","ValveBiped.Bip01_"+side+"_Finger2","ValveBiped.Bip01_"+side+"_Finger21","ValveBiped.Bip01_"+side+"_Finger22","ValveBiped.Bip01_"+side+"_Finger1","ValveBiped.Bip01_"+side+"_Finger11","ValveBiped.Bip01_"+side+"_Finger12","ValveBiped.Bip01_"+side+"_Finger0","ValveBiped.Bip01_"+side+"_Finger01","ValveBiped.Bip01_"+side+"_Finger02"]
+                if bone.name in arm_bone_names:
+                    bone.select = True
+                    bone.select_head = True
+                    bone.select_tail = True
+                    arms_armature.data.edit_bones.active = bone
+                if bone.name == "ValveBiped.Bip01_Spine1" and chestloc == None:
+                    chestloc = (bone.matrix[0][3],bone.matrix[1][3],bone.matrix[2][3])
+                if bone.name == "ValveBiped.Bip01_Spine2":
+                    chestloc = (bone.matrix[0][3],bone.matrix[1][3],bone.matrix[2][3])
+        #once we are done selecting bones, invert and delete so we delete non arm bones.
+        bpy.ops.armature.select_all(action='INVERT')
+        bpy.ops.armature.delete()
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+
+
+        print("moving arms armature to origin and applying transforms")
+        parentobj = None
+        arms_armature = None
+        for obj in armcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                arms_armature = obj
+        obj = parentobj
+        #move arms armature to origin
+        arms_armature.location = [(-1*chestloc[0]),(-1*chestloc[1]),(-1*chestloc[2])]
+        parentobj.select_set(True)
+        arms_armature.select_set(True)
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+
+        print("configuring game and compiler paths")
+        bpy.context.scene.vs.export_format = "SMD"
+        bpy.context.scene.vs.engine_path = steam_librarypath+"/bin/"
+        bpy.context.scene.vs.game_path = steam_librarypath+"/garrysmod/"
+
+
+        print("generating compiling script file for body (.qc file)")
+        jiggle_bone_list = ""
+        jiggle_bone_entry = """\n$jigglebone \"{bone name here}\" {
+    is_flexible
+    {
+        length 10
+        tip_mass 20
+        pitch_stiffness 50
+        pitch_damping 10
+        yaw_stiffness 50
+        yaw_damping 10
+        along_stiffness 100
+        along_damping 0
+        pitch_constraint -20 20
+    }
+}\n"""
+        print("finding tail jiggle bones")
+        refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
+        body_armature = None
+        parentobj = None
+        for obj in refcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+        body_armature.select_set(True)
+        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        for bone in body_armature.data.edit_bones:
+            if "tail" in bone.name.lower():
+                 jiggle_bone_list += jiggle_bone_entry.replace("{bone name here}", bone.name)
+
+
+        qcfile = """$modelname \""""+sanitized_model_name+"""/"""+sanitized_model_name+""".mdl\"
+$BodyGroup \""""+refcoll.name+"""\"
+{
+    studio \""""+refcoll.name+""".smd\"
+}
+$surfaceprop \"flesh\"
+
+$contents \"solid\"
+
+$illumposition -0.007 -0.637 35.329
+
+$eyeposition 0 0 70
+
+$ambientboost
+
+$mostlyopaque
+
+$cdmaterials \"models\\"""+sanitized_model_name+"""\\\"
+
+$attachment \"eyes\" \"ValveBiped.Bip01_Head1\" 3.47 -3.99 -0.1 rotate 0 -80.1 -90
+$attachment \"mouth\" \"ValveBiped.Bip01_Head1\" 0.8 -5.8 -0.15 rotate 0 -80 -90
+$attachment \"chest\" \"ValveBiped.Bip01_Spine2\" 5 4 0 rotate 0 90 90
+$attachment \"anim_attachment_head\" \"ValveBiped.Bip01_Head1\" 0 0 0 rotate -90 -90 0
+
+$cbox 0 0 0 0 0 0
+
+$bbox -13 -13 0 13 13 72
+
+{put define bones here}
+
+$bonemerge \"ValveBiped.Bip01_Pelvis\"
+$bonemerge \"ValveBiped.Bip01_Spine\"
+$bonemerge \"ValveBiped.Bip01_Spine1\"
+$bonemerge \"ValveBiped.Bip01_Spine2\"
+$bonemerge \"ValveBiped.Bip01_Spine4\"
+$bonemerge \"ValveBiped.Bip01_R_Clavicle\"
+$bonemerge \"ValveBiped.Bip01_R_UpperArm\"
+$bonemerge \"ValveBiped.Bip01_R_Forearm\"
+$bonemerge \"ValveBiped.Bip01_R_Hand\"
+$bonemerge \"ValveBiped.Anim_Attachment_RH\"\n\n"""+jiggle_bone_list+"""\n\n
+$ikchain \"rhand\" \"ValveBiped.Bip01_R_Hand\" knee 0.707 0.707 0
+$ikchain \"lhand\" \"ValveBiped.Bip01_L_Hand\" knee 0.707 0.707 0
+$ikchain \"rfoot\" \"ValveBiped.Bip01_R_Foot\" knee 0.707 -0.707 0
+$ikchain \"lfoot\" \"ValveBiped.Bip01_L_Foot\" knee 0.707 -0.707 0
+
+{put_anims_here}
+
+$includemodel \"m_anm.mdl\"
+$includemodel \"m_shd.mdl\"
+$includemodel \"m_pst.mdl\"
+$includemodel \"m_gst.mdl\"
+$includemodel \"player/m_ss.mdl\"
+$includemodel \"player/cs_fix.mdl\"
+$includemodel \"player/global_include.mdl\"
+$includemodel \"humans/male_shared.mdl\"
+$includemodel \"humans/male_ss.mdl\"
+$includemodel \"humans/male_gestures.mdl\"
+$includemodel \"humans/male_postures.mdl\"
+
+$collisionjoints \""""+physcoll.name+""".smd\"
+{
+    $mass 90
+    $inertia 10
+    $damping 0.01
+    $rotdamping 1.5
+
+    $jointconstrain \"ValveBiped.Bip01_R_UpperArm\" x limit -39 39 0
+    $jointconstrain \"ValveBiped.Bip01_R_UpperArm\" y limit -79 95 0
+    $jointconstrain \"ValveBiped.Bip01_R_UpperArm\" z limit -93 23 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_UpperArm\" x limit -30 30 0
+    $jointconstrain \"ValveBiped.Bip01_L_UpperArm\" y limit -95 84 0
+    $jointconstrain \"ValveBiped.Bip01_L_UpperArm\" z limit -86 26 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_Forearm\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Forearm\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Forearm\" z limit -149 4 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_Hand\" x limit -37 37 0
+    $jointconstrain \"ValveBiped.Bip01_L_Hand\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Hand\" z limit -57 59 0
+
+    $jointconstrain \"ValveBiped.Bip01_R_Forearm\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Forearm\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Forearm\" z limit -149 4 0
+
+    $jointconstrain \"ValveBiped.Bip01_R_Hand\" x limit -60 60 0
+    $jointconstrain \"ValveBiped.Bip01_R_Hand\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Hand\" z limit -57 70 0
+
+    $jointconstrain \"ValveBiped.Bip01_R_Thigh\" x limit -12 12 0
+    $jointconstrain \"ValveBiped.Bip01_R_Thigh\" y limit -8 75 0
+    $jointconstrain \"ValveBiped.Bip01_R_Thigh\" z limit -97 32 0
+
+    $jointconstrain \"ValveBiped.Bip01_R_Calf\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Calf\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Calf\" z limit -12 126 0
+
+    $jointconstrain \"ValveBiped.Bip01_Head1\" x limit -20 20 0
+    $jointconstrain \"ValveBiped.Bip01_Head1\" y limit -25 25 0
+    $jointconstrain \"ValveBiped.Bip01_Head1\" z limit -13 30 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_Thigh\" x limit -12 12 0
+    $jointconstrain \"ValveBiped.Bip01_L_Thigh\" y limit -73 6 0
+    $jointconstrain \"ValveBiped.Bip01_L_Thigh\" z limit -93 30 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_Calf\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Calf\" y limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Calf\" z limit -8 126 0
+
+    $jointconstrain \"ValveBiped.Bip01_L_Foot\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_L_Foot\" y limit -19 19 0
+    $jointconstrain \"ValveBiped.Bip01_L_Foot\" z limit -15 35 0
+
+    $jointconstrain \"ValveBiped.Bip01_R_Foot\" x limit 0 0 0
+    $jointconstrain \"ValveBiped.Bip01_R_Foot\" y limit -25 6 0
+    $jointconstrain \"ValveBiped.Bip01_R_Foot\" z limit -15 35 0
+
+    $jointcollide \"ValveBiped.Bip01_R_Forearm\" \"ValveBiped.Bip01_R_Thigh\"
+    $jointcollide \"ValveBiped.Bip01_R_Forearm\" \"ValveBiped.Bip01_L_Thigh\"
+    $jointcollide \"ValveBiped.Bip01_L_Forearm\" \"ValveBiped.Bip01_R_Thigh\"
+    $jointcollide \"ValveBiped.Bip01_L_Forearm\" \"ValveBiped.Bip01_L_Thigh\"
+    $jointcollide \"ValveBiped.Bip01_L_Foot\" \"ValveBiped.Bip01_R_Calf\"
+    $jointcollide \"ValveBiped.Bip01_L_Foot\" \"ValveBiped.Bip01_R_Foot\"
+    $jointcollide \"ValveBiped.Bip01_R_Thigh\" \"ValveBiped.Bip01_L_Thigh\"
+    $jointcollide \"ValveBiped.Bip01_R_Forearm\" \"ValveBiped.Bip01_Pelvis\"
+    $jointcollide \"ValveBiped.Bip01_L_Forearm\" \"ValveBiped.Bip01_Pelvis\"
+}"""
+        body_animation_qc="""$sequence \"reference\" {
+    \"anims/reference.smd\"
+    fadein 0.2
+    fadeout 0.2
+    fps 1
+}
+
+$animation \"a_proportions\" \""""+refcoll.name+""".smd\"{
+    fps 30
+
+    subtract \"reference\" 0
+}
+$Sequence \"ragdoll\" {
+    \"anims/idle.smd\"
+    activity \"ACT_DIERAGDOLL\" 1
+    fadein 0.2
+    fadeout 0.2
+    fps 30
+}
+$sequence \"proportions\"{
+    \"a_proportions\"
+    predelta
+    autoplay
+    fadein 0.2
+    fadeout 0.2
+}"""
+
+
+
+
+        print("writing body script file iteration 1. If this errors, please save your file!")
+        target_dir = bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/")
+        os.makedirs(target_dir,0o777,True)
+        compilefile = open(target_dir+sanitized_model_name+".qc", "w")
+        compilefile.write(qcfile.replace("{put_anims_here}","").replace("{put define bones here}",""))
+        compilefile.close()
+
+        print("configuring export path for body. If this throws an error, save your file!!")
+        bpy.context.scene.vs.export_path = "//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"#two backslashes to escape the backslash because a backslash escapes.
+        bpy.context.scene.vs.qc_path = "//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"
+
+        print("exporting body models")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+
+        #can't iterate so it had to be copied twice
+        #body model
+        parentobj = None
+        body_armature = None
+        bpy.context.scene.vs.export_list_active = 0
+        bpy.context.scene.vs.export_list_active = 1
+        bpy.ops.export_scene.smd()
+        collection = bpy.data.collections[sanitized_model_name+"_ref"]
+        for obj in collection.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        print("exporting "+collection.name)
+        bpy.ops.object.select_all(action='DESELECT')
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            if listitem.name == collection.name+".smd":
+                bpy.context.scene.vs.export_list_active = index
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+
+        #phys model
+        parentobj = None
+        body_armature = None
+        collection = bpy.data.collections[sanitized_model_name+"_phys"]
+        for obj in collection.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        print("exporting "+collection.name)
+        bpy.ops.object.select_all(action='DESELECT')
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            if listitem.name == collection.name+".smd":
+                bpy.context.scene.vs.export_list_active = index
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+
+
+
+        print("making animation for idle body")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        parentobj = None
+        body_armature = None
+        refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
+        for obj in refcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        if bpy.data.actions.get("idle"):
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = body_armature
+            try:
+                body_armature.animation_data_create()
+            except:
+                pass
+            body_armature.animation_data.action = bpy.data.actions["idle"]
+        else:
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = body_armature
+            try:
+                body_armature.animation_data_create()
+            except:
+                pass
+            body_armature.animation_data.action = bpy.data.actions.new(name="idle")
+
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+        body_armature.select_set(True)
+        bpy.ops.object.mode_set(mode='POSE',toggle=False)
+        for bone in body_armature.pose.bones:
+            bone.rotation_mode = "XYZ"
+            bone.keyframe_insert(data_path="rotation_euler", frame=1)
+            bone.keyframe_insert(data_path="location", frame=1)
+
+
+        print("exporting idle body animation")
+        body_armature.animation_data.action = bpy.data.actions["idle"]
+
+        bpy.context.scene.vs.subdir = "anims"
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.context.scene.vs.export_list_active = 0
+        bpy.context.scene.vs.export_list_active = 5
+        body_armature.data.vs.implicit_zero_bone = False
+        context.view_layer.objects.active = body_armature
+        body_armature.select_set(True)
+        time.sleep(1)
+        bpy.context.scene.vs.export_list_active = 0
+        bpy.context.scene.vs.export_list_active = 5
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            if listitem.name == "anims\\idle.smd":
+                bpy.context.scene.vs.export_list_active = index
+        bpy.context.scene.vs.action_selection = "CURRENT"
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+
+        print("deleting old reference animations")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        animationnames = [j.name for j in bpy.data.actions]
+        for animationname in animationnames:
+            if "." in animationname:
+                if animationname.split(".")[0] == "reference":
+                    bpy.data.actions.remove(bpy.data.actions[animationname])
+            if animationname == "reference":
+                bpy.data.actions.remove(bpy.data.actions[animationname])
+
+        print("making animation for reference body")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        parentobj = None
+        body_armature = None
+        refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
+        for obj in refcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+
+        bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "reference.smd"}], append = "APPEND",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
+
+        for barney_bone_name in barney_pose_bone_names:
+            bone = body_armature.pose.bones.get(barney_bone_name)
+            bone.rotation_mode = "XYZ"
+            bone.keyframe_insert(data_path="rotation_euler", frame=1)
+            bone.keyframe_insert(data_path="location", frame=1)
+
+        print("exporting refrence body animation")
+        bpy.context.scene.vs.subdir = "anims"
+        context.view_layer.objects.active = body_armature
+        body_armature.select_set(True)
+        time.sleep(1)
+        bpy.context.scene.vs.export_list_active = 0
+        bpy.context.scene.vs.export_list_active = 1
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.object.select_all(action='DESELECT')
+        #print("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO "+str(body_armature.data.vs.implicit_zero_bone))
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            print(listitem.name)
+            if listitem.name == "anims\\reference.smd":
+                bpy.context.scene.vs.export_list_active = index
+        bpy.context.scene.vs.action_selection = "CURRENT"
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+        # Lazy fix for a race condition before studiomdl.exe is called
+        time.sleep(10)
+        print("Generating bone definitions so your model doesn't collapse on itself. ")
+        output = subprocess.run([steam_librarypath+"/bin/studiomdl.exe", "-game", steam_librarypath+"/garrysmod", "-definebones", "-nop4", "-verbose", bpy.path.abspath(bpy.context.scene.vs.qc_path)],stdout=subprocess.PIPE)
+
+        print("Writing DefineBones.qci")
+        define_bones_file = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci"), "w")
+        index = output.stdout.decode('utf-8').find('$')
+        define_bones_file.write(output.stdout.decode('utf-8')[index:])
+        define_bones_file.close()
+
+
+        print("Rewriting QC to include animations since we finished compiling define bones")
+        compilefile = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"), "w")
+        compilefile.write(qcfile.replace("{put_anims_here}",body_animation_qc).replace("{put define bones here}","$include \"DefineBones.qci\""))
+        compilefile.close()
+
+        print("============= Compiling model! =============\n(THIS CAN TAKE A LONG TIME AND IS PRONE TO ERRORS!!!!)")
+        bpy.ops.smd.compile_qc(filepath=bpy.path.abspath(bpy.context.scene.vs.qc_path))
+        #to prevent errors due to missing data because it changes
+        refcoll = bpy.data.collections[sanitized_model_name+"_phys"]
+
+        print("Moving compiled model to addon folder.")
+        #path after models must match model path in QC.
+        #thanks to "https://stackoverflow.com/a/41827240" for helping me make sure this would work correctly.
+        source_dir = steam_librarypath+"/garrysmod/models/"+sanitized_model_name
+        target_dir = addonpath+"models/"+sanitized_model_name
+        file_names = None
+        try:
+            file_names = os.listdir(source_dir)
+        except:
+            print("THIS IS AN ERROR: Your model failed to compile!")
+            return {'FINISHED'}
+        
+        os.makedirs(target_dir,0o777,True)
+        for file_name in file_names:
+            if os.path.exists(os.path.join(target_dir, file_name)):
+                os.remove(os.path.join(target_dir, file_name))
+            shutil.move(os.path.join(source_dir, file_name), target_dir)
+
+
+        print("Making lua file for adding playermodel to playermodel list in game")
+        os.makedirs(addonpath+"lua/autorun", exist_ok=True)
+        luafile = open(addonpath+"lua/autorun/"+sanitized_model_name+"_playermodel_adder.lua","w")
+        luafile_content = """player_manager.AddValidModel( \""""+offical_model_name+"""\", \""""+"models/"+sanitized_model_name+"/"+sanitized_model_name+""".mdl\" );
+list.Set( "PlayerOptionsModel", \""""+offical_model_name+"""\", \""""+"models/"+sanitized_model_name+"/"+sanitized_model_name+""".mdl\");
+player_manager.AddValidHands( \""""+offical_model_name+"""\", \""""+"models/"+sanitized_model_name+"/"+sanitized_model_name+"""_arms.mdl\", 0, "00000000" );"""
+        luafile.write(luafile_content)
+        luafile.close()
+
+        print("resizing arms")
+
+        arms_scale_factor = None
+        collection = bpy.data.collections[sanitized_model_name+"_arms"]
+        parentobj = None
+        for obj in collection.objects:
+            if obj.type == "ARMATURE":
+                parentobj = obj
+                break
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = parentobj
+        try:
+            bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+            obj = parentobj
+            editbone1 = parentobj.data.edit_bones["ValveBiped.Bip01_L_UpperArm"]
+            editbone2 = parentobj.data.edit_bones["ValveBiped.Bip01_L_Forearm"]
+            loc1 = [editbone1.matrix[0][3],editbone1.matrix[1][3],editbone1.matrix[2][3]]
+            loc2 = [editbone2.matrix[0][3],editbone2.matrix[1][3],editbone2.matrix[2][3]]
+            bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+            distance = sqrt(((loc2[0]-loc1[0])*(loc2[0]-loc1[0]))+((loc2[1]-loc1[1])*(loc2[1]-loc1[1]))+((loc2[2]-loc1[2])*(loc2[2]-loc1[2])))
+            arms_scale_factor = 11.692535032476918/distance #random number is distance between upper and lower arm for barney armature
+
+        except Exception as e:
+            print("ARMS SOMEHOW DON'T HAVE ARM BONES. SCALER BROKE. PLEASE SEE USER \"434468177062133772\" ON CATS/TUXEDO DISCORD.")
+            print("ERROR IS AS FOLLOWS: ",e)
+        if arms_scale_factor is not None:
+            parentobj.scale = (arms_scale_factor,arms_scale_factor,arms_scale_factor)
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
+
+        print("configuring export path for arms. If this throws an error, save your file!!")
+        bpy.context.scene.vs.export_path = bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"_arms/")#two backslashes to escape the backslash because a backslash escapes.
+        bpy.context.scene.vs.qc_path = bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"_arms/"+sanitized_model_name+"_arms.qc")
+
+        print("exporting arm model")
+        parentobj = None
+        body_armature = None
+        collection = bpy.data.collections[sanitized_model_name+"_arms"]
+        for obj in collection.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        bpy.ops.object.select_all(action='DESELECT')
+        print("exporting "+collection.name)
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            if listitem.name == collection.name+".smd":
+                bpy.context.scene.vs.export_list_active = index
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+
+        print("making animation for idle arms")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        parentobj = None
+        body_armature = None
+        refcoll = bpy.data.collections[sanitized_model_name+"_arms"]
+        for obj in refcoll.objects:
+            if obj.type == "MESH":
+                parentobj = obj
+            if obj.type == "ARMATURE":
+                body_armature = obj
+        if bpy.data.actions.get("idle_arms"):
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = body_armature
+            try:
+                body_armature.animation_data_create()
+            except:
+                pass
+            body_armature.animation_data.action = bpy.data.actions["idle_arms"]
+        else:
+            bpy.ops.object.select_all(action='DESELECT')
+            context.view_layer.objects.active = body_armature
+            try:
+                body_armature.animation_data_create()
+            except:
+                pass
+            body_armature.animation_data.action = bpy.data.actions.new(name="idle_arms")
+
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+        bpy.ops.object.mode_set(mode='POSE',toggle=False)
+        for bone in body_armature.pose.bones:
+            bone.rotation_mode = "XYZ"
+            bone.keyframe_insert(data_path="rotation_euler", frame=1)
+            bone.keyframe_insert(data_path="location", frame=1)
+
+        print("exporting idle arms animation")
+        body_armature.animation_data.action.name = "idle_arms"
+        bpy.context.scene.vs.subdir = "anims"
+        context.view_layer.objects.active = body_armature
+        body_armature.select_set(True)
+        time.sleep(1)
+        bpy.context.scene.vs.export_list_active = 0
+        bpy.context.scene.vs.export_list_active = 1
+        body_armature.data.vs.implicit_zero_bone = False
+        #print("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO "+str(body_armature.data.vs.implicit_zero_bone))
+        bpy.ops.object.select_all(action='DESELECT')
+        for index,listitem in enumerate(bpy.context.scene.vs.export_list):
+            print(listitem.name)
+            if listitem.name == "anims\\idle_arms.smd":
+                bpy.context.scene.vs.export_list_active = index
+        bpy.context.scene.vs.action_selection = "CURRENT"
+        body_armature.data.vs.implicit_zero_bone = False
+        bpy.ops.export_scene.smd()
+
+        print("generating qc file for arms")
+        qcfile = """$modelname \""""+sanitized_model_name+"""/"""+sanitized_model_name+"""_arms.mdl\"
+
+$BodyGroup \""""+sanitized_model_name+"""_arms\"
+{
+    studio \""""+sanitized_model_name+"""_arms.smd\"
+}
+
+
+$SurfaceProp \"flesh\"
+
+$Contents \"solid\"
+
+$EyePosition 0 0 70
+
+$MaxEyeDeflection 90
+
+$MostlyOpaque
+
+$CDMaterials \"models\\"""+sanitized_model_name+"""\\\"
+
+$CBox 0 0 0 0 0 0
+
+$BBox -13 -13 0 13 13 72
+
+$Sequence \"idle\" {
+    \"anims/idle_arms.smd\"
+    fps 1
+}"""
+        print("writing qc file for arms. If this errors, please save your file!")
+        compilefile = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"_arms/"+sanitized_model_name+"_arms.qc"), "w")
+        compilefile.write(qcfile)
+        compilefile.close()
+
+        print("Compiling arms model! (THIS CAN TAKE A LONG TIME AND IS PRONE TO ERRORS!!!!)")
+        bpy.ops.smd.compile_qc(filepath=bpy.path.abspath(bpy.context.scene.vs.qc_path))
+
+        print("Moving compiled arms model to addon folder.")
+        #path after models must match model path in QC.
+        #thanks to "https://stackoverflow.com/a/41827240" for helping me make sure this would work correctly.
+        #this is the same as body because they should both be put in the same folder. This could be called once at the end of the script but eh i don't think it's needed.
+        source_dir = steam_librarypath+"/garrysmod/models/"+sanitized_model_name
+        target_dir = addonpath+"models/"+sanitized_model_name
+        file_names = os.listdir(source_dir)
+        os.makedirs(target_dir,0o777,True)
+        for file_name in file_names:
+            if os.path.exists(os.path.join(target_dir, file_name)):
+                os.remove(os.path.join(target_dir, file_name))
+            shutil.move(os.path.join(source_dir, file_name), target_dir)
+
+
+        print("======================FINISHED GMOD PROCESS======================")
+        print("Wow that took a long time...")
+        return {'FINISHED'}
+
+
+
 
