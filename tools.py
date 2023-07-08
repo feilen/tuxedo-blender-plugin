@@ -1204,7 +1204,6 @@ def merge_armature_stage_one(context, base_armature_name, merge_armature_name):
         except Exception as e:
             print(e)
             print("Failed to delete a bone while merging that should be there!")
-            pass # this is probably bad idk - @989onan
     
     bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
     merge_armature.select_set(True)
@@ -1688,6 +1687,46 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("putting barney armature bones on your model")
         merge_armature_stage_one(context, body_armature_name, barney_armature_name)
         
+        
+        print("fixing bones to point correct direction in order to mitigate thigh twisting")
+        
+        twisted_armature = bpy.data.objects[body_armature_name]
+        
+        bpy.context.view_layer.objects.active = twisted_armature
+        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        bpy.ops.armature.select_all(action='DESELECT')
+        leglist = {"ValveBiped.Bip01_R_Calf":"ValveBiped.Bip01_R_Foot","ValveBiped.Bip01_L_Calf":"ValveBiped.Bip01_L_Foot","ValveBiped.Bip01_R_Thigh":"ValveBiped.Bip01_R_Calf","ValveBiped.Bip01_L_Thigh":"ValveBiped.Bip01_L_Calf"}
+        for legbone in leglist:
+
+            
+            editing_bone = twisted_armature.data.edit_bones[legbone]
+            target_bone = twisted_armature.data.edit_bones[leglist[legbone]]
+            
+            print(editing_bone.name +" is going to point at "+target_bone.name+" on the x axis now.")
+            
+            original_length = editing_bone.length
+            
+            bonedir = [0,0,0]
+            bonedir[0] = (target_bone.head.x - editing_bone.head.x)
+            bonedir[1] = (target_bone.head.y - editing_bone.head.y)
+            bonedir[2] = (target_bone.head.z - editing_bone.head.z)
+            
+            length_dir = math.sqrt((math.pow(bonedir[0],2.0)+math.pow(bonedir[1],2.0)+math.pow(bonedir[2],2.0)))
+            
+            print([(i/length_dir)*original_length for i in bonedir])
+            
+            editing_bone.tail.x = ((bonedir[0]/length_dir)*original_length)+editing_bone.head.x
+            editing_bone.tail.y = ((bonedir[1]/length_dir)*original_length)+editing_bone.head.y
+            editing_bone.tail.z = ((bonedir[2]/length_dir)*original_length)+editing_bone.head.z
+            
+            editing_bone.select_head = True
+            editing_bone.select_tail = True
+            bpy.context.scene.tool_settings.transform_pivot_point = 'INDIVIDUAL_ORIGINS'
+            bpy.ops.transform.rotate(value=-1.5708, orient_axis='Z', orient_type='NORMAL')
+            editing_bone.select_head = False
+            editing_bone.select_tail = False
+            
+        
 
         print("putting armature back under reference collection")
         for collection in bpy.data.collections:
@@ -1894,8 +1933,12 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
             context.view_layer.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+            
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.object.vertex_group_clean(limit=0.1)
 
-            bpy.ops.mesh.select_all(action='DESELECT') #deselecting entire mesh so we can select the mesh parts belonging to our arm bones
+            
+            bpy.ops.mesh.select_all(action='DESELECT') #deselecting entire mesh so we can select the mesh parts not belonging to arm bones and delete them
 
             #remove arms from armature bone names list
             for i in arm_bone_names:
@@ -1904,7 +1947,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
 
             for bonename in arms_armature_bone_names_list:
-                #select vertices belonging to bone
+                #select vertices belonging to bones that are not arms for deletion
                 try:
                     for index,group in enumerate(obj.vertex_groups):
                         if group.name == bonename:
@@ -1914,7 +1957,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 except:
                     print("failed to find vertex group "+bone+" On arms. Skipping.")
                     continue
-            bpy.ops.mesh.delete(type='VERT')
+            bpy.ops.mesh.delete(type='VERT') #delete dem vertices so we have only arms.
             bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
         #select all arm bones and invert selection, then delete bones in edit mode.
         print("deleting leftover bones for arms and finding chest location.")
@@ -1937,7 +1980,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             bone.select_head = False
             bone.select_tail = False
             for side in ["L","R"]:
-                arm_bone_names = ["ValveBiped.Bip01_"+side+"_UpperArm","ValveBiped.Bip01_"+side+"_Hand","ValveBiped.Bip01_"+side+"_Forearm","ValveBiped.Bip01_"+side+"_Finger4","ValveBiped.Bip01_"+side+"_Finger41","ValveBiped.Bip01_"+side+"_Finger42","ValveBiped.Bip01_"+side+"_Finger3","ValveBiped.Bip01_"+side+"_Finger31","ValveBiped.Bip01_"+side+"_Finger32","ValveBiped.Bip01_"+side+"_Finger2","ValveBiped.Bip01_"+side+"_Finger21","ValveBiped.Bip01_"+side+"_Finger22","ValveBiped.Bip01_"+side+"_Finger1","ValveBiped.Bip01_"+side+"_Finger11","ValveBiped.Bip01_"+side+"_Finger12","ValveBiped.Bip01_"+side+"_Finger0","ValveBiped.Bip01_"+side+"_Finger01","ValveBiped.Bip01_"+side+"_Finger02"]
+                #this list is generated soon before - @989onan
+                #arm_bone_names = ["ValveBiped.Bip01_"+side+"_UpperArm",  "ValveBiped.Bip01_"+side+"_Hand",  "ValveBiped.Bip01_"+side+"_Forearm",  "ValveBiped.Bip01_"+side+"_Finger4",  "ValveBiped.Bip01_"+side+"_Finger41",  "ValveBiped.Bip01_"+side+"_Finger42",  "ValveBiped.Bip01_"+side+"_Finger3",  "ValveBiped.Bip01_"+side+"_Finger31",  "ValveBiped.Bip01_"+side+"_Finger32",  "ValveBiped.Bip01_"+side+"_Finger2",  "ValveBiped.Bip01_"+side+"_Finger21",  "ValveBiped.Bip01_"+side+"_Finger22",  "ValveBiped.Bip01_"+side+"_Finger1",  "ValveBiped.Bip01_"+side+"_Finger11",  "ValveBiped.Bip01_"+side+"_Finger12",  "ValveBiped.Bip01_"+side+"_Finger0",  "ValveBiped.Bip01_"+side+"_Finger01",  "ValveBiped.Bip01_"+side+"_Finger02"]
                 if bone.name in arm_bone_names:
                     bone.select = True
                     bone.select_head = True
@@ -2356,6 +2400,7 @@ $sequence \"proportions\"{
         #thanks to "https://stackoverflow.com/a/41827240" for helping me make sure this would work correctly.
         source_dir = steam_librarypath+"/garrysmod/models/"+sanitized_model_name
         target_dir = addonpath+"models/"+sanitized_model_name
+        
         file_names = None
         try:
             file_names = os.listdir(source_dir)
@@ -2368,7 +2413,10 @@ $sequence \"proportions\"{
             if os.path.exists(os.path.join(target_dir, file_name)):
                 os.remove(os.path.join(target_dir, file_name))
             shutil.move(os.path.join(source_dir, file_name), target_dir)
-
+        
+        
+        print("Making materials folder")
+        os.makedirs((addonpath+"materials/models/"+sanitized_model_name),0o777,True)
 
         print("Making lua file for adding playermodel to playermodel list in game")
         os.makedirs(addonpath+"lua/autorun", exist_ok=True)
