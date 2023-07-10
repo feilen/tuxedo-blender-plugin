@@ -183,19 +183,23 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
         if obj.parent != armature:
             continue
         # TODO: this can be MUCH faster.
-        # TODO: Did I fix it? I did this because it kept throwing egyptian keyerrors at me - @989onan
-        for bone in bone_names:
-            try:
-                mix_weights(obj.data, obj.vertex_groups[bone],  obj.vertex_groups[armature[bone].parent.name], mix_strength=1.0, mix_mode='ADD', delete_old_vg=True)
-            except:
-                obj.vertex_groups.new(name=bone)
-                obj.vertex_groups.new(name=armature.data.bones[bone].parent.name)
-                mix_weights(obj, bone,  armature.data.bones[bone].parent.name, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True)
-    
+        vgroup_lookup = dict([(vgp.index, vgp.name) for vgp in obj.vertex_groups])
+        for v in obj.data.vertices:
+            for g in v.groups:
+                if vgroup_lookup[g.group] in bone_names:
+                    bone = armature.data.bones[vgroup_lookup[g.group]]
+                    if bone.parent and bone.parent.name in obj.vertex_groups:
+                       obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
+
+        for bone_name in bone_names:
+            # remove old bones vertex groups
+            if bone_name in obj.vertex_groups:
+                obj.vertex_groups.remove(obj.vertex_groups[bone_name])
+        
     # remove old bones
     try:
-        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
         bpy.context.view_layer.objects.active = armature
+        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
         bpy.ops.object.mode_set(mode='EDIT', toggle=False)
     except:
         print("Oh here comes a crash from the merge bone weights!")
@@ -1168,27 +1172,7 @@ class PoseToRest(bpy.types.Operator):
             shape_key.mute = mute
         mesh_obj.active_shape_key_index = old_active_shape_key_index
         mesh_obj.show_only_shape_key = old_show_only_shape_key
-
-def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True):
-    """Mix the weights of two vertex groups on the mesh, optionally removing the vertex group named vg_from.
-
-    Note that as of Blender 3.0+, existing references to vertex groups become invalid when applying certain modifiers,
-    including 'VERTEX_WEIGHT_MIX'. Keeping reference to the vertex groups' attributes such as their names seems ok
-    though. More information on this issue can be found in https://developer.blender.org/T93896"""
-    mesh.active_shape_key_index = 0
-    mod = mesh.modifiers.new("VertexWeightMix", 'VERTEX_WEIGHT_MIX')
-    mod.vertex_group_a = vg_to
-    mod.vertex_group_b = vg_from
-    mod.mix_mode = mix_mode
-    mod.mix_set = 'B'
-    mod.mask_constant = mix_strength
-    apply_modifier(mod)
-    if delete_old_vg:
-        mesh.vertex_groups.remove(mesh.vertex_groups.get(vg_from))
-    mesh.active_shape_key_index = 0  # This line fixes a visual bug in 2.80 which causes random weights to be stuck after being merged
-
-
-
+        
 #end cats blender plugin code block
 
 
