@@ -102,7 +102,7 @@ class Choose_Steam_Library(Operator, ImportHelper):
     bl_idname = "tuxedo_bake.choose_steam_library"
     bl_label = "Choose Steam Library"
 
-    directory = StringProperty(subtype='DIR_PATH')
+    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
     @classmethod
     def poll(cls, context):

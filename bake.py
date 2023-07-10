@@ -9,7 +9,7 @@ import subprocess
 import shutil
 import threading
 
-from .tools import t, patch_fbx_exporter
+from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel
 from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
 class BakeTutorialButton(bpy.types.Operator):
@@ -1731,6 +1731,8 @@ class BakeButton(bpy.types.Operator):
 
             if translate_bone_names == "SECONDLIFE":
                 bpy.ops.tuxedo.convert_to_secondlife()
+            if translate_bone_names == "VALVE":
+                bpy.ops.tuxedo.convert_to_valve()
 
             if pass_alpha:
                 # Ensure baked alpha is RGB-only, changed in 3.3
@@ -2285,9 +2287,9 @@ class BakeButton(bpy.types.Operator):
                                               export_animation_transformation_type=0, open_sim=False,
                                               limit_precision=False, keep_bind_info=False)
                 elif export_format == "GMOD":
-                    print("TODO")
+                    print("TODO: The gmod exporter needs more testing - @989onan")
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
-                    # TODO: bpy.ops.cats_importer.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
+                    bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
             # Reapply tuxedo material
             if export_format != "GMOD":
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
