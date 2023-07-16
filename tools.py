@@ -11,6 +11,7 @@ import time
 import subprocess
 import shutil
 from mathutils import Matrix
+import itertools
 
 from io_scene_fbx import fbx_utils
 from mathutils.geometry import intersect_point_line
@@ -184,12 +185,18 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
             continue
         # TODO: this can be MUCH faster.
         vgroup_lookup = dict([(vgp.index, vgp.name) for vgp in obj.vertex_groups])
+        print(vgroup_lookup)
         for v in obj.data.vertices:
             for g in v.groups:
-                if vgroup_lookup[g.group] in bone_names:
-                    bone = armature.data.bones[vgroup_lookup[g.group]]
-                    if bone.parent and bone.parent.name in obj.vertex_groups:
-                       obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
+                try:
+                    if vgroup_lookup[g.group] in bone_names:
+                        bone = armature.data.bones[vgroup_lookup[g.group]]
+                        if bone.parent and bone.parent.name in obj.vertex_groups:
+                           obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
+                except Exception as e:
+                    print("\nerror below is because it attempted to read a null vertex's vertex groups.\n")
+                    print(e)
+                    print("\n===== END ERROR =====\n")
 
         for bone_name in bone_names:
             # remove old bones vertex groups
@@ -1420,7 +1427,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                         sanitized += i
                     else:
                         sanitized += "_"
-                return sanitized.replace("_tga", ".tga")
+                return sanitized
         sanitized_model_name = sanitized_name(model_name)
         sanitized_platform_name = sanitized_name(platform_name)
         #feilen's code ends here
@@ -1437,13 +1444,15 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("Playermodel Selection Menu Name"+offical_model_name)
         print("armature name:"+self.armature_name)
 
+        self.steam_library_path = self.steam_library_path.replace("\\\\","/").replace("\\","/")
+        print("Fixed library path name: \""+self.steam_library_path+"\"")
 
         steam_librarypath = self.steam_library_path+"steamapps/common/GarrysMod" #add the rest onto it so that we can get garrysmod only.
         addonpath = steam_librarypath+"/garrysmod/addons/"+sanitized_model_name+"_playermodel/"
         
         print("Deleting old DefineBones.qci")
-        if os.path.exists(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci")):
-            os.remove(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci"))
+        if os.path.exists(bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci")):
+            os.remove(bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci"))
             print("DefineBones.qci deleted! Soon to be replaced.")
         
         
@@ -1452,11 +1461,6 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         except:
             pass
         bpy.ops.object.select_all(action='DESELECT')
-        
-        print("translating bones. if you hit an error here please fix your model using fix model!!!!!! If you have, please ignore the error.")
-        armature = get_armature(context,self.armature_name)
-        context.view_layer.objects.active = armature
-        bpy.ops.tuxedo.convert_to_valve(armature_name = self.armature_name)
         
         
         #TODO: Ask the user to add an upper chest bone instead - @989onan
@@ -1476,8 +1480,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         #    chest_bone.children[0].name = "ValveBiped.Bip01_Spine4"
         #    bpy.ops.armature.subdivide()
         #    bpy.ops.armature.select_all(action='DESELECT')
-
-            
+        armature = get_armature(context,self.armature_name)
+        context.view_layer.objects.active = armature
 
         print("putting armature and objects under reference collection")
         #putting objects and armature under a better collection.
@@ -1515,10 +1519,41 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                     print("huh there was a collection named "+collection.name+" not in your scene. multiple scenes or garbage data?")
                     
                     
+        print("marking which models toggled off by default, and deleting always inactive objects for body groups.")
+        hidden_by_default_bodygroups = []
+        do_not_toggle_bodygroups = []
+        always_hidden_garbage = []
+        context.view_layer.objects.active = armature
+        for mesh in refcoll.objects:
+            if mesh.type == "MESH":
+                if mesh.hide_viewport and mesh.hide_get():
+                    always_hidden_garbage.append(mesh.name)
+                    continue
+                if mesh.hide_viewport:
+                    do_not_toggle_bodygroups.append(mesh.name)
+                    print("mesh \""+mesh.name+"\" hidden with monitor icon, it will always be on and untoggleable!")
+                if mesh.hide_get():
+                    hidden_by_default_bodygroups.append(mesh.name)
+                    print("mesh \""+mesh.name+"\" hidden with eyeball icon, it will be toggled off in gmod by default!")
+        
+        print("deleting always hidden meshes")
+        for obj in always_hidden_garbage:
+            print("mesh \""+obj.name+"\" always hidden, deleting!")
+            mesh = bpy.data.objects.get(obj)
+            context.view_layer.objects.active = mesh
+            mesh.select_set(True)
+            bpy.ops.object.delete(use_global=False)
+        
+        for obj in do_not_toggle_bodygroups:
+            mesh = bpy.data.objects.get(obj)
+            mesh.hide_viewport = False
+        for obj in hidden_by_default_bodygroups:
+            mesh = bpy.data.objects.get(obj)
+            mesh.hide_set(False)
         
         
-            
-            
+        print("translating bones. if you hit an error here please fix your model using fix model!!!!!! If you have, please ignore the error.")
+        bpy.ops.tuxedo.convert_to_valve(armature_name = self.armature_name)
         
         print("testing if SMD tools exist.")
         try:
@@ -1611,8 +1646,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         if (not body_armature) or (len(parentobj) == 0):
             print('Report: Error')
             print(refcoll.name+" gmod baking failed at this point since bake result didn't have at least one armature and one mesh!")
-
-
+        
         
         print("clearing bone rolls")
         bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
@@ -1676,6 +1710,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         barney_armature_name = barney_armature.name
         body_armature_name = body_armature.name
         
+        
+        
         for barney_bone_name in barney_pose_bone_names:
             print("this is a barney bone name:" +barney_bone_name)
             bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
@@ -1712,36 +1748,15 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         merge_armature_stage_one(context, body_armature_name, barney_armature_name)
         
         
-        print("fixing bones to point correct direction in order to mitigate thigh twisting")
+        print("fixing bones to point correct direction in order to mitigate bad bone twists. (includes thighs and jiggle bones)")
         
         twisted_armature = bpy.data.objects[body_armature_name]
+        twisted_armature_bone_names = list(set([j.name for j in children_bone_recursive(twisted_armature.pose.bones["ValveBiped.Bip01_Pelvis"])]) - set(barney_pose_bone_names))
         
-        bpy.context.view_layer.objects.active = twisted_armature
-        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
-        bpy.ops.armature.select_all(action='DESELECT')
-        leglist = {"ValveBiped.Bip01_R_Calf":"ValveBiped.Bip01_R_Foot","ValveBiped.Bip01_L_Calf":"ValveBiped.Bip01_L_Foot","ValveBiped.Bip01_R_Thigh":"ValveBiped.Bip01_R_Calf","ValveBiped.Bip01_L_Thigh":"ValveBiped.Bip01_L_Calf"}
-        for legbone in leglist:
-
+        def rotatebone(bone_name = ""):
+            editing_bone = twisted_armature.data.edit_bones[bone_name]
             
-            editing_bone = twisted_armature.data.edit_bones[legbone]
-            target_bone = twisted_armature.data.edit_bones[leglist[legbone]]
-            
-            print(editing_bone.name +" is going to point at "+target_bone.name+" on the x axis now.")
-            
-            original_length = editing_bone.length
-            
-            bonedir = [0,0,0]
-            bonedir[0] = (target_bone.head.x - editing_bone.head.x)
-            bonedir[1] = (target_bone.head.y - editing_bone.head.y)
-            bonedir[2] = (target_bone.head.z - editing_bone.head.z)
-            
-            length_dir = math.sqrt((math.pow(bonedir[0],2.0)+math.pow(bonedir[1],2.0)+math.pow(bonedir[2],2.0)))
-            
-            print([(i/length_dir)*original_length for i in bonedir])
-            
-            editing_bone.tail.x = ((bonedir[0]/length_dir)*original_length)+editing_bone.head.x
-            editing_bone.tail.y = ((bonedir[1]/length_dir)*original_length)+editing_bone.head.y
-            editing_bone.tail.z = ((bonedir[2]/length_dir)*original_length)+editing_bone.head.z
+            print("\""+editing_bone.name+"\" is gonna be rotated 90 degrees on the z normal axis now.")
             
             editing_bone.select_head = True
             editing_bone.select_tail = True
@@ -1751,6 +1766,40 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             editing_bone.select_head = False
             editing_bone.select_tail = False
             editing_bone.select = False
+        
+        bpy.context.view_layer.objects.active = twisted_armature
+        bpy.ops.object.mode_set(mode='EDIT',toggle=False)
+        bpy.ops.armature.select_all(action='DESELECT')
+        leglist = {"ValveBiped.Bip01_R_Calf":"ValveBiped.Bip01_R_Foot","ValveBiped.Bip01_L_Calf":"ValveBiped.Bip01_L_Foot","ValveBiped.Bip01_R_Thigh":"ValveBiped.Bip01_R_Calf","ValveBiped.Bip01_L_Thigh":"ValveBiped.Bip01_L_Calf"}
+        for bone in itertools.chain(twisted_armature_bone_names,leglist):
+            if hasattr(twisted_armature.data.edit_bones[bone], "children"):
+                if len(twisted_armature.data.edit_bones[bone].children) == 1:
+                    editing_bone = twisted_armature.data.edit_bones[bone]
+                    target_bone = twisted_armature.data.edit_bones[bone].children[0]
+                    
+                    print("\""+editing_bone.name +"\" is going to point at \""+target_bone.name+"\" on the x axis now.")
+                    
+                    original_length = editing_bone.length
+                    
+                    bonedir = [0,0,0]
+                    bonedir[0] = (target_bone.head.x - editing_bone.head.x)
+                    bonedir[1] = (target_bone.head.y - editing_bone.head.y)
+                    bonedir[2] = (target_bone.head.z - editing_bone.head.z)
+                    
+                    length_dir = math.sqrt((math.pow(bonedir[0],2.0)+math.pow(bonedir[1],2.0)+math.pow(bonedir[2],2.0)))
+                    
+                    print([(i/length_dir)*original_length for i in bonedir])
+                    
+                    editing_bone.tail.x = ((bonedir[0]/length_dir)*original_length)+editing_bone.head.x
+                    editing_bone.tail.y = ((bonedir[1]/length_dir)*original_length)+editing_bone.head.y
+                    editing_bone.tail.z = ((bonedir[2]/length_dir)*original_length)+editing_bone.head.z
+                    
+                    rotatebone(bone_name = bone)
+                    
+                else:
+                    rotatebone(bone_name = bone)
+            else:
+                rotatebone(bone_name = bone)
             
         
 
@@ -1855,8 +1904,11 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 bpy.ops.object.select_all(action='DESELECT')
                 
                 #use tuxedo function to yeet dem bones on phys mesh.
+                context.view_layer.objects.active = phys_armature
+                bpy.ops.object.mode_set(mode='EDIT',toggle=False)
                 merge_bone_weights_to_respective_parents(context, phys_armature, bones_to_merge_valve)
-
+                
+                
                 #separating into seperate phys objects to join later.
                 bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
                 bpy.ops.object.select_all(action='DESELECT')
@@ -2244,19 +2296,29 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         
 
         print("configuring export path. If this throws an error, save your file!!")
-        bpy.context.scene.vs.export_path = "//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"
-        bpy.context.scene.vs.qc_path = "//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"
+        bpy.context.scene.vs.export_path = "//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"
+        bpy.context.scene.vs.qc_path = "//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"
 
-        print("making animation for idle body")
-        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        
+        refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
         parentobj = []
         body_armature = None
-        refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
         for obj in refcoll.objects:
             if obj.type == "MESH":
                 parentobj.append(obj)
             if obj.type == "ARMATURE":
                 body_armature = obj
+        context.view_layer.objects.active = body_armature
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        
+        print("deleting old animations")
+        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
+        animationnames = [j.name for j in bpy.data.actions]
+        for animationname in animationnames:
+            bpy.data.actions.remove(bpy.data.actions[animationname])
+
+        print("making animation for idle body")
+        
         if bpy.data.actions.get("idle"):
             bpy.ops.object.select_all(action='DESELECT')
             context.view_layer.objects.active = body_armature
@@ -2288,15 +2350,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         
         
 
-        print("deleting old reference animations")
-        bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
-        animationnames = [j.name for j in bpy.data.actions]
-        for animationname in animationnames:
-            if "." in animationname:
-                if animationname.split(".")[0] == "reference":
-                    bpy.data.actions.remove(bpy.data.actions[animationname])
-            if animationname == "reference":
-                bpy.data.actions.remove(bpy.data.actions[animationname])
+
         
         print("making animation for reference body")
         bpy.ops.object.mode_set(mode='OBJECT',toggle=False)
@@ -2543,13 +2597,26 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                     new_body_groups += flex_block_model.replace("{put flexes here}",replace_flex_with).replace("{put flexcontrollers here}",replace_flexcontrollers_with).replace("{put percent thingies here}",replace_percent_thingies_with)
                 else:
                     body_group_coll = dup_collection_only_mesh(body_armature,obj)
-                    #ignore weird formatting below, indenting it will mess it up. - @989onan
-                    new_body_groups +="""\n$BodyGroup \""""+body_group_coll.name+"""\"
+                    if not (obj.name in do_not_toggle_bodygroups):
+                        if obj.name in hidden_by_default_bodygroups:
+                            #ignore weird formatting below, indenting it will mess it up. - @989onan
+                            new_body_groups +="""\n$BodyGroup \""""+obj.name+"""\"
+{
+    blank
+    studio \""""+body_group_coll.name+""".smd\"
+}
+"""
+                        else:
+                            #ignore weird formatting below, indenting it will mess it up. - @989onan
+                            new_body_groups +="""\n$BodyGroup \""""+obj.name+"""\"
 {
     studio \""""+body_group_coll.name+""".smd\"
     blank
 }
 """
+                    else: #this is for bodies that were hidden from viewport
+                        new_body_groups +="\n$body "+obj.name+" \""+body_group_coll.name+".smd\"\n"
+                    
         body_animation_qc="""$sequence \"reference\" {
     \"anims/idle.smd\"//don't ask...
     fadein 0.2
@@ -2583,7 +2650,7 @@ $sequence \"proportions\"{
         
         
         print("writing body script file iteration 1. If this errors, please save your file!")
-        target_dir = bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/")
+        target_dir = bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/")
         os.makedirs(target_dir,0o777,True)
         compilefile = open(target_dir+sanitized_model_name+".qc", "w")
         compilefile.write(qcfile.replace("{put_anims_here}","").replace("{put define bones here}","").replace("{put body groups here}",new_body_groups))
@@ -2600,14 +2667,14 @@ $sequence \"proportions\"{
         
         
         print("Writing DefineBones.qci")
-        define_bones_file = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci"), "w")
+        define_bones_file = open(bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/DefineBones.qci"), "w")
         index = output.stdout.decode('utf-8').find('$')
         define_bones_file.write(output.stdout.decode('utf-8')[index:])
         define_bones_file.close()
 
 
         print("Rewriting QC to include animations and definebones file qci and body groups since we finished compiling define bones")
-        compilefile = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"), "w")
+        compilefile = open(bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+".qc"), "w")
         compilefile.write(qcfile.replace("{put_anims_here}",body_animation_qc).replace("{put define bones here}","$include \"DefineBones.qci\"").replace("{put body groups here}",new_body_groups))
         compilefile.close()
 
@@ -2712,12 +2779,12 @@ $Sequence \"idle\" {
     fps 1
 }"""
         print("writing qc file for arms. If this errors, please save your file!")
-        compilefile = open(bpy.path.abspath("//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+"_arms.qc"), "w")
+        compilefile = open(bpy.path.abspath("//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+"_arms.qc"), "w")
         compilefile.write(qcfile)
         compilefile.close()
         
         
-        bpy.context.scene.vs.qc_path = "//tuxedo_baked_/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+"_arms.qc"
+        bpy.context.scene.vs.qc_path = "//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+"_arms.qc"
         print("Compiling arms model! (THIS CAN TAKE A LONG TIME AND IS PRONE TO ERRORS!!!!)")
         bpy.ops.smd.compile_qc(filepath=bpy.path.abspath(bpy.context.scene.vs.qc_path))
 
