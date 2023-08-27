@@ -66,6 +66,7 @@ def exit_test():
     else:
         end_message += 'Test ' + 'PASSED'
     end_message += ' in ' + str(round((time.time() - start_time))) + ' seconds'
+    end_message += ' exit code was ' + str(exit_code)
     print(end_message)
     sys.exit(error_code if error_code != 0 else exit_code)
 
@@ -77,11 +78,22 @@ def print_output(raw, output):
         print(raw)
 
 
+def platform_specific_glob(list):
+
+    if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "win86":
+        newlist = []
+        for i in list:
+            newlist.append(i.replace("\\", "/").replace("./","C:/Users/Onan/AppData/Roaming/Blender Foundation/Blender/3.5/scripts/addons/tuxedo-blender-plugin/"))
+        print(newlist)
+        return newlist
+    else:
+        return list
+
 # iterate over each globber_blend_files.blend file relative to the 'tests' directory
 # then iterate over each globber_test.test.py file relative to the 'tests' directory
 # then open up blender with the current blend file and run the current test
-for blend_file in glob.glob(globber_blend_files + '.blend'):
-    for file in glob.glob(globber_test + '.test.py'):
+for blend_file in platform_specific_glob(glob.glob(globber_blend_files + '.blend')):
+    for file in platform_specific_glob(glob.glob(globber_test + '.test.py')):
         if os.path.basename(file) in scripts_only_executed_once:
             if os.path.basename(file) in scripts_executed:
                 continue  # skips already executed test

@@ -52,6 +52,7 @@ class TestGenerateTwistBones(unittest.TestCase):
 
         # Select TestBone
         bpy.ops.object.mode_set(mode='EDIT')
+        bone = armature.data.edit_bones["TestBone"]
         armature.data.edit_bones.active = bone
         bone.select = True
 
