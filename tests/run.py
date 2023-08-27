@@ -83,7 +83,7 @@ def platform_specific_glob(list):
     if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "win86":
         newlist = []
         for i in list:
-            newlist.append(i.replace("\\", "/").replace("./","C:/Users/Onan/AppData/Roaming/Blender Foundation/Blender/3.5/scripts/addons/tuxedo-blender-plugin/"))
+            newlist.append(i.replace("\\", "/"))
         print(newlist)
         return newlist
     else:
