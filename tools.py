@@ -213,7 +213,6 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
         print("Oh here comes a crash from the merge bone weights!")
     for bone_name in bone_names:
         armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
-    bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
 def patch_fbx_exporter():
     fbx_utils.get_bid_name = get_bid_name
@@ -1985,7 +1984,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 context.view_layer.objects.active = phys_armature
                 Set_Mode(context, "EDIT")
                 merge_bone_weights_to_respective_parents(context, phys_armature, bones_to_merge_valve)
-                
+                Set_Mode(context, "OBJECT")
                 
                 #separating into seperate phys objects to join later.
                 Set_Mode(context, "OBJECT")
