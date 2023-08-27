@@ -920,7 +920,6 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 
         # Better foot setup
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.armature.reveal()
         bpy.ops.armature.select_all(action='DESELECT')
         for bone in context.visible_bones:
             if bone.name == "mToeLeft" or bone.name == "mToeRight":
