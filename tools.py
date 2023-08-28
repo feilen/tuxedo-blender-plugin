@@ -34,22 +34,27 @@ bone_names = {
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
+    "pinkie_0_r": ["littlefinger0r","pinkie0r","pinkiemetacarpalr"],
     "pinkie_1_r": ["littlefinger1r","pinkie1r","pinkieproximalr"],
     "pinkie_2_r": ["littlefinger2r","pinkie2r","pinkieintermediater"],
     "pinkie_3_r": ["littlefinger3r","pinkie3r","pinkiedistalr"],
 
+    "ring_0_r": ["ringfinger0r","ring0r","ringmetacarpalr"],
     "ring_1_r": ["ringfinger1r","ring1r","ringproximalr"],
     "ring_2_r": ["ringfinger2r","ring2r","ringintermediater"],
     "ring_3_r": ["ringfinger3r","ring3r","ringdistalr"],
 
+    "middle_0_r": ["middlefinger0r","middle0r","middlemetacarpalr"],
     "middle_1_r": ["middlefinger1r","middle1r","middleproximalr"],
     "middle_2_r": ["middlefinger2r","middle2r","middleintermediater"],
     "middle_3_r": ["middlefinger3r","middle3r","middledistalr"],
 
+    "index_0_r": ["indexfinger0r","index0r","indexmetacarpalr"],
     "index_1_r": ["indexfinger1r","index1r","indexproximalr"],
     "index_2_r": ["indexfinger2r","index2r","indexintermediater"],
     "index_3_r": ["indexfinger3r","index3r","indexdistalr"],
 
+    "thumb_0_r": ["thumb0r","thumbmetacarpalr"],
     "thumb_1_r": ['thumb0r',"thumbproximalr"],
     "thumb_2_r": ['thumb1r',"thumbintermediater"],
     "thumb_3_r": ['thumb2r',"thumbdistalr"],
@@ -65,22 +70,27 @@ bone_names = {
     "left_wrist": ["leftwrist", "wristl", "rwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
+    "pinkie_0_l": ["pinkiefinger0l","pinkie0l","pinkiemetacarpall"],
     "pinkie_1_l": ["littlefinger1l","pinkie1l","pinkieproximall"],
     "pinkie_2_l": ["littlefinger2l","pinkie2l","pinkieintermediatel"],
     "pinkie_3_l": ["littlefinger3l","pinkie3l","pinkiedistall"],
 
+    "ring_0_l": ["ringfinger0l","ring0l","ringmetacarpall"],
     "ring_1_l": ["ringfinger1l","ring1l","ringproximall"],
     "ring_2_l": ["ringfinger2l","ring2l","ringintermediatel"],
     "ring_3_l": ["ringfinger3l","ring3l","ringdistall"],
 
+    "middle_0_l": ["middlefinger0l","middle0l","middlemetacarpall"],
     "middle_1_l": ["middlefinger1l","middle_1l","middleproximall"],
     "middle_2_l": ["middlefinger2l","middle_2l","middleintermediatel"],
     "middle_3_l": ["middlefinger3l","middle_3l","middledistall"],
 
+    "index_0_l": ["indexfinger0l","index0l","indexmetacarpall"],
     "index_1_l": ["indexfinger1l","index1l","indexproximall"],
     "index_2_l": ["indexfinger2l","index2l","indexintermediatel"],
     "index_3_l": ["indexfinger3l","index3l","indexdistall"],
 
+    "thumb_0_l": ["thumb0l","thumbmetacarpall"],
     "thumb_1_l": ['thumb0l',"thumbproximall"],
     "thumb_2_l": ['thumb1l',"thumbintermediatel"],
     "thumb_3_l": ['thumb2l',"thumbdistall"],
@@ -1409,7 +1419,7 @@ def update_viewport(): #this isn't needed nessarily, it's a hack for asthetic pu
         else:
             with bpy.context.temp_override(window=bpy.context.window,area=areas[0],region=[region for region in areas[0].regions if region.type == 'WINDOW'][0],screen=bpy.context.window.screen):
                 bpy.ops.view3d.view_all(use_all_regions=True)
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1) 
+        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=2) 
     except Exception as e:
         print(e)
 
@@ -1504,13 +1514,34 @@ class ConvertToValveButton(bpy.types.Operator):
             'thumb_2_r': "ValveBiped.Bip01_R_Finger01",
             'thumb_3_r': "ValveBiped.Bip01_R_Finger02"
         }
-
+        
+        
+        #set bones to standard names first
         for bone in armature.data.bones:
             if simplify_bonename(bone.name) in reverse_bone_lookup and reverse_bone_lookup[simplify_bonename(bone.name)] in valve_translations:
-                bone.name = valve_translations[reverse_bone_lookup[simplify_bonename(bone.name)]]
+                bone.name = reverse_bone_lookup[simplify_bonename(bone.name)]
             else:
                 translate_bone_fails += 1
-
+        
+        #this is to fix fingers that start with <fingerbonename>_0_l instead of <fingerbonename>_1_l:
+        for bone in armature.data.bones:
+            if bone.name.lower() in ["index_0_l","thumb_0_l","middle_0_l","ring_0_l","pinkie_0_l","index_0_r","thumb_0_r","middle_0_r","ring_0_r","pinkie_0_r"]:
+                #shift bone name numbers down by 1 towards the end to fix hands, unless there are 4 finger bones, which would indicate fingers in the palms.
+                if not armature.data.bones.get(bone.name.lower().replace("0","3")):
+                    print("finger chain "+bone.name.lower()+" started with a 0 bone and only has 3 bones, shifting the chain of bones so your hands work!")
+                    armature.data.bones[bone.name.lower().replace("0","2")].name = bone.name.lower().replace("0","3")
+                    armature.data.bones[bone.name.lower().replace("0","1")].name = bone.name.lower().replace("0","2")
+                    bone.name = bone.name.lower().replace("0","1")
+                else:
+                    print("It is assumed that the finger bone "+bone.name.lower()+" is a bone in your palm, since the total length of finger bones in this finger is 4.")
+                    print("You may wanna delete the bone that matches the description of "+bone.name.lower()+" when running this script again, if you're not gonna use it in Gmod for bone posing!")
+        
+        #finally translate bone names to Source.
+        for bone in armature.data.bones:
+            if bone.name in valve_translations:
+                bone.name = valve_translations[bone.name]
+        
+        
         if translate_bone_fails > 0:
             self.report({'INFO'}, f"Error! Failed to translate {translate_bone_fails} bones! Make sure your model has standard bone names!")
 
