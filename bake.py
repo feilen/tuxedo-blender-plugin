@@ -195,6 +195,10 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
             item.diffuse_alpha_pack = "TRANSPARENCY"
         else:
             item.diffuse_alpha_pack = "NONE"
+        
+        item.use_decimation = max(get_tricount(obj) for obj in objects) > 9950
+            
+        
 
 def img_channels_as_nparray(image_name):
     image = bpy.data.images[image_name]
@@ -264,7 +268,7 @@ class BakePresetGmod(bpy.types.Operator):
     def execute(self, context):
         item = context.scene.bake_platforms.add()
         item.name = "Garrys Mod (Metallic)"
-        autodetect_passes(self, context, item, 10000, "GMOD")
+        autodetect_passes(self, context, item, 65500, "GMOD")
         return {'FINISHED'}
 
 class BakePresetGmodPhong(bpy.types.Operator):
@@ -276,7 +280,7 @@ class BakePresetGmodPhong(bpy.types.Operator):
     def execute(self, context):
         item = context.scene.bake_platforms.add()
         item.name = "Garrys Mod (Organic)"
-        autodetect_passes(self, context, item, 10000, "GMOD", use_phong=True)
+        autodetect_passes(self, context, item, 65500, "GMOD", use_phong=True)
         return {'FINISHED'}
 
 class BakePresetAll(bpy.types.Operator):
@@ -781,9 +785,11 @@ class BakeButton(bpy.types.Operator):
         def on_timeout(process,statusdict):
             process.kill()
         #print(str([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", images_path+"materialsrc/"+texturename,"-mkdir", "-quiet","-game", steam_library_path+"steamapps/common/GarrysMod/garrysmod"]))
-        proc = subprocess.Popen([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", images_path+"materialsrc/"+texturename,"-mkdir", "-quiet","-game", steam_library_path+"steamapps/common/GarrysMod/garrysmod"])
-        # trigger timout and kill process in 5 seconds
-        timer = threading.Timer(10, on_timeout, (proc,{'timeout':False}))
+        DEVNULL = open(os.devnull, 'r+b', 0) #this prevents the sub process for asking for stoopid key input. YEET! Or is supposed to... https://stackoverflow.com/a/23478570
+        proc = subprocess.Popen([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", images_path+"materialsrc/"+texturename,"-mkdir", "-quiet","-game", steam_library_path+"steamapps/common/GarrysMod/garrysmod"], stdin=DEVNULL)
+        # trigger timout and kill process in 20 seconds if not finished by then
+        # this will probably cause errors later, but that's because there's an issue with the texture before this code!
+        timer = threading.Timer(20, on_timeout, (proc,{'timeout':False}))
         timer.start()
         proc.wait()
         # in case we didn't hit timeout
@@ -890,17 +896,7 @@ class BakeButton(bpy.types.Operator):
                     modifier.object = arm_copy
                 if modifier.type == "MULTIRES":
                     modifier.render_levels = modifier.total_levels
-            # Do a little weight painting cleanup here
-            if obj.type == "MESH":
-                obj.select_set(True)
-                context.view_layer.objects.active = obj
-                bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
-                # Unity maxes out at 4 deforms, remove here
-                bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM')
-                # Remove insiginificant weights
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM', limit=0.00001)
-                bpy.ops.object.mode_set(mode='OBJECT')
-                obj['tuxedoForcedExportName'] = orig_largest_obj_name
+            #moved weight paint cleanup to inside the platforms because this interferes with Gmod needing a certain weight cleanup method - @989onan
 
         # Copy default values from the largest diffuse BSDF
         objs_size_descending = sorted(get_objects(collection.all_objects, {"MESH"}),
@@ -1039,7 +1035,7 @@ class BakeButton(bpy.types.Operator):
                         if poly.center[0] > 0:
                             for loop in poly.loop_indices:
                                 uv_layer[loop].uv.x += 1
-                elif uv_overlap_correction == "MANUAL":
+                elif uv_overlap_correction in ["MANUAL", "MANUALNOPACK"]:
                     if "Target" in obj.data.uv_layers:
                         for idx, loop in enumerate(obj.data.uv_layers["Target"].data):
                             obj.data.uv_layers["Tuxedo UV"].data[idx].uv = loop.uv
@@ -1587,6 +1583,17 @@ class BakeButton(bpy.types.Operator):
                         modifier.object = plat_arm_copy
                     if modifier.type == "MULTIRES":
                         modifier.render_levels = modifier.total_levels
+                # Do a little weight painting cleanup here
+                if obj.type == "MESH" and export_format != "GMOD": #wanna exclude gmod since gmod does this itself.
+                    obj.select_set(True)
+                    context.view_layer.objects.active = obj
+                    bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
+                    # Unity maxes out at 4 deforms, remove here
+                    bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM')
+                    # Remove insiginificant weights
+                    bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM', limit=0.00001)
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                    obj['tuxedoForcedExportName'] = orig_largest_obj_name
 
             # Optionally cleanup bones if we're not going to use them
             if merge_twistbones:
@@ -1905,7 +1912,7 @@ class BakeButton(bpy.types.Operator):
                 for obj in get_objects(new_arm.children):
                     obj.display_type = "WIRE"
                 context.scene.tuxedo_max_tris = int(platform.max_tris * physmodel_lod)
-                bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=False)
+                bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=False, preserve_objects=(export_format == "GMOD"), max_single_mesh_tris=(9900 if (export_format == "GMOD") else (bpy.context.scene.tuxedo_max_tris)))
                 for obj in get_objects(new_arm.children):
                     obj.name = "LODPhysics"
                 new_arm.name = "ArmatureLODPhysics"
@@ -1915,7 +1922,7 @@ class BakeButton(bpy.types.Operator):
                 for idx, lod in enumerate(lods):
                     new_arm = self.tree_copy(plat_arm_copy, None, plat_collection, ignore_hidden, view_layer=context.view_layer)
                     context.scene.tuxedo_max_tris = int(platform.max_tris * lod)
-                    bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=preserve_seams)
+                    bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=preserve_seams, preserve_objects=(export_format == "GMOD"), max_single_mesh_tris=(9900 if (export_format == "GMOD") else (bpy.context.scene.tuxedo_max_tris)))
                     for obj in get_objects(new_arm.children):
                         obj.name = "LOD" + str(idx + 1)
                     new_arm.name = "ArmatureLOD" + str(idx + 1)
@@ -1924,10 +1931,11 @@ class BakeButton(bpy.types.Operator):
             if use_decimation:
                 # Decimate. If 'preserve seams' is selected, forcibly preserve seams (seams from islands, deselect seams)
                 context.scene.tuxedo_max_tris = int(platform.max_tris)
-                bpy.ops.tuxedo.smart_decimation(armature_name=plat_arm_copy.name, preserve_seams=preserve_seams)
+                bpy.ops.tuxedo.smart_decimation(armature_name=plat_arm_copy.name, preserve_seams=preserve_seams, preserve_objects=(export_format == "GMOD"), max_single_mesh_tris=(9900 if (export_format == "GMOD") else (bpy.context.scene.tuxedo_max_tris)))
             else:
                 # join meshes here if we didn't decimate
-                join_meshes(context, armature_name=plat_arm_copy.name)
+                if export_format != "GMOD":
+                    join_meshes(context, armature_name=plat_arm_copy.name)
 
             # Remove all other materials if we've done at least one bake pass
             for obj in get_objects(plat_collection.all_objects):
@@ -2246,10 +2254,12 @@ class BakeButton(bpy.types.Operator):
                     obj.select_set(True)
 
                 # Join to save on skinned mesh renderers
-                join_meshes(context, armature_name=plat_arm_copy.name)
-                for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
-                                       filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
-                    obj['tuxedoForcedExportName'] = orig_largest_obj_name
+                # 989onan - We don't want this for Gmod since Gmod allows for multiple object groups.
+                if export_format != "GMOD":
+                    join_meshes(context, armature_name=plat_arm_copy.name)
+                    for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
+                                           filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
+                        obj['tuxedoForcedExportName'] = orig_largest_obj_name
 
             # Prep export group 1
             export_groups[0][1].extend(obj.name for obj in get_children_recursive(plat_arm_copy))
@@ -2300,15 +2310,23 @@ class BakeButton(bpy.types.Operator):
                             if slot.material == None:
                                 slot.material = mat
 
-            if optimize_static:
+            if optimize_static and export_format != "GMOD":
                 with open(os.path.dirname(os.path.abspath(__file__)) + "/BakeFixer.cs", 'r') as infile:
                     with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/") + "BakeFixer.cs", 'w') as outfile:
                         for line in infile:
                             outfile.write(line.replace("{BODYNAME}", orig_largest_obj_name)
                                           .replace("{IFDEFNAME}", orig_largest_obj_name.upper().replace(" ", "_"))
                                           .replace("{ARMATURENAME}", plat_arm_copy['tuxedoForcedExportName']))
+            
+            
+            
+            
             # Delete our duplicate scene
-            bpy.ops.scene.delete()
+            #edit, Users who wanna see what the script creates and make any last minute changes will want this disabled for gmod.
+            if export_format != "GMOD":
+                bpy.ops.scene.delete()
+            else: #go back to the scene before, so that when we create the next one, it switches away from this one. therefore saving it from destruction
+                bpy.context.window.scene = bpy.data.scenes[bpy.data.scenes.find(bpy.context.scene.name)-1]
 
             if export_format == "GMOD":
                 vmtfile += "\n}"
@@ -2325,6 +2343,7 @@ class BakeButton(bpy.types.Operator):
                         plat_collection.objects["ArmatureLOD" + str(idx + 1)].location.z += armature.dimensions.z * (1 + idx)
 
         # Delete our duplicate scene and the platform-agnostic Tuxedo Bake
+        bpy.context.window.scene = bpy.data.scenes[bpy.data.scenes.find("Tuxedo Scene")]
         bpy.ops.scene.delete()
 
         for obj in get_objects(collection.objects):

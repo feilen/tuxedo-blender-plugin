@@ -485,7 +485,13 @@ class SmartDecimation(bpy.types.Operator):
     preserve_seams: bpy.props.BoolProperty(
         default=False
     )
-#
+    preserve_objects: bpy.props.BoolProperty(
+        default=False
+    )
+    max_single_mesh_tris: bpy.props.IntProperty(
+        default=9900
+    )
+    
 #    def poll(cls, context):
 #        return True #context.view_layer.objects.active and context.view_layer.objects.selected
 #
@@ -494,9 +500,11 @@ class SmartDecimation(bpy.types.Operator):
         animation_weighting_factor = context.scene.decimation_animation_weighting_factor
         tuxedo_max_tris = context.scene.tuxedo_max_tris
         armature = get_armature(context, armature_name=self.armature_name)
-        join_meshes(context, armature.name)
+        if not self.preserve_objects:
+            join_meshes(context, armature.name)
         meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
-
+        
+        
         if len(meshes_obj) == 0:
             self.report({'INFO'}, "No meshes found.")
             return {'FINISHED'}
@@ -511,86 +519,115 @@ class SmartDecimation(bpy.types.Operator):
                 remove_doubles(mesh, 0.00001)
             tris_count += get_tricount(mesh.data.polygons)
             add_shapekey(mesh, 'Tuxedo Basis', False)
-
-        if tris_count == 0:
-            self.report({'INFO'}, "No tris found.")
-            return {'FINISHED'}
-
+    
+        
         decimation = 1. + ((tuxedo_max_tris - tris_count) / tris_count)
-        print("Decimation: " + str(decimation))
+        
+        print("Decimation total: " + str(decimation))
         if decimation >= 1:
-            self.report({'INFO'}, "No Decimation needed.")
-            return {'FINISHED'}
-        elif decimation <= 0:
-            self.report({'INFO'}, "Can't reach target decimation level.")
-            return {'FINISHED'}
-
-        if animation_weighting:
+            
+            decimated_a_mesh = False
             for mesh in meshes_obj:
-                newweights = self.get_animation_weighting(context, mesh, armature)
-
-                context.view_layer.objects.active = mesh
-                bpy.ops.object.vertex_group_add()
-                mesh.vertex_groups[-1].name = "Tuxedo Animation"
-                for idx, weight in newweights.items():
-                    mesh.vertex_groups[-1].add([idx], weight, "REPLACE")
-
-        for mesh_obj in meshes_obj:
-            tris = get_tricount(mesh_obj)
-            context.view_layer.objects.active = mesh
-            # Smart
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_mode(type="VERT")
-            bpy.ops.mesh.select_all(action="SELECT")
-
-            # TODO: Fix decimation calculation when pinning seams
-            # TODO: Add ability to explicitly include/exclude vertices from decimation. So you
-            # can manually preserve loops
-            if self.preserve_seams:
-                bpy.ops.mesh.select_all(action="DESELECT")
-                bpy.ops.uv.seams_from_islands()
-
-                # select all seams
-                bpy.ops.object.mode_set(mode='OBJECT')
-                me = mesh_obj.data
-                for edge in me.edges:
-                    if edge.use_seam:
-                        edge.select = True
-
-                bpy.ops.object.mode_set(mode='EDIT')
-                bpy.ops.mesh.select_all(action="INVERT")
-            if animation_weighting:
-                bpy.ops.mesh.select_all(action="DESELECT")
-                bpy.ops.object.mode_set(mode='OBJECT')
-                me = mesh_obj.data
-                vgroup_idx = mesh_obj.vertex_groups["Tuxedo Animation"].index
-                weight_dict = {vertex.index: group.weight for vertex in me.vertices for group in vertex.groups if group.group == vgroup_idx}
-                # We de-select a_w_f worth of polygons, so the remaining decimation must be done in decimation/(1-a_w_f) polys
-                selected_verts = sorted([v for v in me.vertices], key=lambda v: 0 - weight_dict.get(v.index, 0.0))[0:int(decimation * tris * animation_weighting_factor)]
-                for v in selected_verts:
-                    v.select = True
-
-                bpy.ops.object.mode_set(mode='EDIT')
-                bpy.ops.mesh.select_all(action="INVERT")
-
-            effective_ratio = decimation if not animation_weighting else (decimation * (1-animation_weighting_factor))
-            bpy.ops.mesh.decimate(ratio=effective_ratio,
-                                  #use_vertex_group=animation_weighting,
-                                  #vertex_group_factor=animation_weighting_factor,
-                                  #invert_vertex_group=True,
-                                  use_symmetry=True,
-                                  symmetry_axis='X')
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-            if has_shapekeys(mesh_obj):
-                for idx in range(1, len(mesh_obj.data.shape_keys.key_blocks) - 1):
-                    mesh_obj.active_shape_key_index = idx
-                    bpy.ops.object.mode_set(mode='EDIT')
-                    bpy.ops.mesh.blend_from_shape(shape="Tuxedo Basis", blend=-1.0, add=True)
-                    bpy.ops.object.mode_set(mode='OBJECT')
-                mesh_obj.shape_key_remove(key=mesh_obj.data.shape_keys.key_blocks["Tuxedo Basis"])
-                mesh_obj.active_shape_key_index = 0
+                tris = get_tricount(mesh)
+                if tris > self.max_single_mesh_tris:
+                    decimation = 1. + ((self.max_single_mesh_tris - tris) / tris)
+                    print("Decimation to reduce mesh "+mesh.name+"less than max tris per mesh: " + str(decimation))
+                    self.extra_decimation_weights(context, animation_weighting, mesh, armature, animation_weighting_factor, decimation)
+                    decimated_a_mesh = True
+                
+            
+            if not decimated_a_mesh:
+                self.report({'INFO'}, "No Decimation needed.")
+                return {'FINISHED'}
+            else:
+                self.report({'INFO'}, "Decimated some meshes that went over the individual mesh polygon limit of " + str(self.max_single_mesh_tris))
+        else:
+            
+            if tris_count == 0:
+                self.report({'INFO'}, "No tris found.")
+                return {'FINISHED'}
+            elif decimation <= 0:
+                self.report({'INFO'}, "Can't reach target decimation level.")
+                return {'FINISHED'}
+            for mesh in meshes_obj:
+                tris = get_tricount(mesh)
+                
+                newdecimation = decimation if not ( math.ceil(tris*decimation) > self.max_single_mesh_tris) else (1. + ((self.max_single_mesh_tris - tris) / tris))
+                
+                self.extra_decimation_weights(context, animation_weighting, mesh, armature, animation_weighting_factor, newdecimation)
+        
+        
+            
         return {'FINISHED'}
+
+    def extra_decimation_weights(self, context, animation_weighting, mesh, armature, animation_weighting_factor, decimation):
+        tris = get_tricount(mesh)
+        if animation_weighting:
+            newweights = self.get_animation_weighting(context, mesh, armature)
+
+            context.view_layer.objects.active = mesh
+            bpy.ops.object.vertex_group_add()
+            mesh.vertex_groups[-1].name = "Tuxedo Animation"
+            for idx, weight in newweights.items():
+                mesh.vertex_groups[-1].add([idx], weight, "REPLACE")
+
+
+        context.view_layer.objects.active = mesh
+        # Smart
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_mode(type="VERT")
+        bpy.ops.mesh.select_all(action="SELECT")
+
+        # TODO: Fix decimation calculation when pinning seams
+        # TODO: Add ability to explicitly include/exclude vertices from decimation. So you
+        # can manually preserve loops
+        if self.preserve_seams:
+            bpy.ops.mesh.select_all(action="DESELECT")
+            bpy.ops.uv.seams_from_islands()
+
+            # select all seams
+            bpy.ops.object.mode_set(mode='OBJECT')
+            me = mesh.data
+            for edge in me.edges:
+                if edge.use_seam:
+                    edge.select = True
+
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action="INVERT")
+        if animation_weighting:
+            bpy.ops.mesh.select_all(action="DESELECT")
+            bpy.ops.object.mode_set(mode='OBJECT')
+            me = mesh.data
+            vgroup_idx = mesh.vertex_groups["Tuxedo Animation"].index
+            weight_dict = {vertex.index: group.weight for vertex in me.vertices for group in vertex.groups if group.group == vgroup_idx}
+            # We de-select a_w_f worth of polygons, so the remaining decimation must be done in decimation/(1-a_w_f) polys
+            selected_verts = sorted([v for v in me.vertices], key=lambda v: 0 - weight_dict.get(v.index, 0.0))[0:int(decimation * tris * animation_weighting_factor)]
+            for v in selected_verts:
+                v.select = True
+
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action="INVERT")
+
+
+
+        effective_ratio = decimation if not animation_weighting else (decimation * (1-animation_weighting_factor))
+        bpy.ops.mesh.decimate(ratio=effective_ratio,
+                              #use_vertex_group=animation_weighting,
+                              #vertex_group_factor=animation_weighting_factor,
+                              #invert_vertex_group=True,
+                              use_symmetry=True,
+                              symmetry_axis='X')
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        if has_shapekeys(mesh):
+            for idx in range(1, len(mesh.data.shape_keys.key_blocks) - 1):
+                mesh.active_shape_key_index = idx
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.blend_from_shape(shape="Tuxedo Basis", blend=-1.0, add=True)
+                bpy.ops.object.mode_set(mode='OBJECT')
+            mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks["Tuxedo Basis"])
+            mesh.active_shape_key_index = 0
+
 
     def get_animation_weighting(self, context, mesh, armature):
         print("Performing animation weighting for {}".format(mesh.name))
@@ -1529,8 +1566,14 @@ class ConvertToValveButton(bpy.types.Operator):
                 #shift bone name numbers down by 1 towards the end to fix hands, unless there are 4 finger bones, which would indicate fingers in the palms.
                 if not armature.data.bones.get(bone.name.lower().replace("0","3")):
                     print("finger chain "+bone.name.lower()+" started with a 0 bone and only has 3 bones, shifting the chain of bones so your hands work!")
-                    armature.data.bones[bone.name.lower().replace("0","2")].name = bone.name.lower().replace("0","3")
-                    armature.data.bones[bone.name.lower().replace("0","1")].name = bone.name.lower().replace("0","2")
+                    try:
+                        armature.data.bones[bone.name.lower().replace("0","2")].name = bone.name.lower().replace("0","3")
+                    except:
+                        pass
+                    try:
+                        armature.data.bones[bone.name.lower().replace("0","1")].name = bone.name.lower().replace("0","2")
+                    except:
+                        pass
                     bone.name = bone.name.lower().replace("0","1")
                 else:
                     print("It is assumed that the finger bone "+bone.name.lower()+" is a bone in your palm, since the total length of finger bones in this finger is 4.")
@@ -1947,9 +1990,9 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         "ValveBiped.Bip01_R_Calf",
         "ValveBiped.Bip01_L_Foot",
         "ValveBiped.Bip01_R_Foot",
+        "ValveBiped.Bip01_Pelvis",
         "ValveBiped.Bip01_Spine",
         "ValveBiped.Bip01_Spine1",
-        "ValveBiped.Bip01_Pelvis",
         "ValveBiped.Bip01_Neck1",
         "ValveBiped.Bip01_Head1"
         ]
@@ -1995,7 +2038,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                         obj.vertex_groups.active_index = index
                         bpy.ops.object.vertex_group_select()
                         bpy.ops.object.vertex_group_remove_from()
-                    elif not (group.name in bone_names_for_phys): # we wanna merge bones that aren't being used for physics, so we have a simplifed physics rig - @989onan
+                    elif (not (group.name in bone_names_for_phys)): # we wanna merge bones that aren't being used for physics, so we have a simplifed physics rig - @989onan
                         Set_Mode(context, "OBJECT")
                         bpy.ops.object.select_all(action='DESELECT')
                         context.view_layer.objects.active = phys_armature
@@ -2608,7 +2651,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                         new_body_groups +="\n$body "+obj.name+" \""+body_group_coll.name+".smd\"\n"
                     
         body_animation_qc="""$sequence \"reference\" {
-    \"anims/idle.smd\"//don't ask...
+    \"anims/reference.smd\"
     fadein 0.2
     fadeout 0.2
     fps 1
@@ -2620,7 +2663,7 @@ $animation \"a_proportions\" \""""+refcoll.name+""".smd\"{
     subtract \"reference\" 0
 }
 $Sequence \"ragdoll\" {
-    \"anims/reference.smd\"
+    \"anims/idle.smd\"
     activity \"ACT_DIERAGDOLL\" 1
     fadein 0.2
     fadeout 0.2

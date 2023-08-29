@@ -232,12 +232,15 @@ class BakePanel(bpy.types.Panel):
                 continue
             for slot in obj.material_slots:
                 if slot.material:
-                    if not slot.material.use_nodes:
+                    if (not (slot.material.node_tree)):
                         non_node_mat_names.add(slot.material.name)
-                    if not any(node.type == "BSDF_PRINCIPLED" for node in slot.material.node_tree.nodes):
-                        non_bsdf_mat_names.add(slot.material.name)
-                    if len([node for node in slot.material.node_tree.nodes if node.type == "BSDF_PRINCIPLED"]) > 1:
-                        multi_bsdf_mat_names.add(slot.material.name)
+                    else:
+                        if not slot.material.use_nodes:
+                            non_node_mat_names.add(slot.material.name)
+                        if not any(node.type == "BSDF_PRINCIPLED" for node in slot.material.node_tree.nodes):
+                            non_bsdf_mat_names.add(slot.material.name)
+                        if len([node for node in slot.material.node_tree.nodes if node.type == "BSDF_PRINCIPLED"]) > 1:
+                            multi_bsdf_mat_names.add(slot.material.name)
                 else:
                     if len(obj.material_slots) == 1:
                         empty_material_slots.add(obj.name)
