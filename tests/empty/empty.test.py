@@ -52,6 +52,7 @@ class TestGenerateTwistBones(unittest.TestCase):
 
         # Select TestBone
         bpy.ops.object.mode_set(mode='EDIT')
+        bone = armature.data.edit_bones["TestBone"]
         armature.data.edit_bones.active = bone
         bone.select = True
 
@@ -104,7 +105,7 @@ class TestSmartDecimation(unittest.TestCase):
 
         # Decimate
         bpy.context.scene.tuxedo_max_tris = 5
-        bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=False)
+        bpy.ops.tuxedo.smart_decimation(armature_name=new_arm.name, preserve_seams=False,  preserve_objects=False, max_single_mesh_tris=bpy.context.scene.tuxedo_max_tris)
 
         # Ensure shape keys are similar
         for key in sphere.data.shape_keys.key_blocks[1:]:

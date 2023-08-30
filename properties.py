@@ -277,7 +277,8 @@ def register_properties():
             ("NONE", t("Scene.bake_uv_overlap_correction.none.label"), t("Scene.bake_uv_overlap_correction.none.desc")),
             ("UNMIRROR", t("Scene.bake_uv_overlap_correction.unmirror.label"), t("Scene.bake_uv_overlap_correction.unmirror.desc")),
             ("REPROJECT", t("Scene.bake_uv_overlap_correction.reproject.label"), t("Scene.bake_uv_overlap_correction.reproject.desc")),
-            ("MANUAL", "Manual", "Bake will take island information from any UVMap named 'Target' from your meshes, else it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!")
+            ("MANUAL", "Manual", "Bake will take island information from any UVMap named 'Target' from your meshes, else it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!"),
+            ("MANUALNOPACK", "Manual Don't Pack", "Bake will take island information from any UVMap named 'Target' from your meshes. This will not move them so when all meshes are selected with the uv map active they cannot overlap. If there is no 'Target' map it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!")
         ],
         default="UNMIRROR"
     )
