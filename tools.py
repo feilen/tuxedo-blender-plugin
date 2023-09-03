@@ -273,6 +273,30 @@ def get_armature(context, armature_name=None):
 def simplify_bonename(n):
     return n.lower().translate(dict.fromkeys(map(ord, u" _.")))
 
+def materials_list_update(context):
+    choices = []
+    try:
+        for mesh in get_meshes_objects(context, armature_name=get_armature(context).name):
+            for mat in mesh.data.materials:
+                if mat.name not in choices:
+                    choices.append(mat.name)
+    except Exception as e:
+        print(e)
+    
+    material_list_bake = [i.name for i in context.scene.bake_material_groups]
+    
+    for i in choices:
+        if i not in material_list_bake:
+            added_item = context.scene.bake_material_groups.add()
+            added_item.name = i
+    material_list_bake = [i.name for i in context.scene.bake_material_groups]
+    for k,i in enumerate(material_list_bake):
+        if i not in choices:
+            context.scene.bake_material_groups.remove(k)
+    
+    return choices
+
+
 def apply_modifier(mod):
     if mod.type == 'ARMATURE':
         # Armature modifiers are a special case: they don't have a show_render

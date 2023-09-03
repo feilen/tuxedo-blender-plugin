@@ -6,6 +6,7 @@ from .tools import t, get_meshes_objects, get_armature
 from .tools import OptimizeStaticShapekeys, GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
 from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import FitClothes
+from .tools import materials_list_update
 
 from bpy.types import UIList, Operator
 from bpy_extras.io_utils import ImportHelper
@@ -23,6 +24,33 @@ class Bake_Platform_List(UIList):
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon = custom_icon)
+
+
+class Material_Grouping_UL_List(UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # We could write some code to decide which icon to use here...
+        custom_icon = 'MATERIAL'
+        # Make sure your code supports all 3 layout types
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            row = layout.row()
+            col = row.column()
+            col.label(text=item.name, icon = custom_icon)
+            col = row.column()
+            col.prop(item, "group", text="group")
+            #col = row.column()
+            #col.prop(item, "include", text="include")
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon = custom_icon)
+
+class Material_Grouping_UL_List_New(Operator):
+    bl_idname = "tuxedo_bake.materials_reload"
+    bl_label = "Reload Materials"
+
+    def execute(self, context):
+        materials_list_update(context)
+
+        return{'FINISHED'}
 
 class Bake_Platform_New(Operator):
     bl_idname = "tuxedo_bake.platform_add"
@@ -266,6 +294,14 @@ class BakePanel(bpy.types.Panel):
         row = col.row(align=True)
         row.operator(Bake.BakePresetGmod.bl_idname, icon="EVENT_G")
         row.operator(Bake.BakePresetGmodPhong.bl_idname, icon="EVENT_G")
+        col.separator()
+        row = col.row()
+        col.label(text="Material Groupings")
+        row = col.row()
+        row.template_list("Material_Grouping_UL_List", "The_Mat_List", context.scene,
+                          "bake_material_groups", context.scene, "bake_material_groups_index")
+        row = col.row(align=True)
+        row.operator(Material_Grouping_UL_List_New.bl_idname)
         col.separator()
         row = col.row()
         col.label(text="Platforms:")

@@ -3,6 +3,7 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, Co
 from bpy.utils import register_class
 
 from .tools import t
+from .tools import materials_list_update
 
 def register_properties():
     # Bake
@@ -255,7 +256,33 @@ def register_properties():
         description=t("remove_backup_shapekeys_in_the_final_result_eg_key__reverted_or_blinkold"),
         default=True
     )
-
+    
+    
+    
+    class MaterialListGrouper(PropertyGroup):
+        name: StringProperty(name='name', default="Null Material")
+        group: IntProperty(
+            name=t('Scene.material_grouping.label'),
+            description=t('Scene.material_grouping.desc'),
+            default=0,
+            min=0,
+            max=30
+        )
+        include: BoolProperty(
+            name=t('Scene.include_material'),
+            description=t("include_material_in_bake"),
+            default=True
+        )
+    
+    register_class(MaterialListGrouper)
+    
+    
+    
+    Scene.bake_material_groups = CollectionProperty(
+        type=MaterialListGrouper
+    )
+    Scene.bake_material_groups_index = IntProperty(default=0)
+        
     Scene.bake_resolution = IntProperty(
         name=t('Scene.bake_resolution.label'),
         description=t('Scene.bake_resolution.desc'),
@@ -505,3 +532,4 @@ def register_properties():
         description=t('Scene.decimation_remove_doubles.desc'),
         default=True
     )
+    
