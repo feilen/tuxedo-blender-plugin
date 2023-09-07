@@ -1864,16 +1864,16 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 print("barney bone above failed! may not exist on our armature, which is okay!")
                 print(e)
         
-        
-        
         print("applying barney pose as rest pose")
         Set_Mode(context, "OBJECT")
-        
+        original_scene_armature_name = bpy.context.scene.armature
+        bpy.context.scene.armature = barney_armature_name
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = bpy.data.objects[barney_armature_name]
         Set_Mode(context, "POSE")
         print("doing an apply rest pose")
         bpy.ops.tuxedo.pose_to_rest()
+        bpy.context.scene.armature = original_scene_armature_name
         Set_Mode(context, "OBJECT")
         
         
@@ -2067,7 +2067,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 Set_Mode(context, "EDIT")
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.object.vertex_group_normalize()
-                bpy.ops.object.vertex_group_clean(group_select_mode='ALL', keep_single=True, limit=0.001)
+                bpy.ops.object.vertex_group_clean(group_select_mode='ALL', limit=0.1)
                 bpy.ops.object.vertex_group_quantize(group_select_mode='ALL', steps=1)#this quantize limit is very important. It makes sure we only have 1 weight assignment per vertex, giving those sharp borders we want to make our convex hulls
                 
                 
@@ -2184,7 +2184,6 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.object.vertex_group_normalize()
-                bpy.ops.object.vertex_group_clean(group_select_mode='ALL', keep_single=True, limit=0.001)
                 bpy.ops.object.vertex_group_limit_total(limit=4)
                 
 

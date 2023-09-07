@@ -8,7 +8,6 @@ import numpy as np
 import subprocess
 import shutil
 import threading
-from subprocess import DEVNULL
 
 from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel
 from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
@@ -783,12 +782,18 @@ class BakeButton(bpy.types.Operator):
 
     #needed because it likes to pause blender entirely for a key input in console and we don't want that garbage - @989onan
     def compile_gmod_tga(self,steam_library_path,images_path,texturename):
-        
-        print("Start Texture bake for \""+texturename+"\".")
-        #this prevents the sub process for asking for stoopid key input. YEET! Or is supposed to... https://stackoverflow.com/a/23478570
-        proc = subprocess.Popen([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", "-nopause", "-mkdir", images_path+"materialsrc/"+texturename])
+        def on_timeout(process,statusdict):
+            process.kill()
+        #print(str([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", images_path+"materialsrc/"+texturename,"-mkdir", "-quiet","-game", steam_library_path+"steamapps/common/GarrysMod/garrysmod"]))
+        DEVNULL = open(os.devnull, 'r+b', 0) #this prevents the sub process for asking for stoopid key input. YEET! Or is supposed to... https://stackoverflow.com/a/23478570
+        proc = subprocess.Popen([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", images_path+"materialsrc/"+texturename,"-mkdir", "-quiet","-game", steam_library_path+"steamapps/common/GarrysMod/garrysmod"], stdin=DEVNULL)
+        # trigger timout and kill process in 20 seconds if not finished by then
+        # this will probably cause errors later, but that's because there's an issue with the texture before this code!
+        timer = threading.Timer(20, on_timeout, (proc,{'timeout':False}))
+        timer.start()
         proc.wait()
-        print("Finished Texture bake for \""+texturename+"\"!")
+        # in case we didn't hit timeout
+        timer.cancel()
 
     def perform_bake(self, context):
         is_unittest = context.scene.tuxedo_is_unittest
@@ -2173,8 +2178,6 @@ class BakeButton(bpy.types.Operator):
                 if export_format == "GMOD":
                     image.filepath_raw = images_path+"materialsrc/"+sanitized_name(image.name)
                     image.save_render(image.filepath_raw,scene=context.scene)
-                    if(os.stat(image.filepath_raw.st_size) > 33554400):
-                        raise Exception("Your file named "+sanitized_name(image.name)+" is bigger than the max (33,554,432 bytes) allowed VTF Size!!! EXITING!")
                     self.compile_gmod_tga(steam_library_path,images_path,sanitized_name(image.name))
                     if os.path.isfile(target_dir+"/"+sanitized_name(image.name).replace(".tga",".vtf")):
                         os.remove(target_dir+"/"+sanitized_name(image.name).replace(".tga",".vtf"))
