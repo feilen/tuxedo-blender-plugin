@@ -1,6 +1,6 @@
 import bpy
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
-from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Material_Grouping_UL_List, Material_Grouping_UL_List_New, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation
+from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Material_Grouping_UL_List, Material_Grouping_UL_List_Reload, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation
 from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, OptimizeStaticShapekeys, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest, RepairShapekeys, ExportGmodPlayermodel, ConvertToValveButton, PoseToRest
 from .properties import register_properties
 
@@ -45,7 +45,7 @@ def register():
     bpy.utils.register_class(Bake_Platform_Delete)
     bpy.utils.register_class(Bake_Platform_List)
     bpy.utils.register_class(Material_Grouping_UL_List)
-    bpy.utils.register_class(Material_Grouping_UL_List_New)
+    bpy.utils.register_class(Material_Grouping_UL_List_Reload)
     bpy.utils.register_class(Bake_Platform_New)
     bpy.utils.register_class(Choose_Steam_Library)
     bpy.utils.register_class(Open_GPU_Settings)
@@ -92,7 +92,7 @@ def unregister():
     bpy.utils.unregister_class(Bake_Platform_Delete)
     bpy.utils.unregister_class(Bake_Platform_List)
     bpy.utils.unregister_class(Material_Grouping_UL_List)
-    bpy.utils.unregister_class(Material_Grouping_UL_List_New)
+    bpy.utils.unregister_class(Material_Grouping_UL_List_Reload)
     bpy.utils.unregister_class(Bake_Platform_New)
     bpy.utils.unregister_class(Choose_Steam_Library)
     bpy.utils.unregister_class(Open_GPU_Settings)

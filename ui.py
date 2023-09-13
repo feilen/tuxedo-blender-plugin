@@ -43,7 +43,7 @@ class Material_Grouping_UL_List(UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon = custom_icon)
 
-class Material_Grouping_UL_List_New(Operator):
+class Material_Grouping_UL_List_Reload(Operator):
     bl_idname = "tuxedo_bake.materials_reload"
     bl_label = "Reload Materials"
 
@@ -301,7 +301,7 @@ class BakePanel(bpy.types.Panel):
         row.template_list("Material_Grouping_UL_List", "The_Mat_List", context.scene,
                           "bake_material_groups", context.scene, "bake_material_groups_index")
         row = col.row(align=True)
-        row.operator(Material_Grouping_UL_List_New.bl_idname)
+        row.operator(Material_Grouping_UL_List_Reload.bl_idname)
         col.separator()
         row = col.row()
         col.label(text="Platforms:")

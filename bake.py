@@ -10,7 +10,7 @@ import shutil
 import threading
 from subprocess import DEVNULL
 
-from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel
+from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel, materials_list_update
 from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
 class BakeTutorialButton(bpy.types.Operator):
@@ -766,7 +766,9 @@ class BakeButton(bpy.types.Operator):
         context.scene.decimation_animation_weighting = context.scene.bake_animation_weighting
         context.scene.decimation_animation_weighting_factor = context.scene.bake_animation_weighting_factor
         context.scene.decimation_animation_weighting_include_shapekeys = context.scene.bake_animation_weighting_include_shapekeys
-
+        
+        materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
+        
         self.perform_bake(context)
 
         context.scene.tuxedo_max_tris = tuxedo_max_tris
@@ -1174,6 +1176,7 @@ class BakeButton(bpy.types.Operator):
                     # detect if UVPackMaster installed and configured: apparently UVP doesn't always
                     # self-initialize? So just force it
                     # if 'uvpm3_props' in context.scene:
+                    bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='FACE')
                     try:
                         context.scene.uvpm3_props.normalize_islands = False
                         # Tuxedo UV Super is where we do the World normal bake, so it must be totally
