@@ -893,9 +893,6 @@ class BakeButton(bpy.types.Operator):
             
             material_name_groups[i.group].append(i.name)
         
-        if len(material_name_groups) <= 1:
-            material_name_groups = dict()
-        
         for group_num,group in material_name_groups.items():
             for mat in group:
                 reverse_material_name_dict[mat] = group_num
