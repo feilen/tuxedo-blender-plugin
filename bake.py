@@ -540,48 +540,51 @@ class BakeButton(bpy.types.Operator):
         sharpen_node.inputs["Fac"].default_value = 0.1
         return sharpen_node.inputs["Image"], sharpen_node.outputs["Image"]
 
-    # "Bake pass" function. Run a single bake to "<bake_name>.png" against all selected objects.
-    def bake_pass(self, context, bake_name, bake_type, bake_pass_filter, objects, bake_size, bake_samples, bake_ray_distance, background_color, clear, bake_margin, bake_active=None, bake_multires=False,
-                  normal_space='TANGENT',solidmaterialcolors=dict()):
+    def deselect_all_objects():
         bpy.ops.object.select_all(action='DESELECT')
-        if bake_active is not None:
-            bake_active.select_set(True)
-            context.view_layer.objects.active = bake_active
 
+    def select_and_set_active_object(context, obj):
+        obj.select_set(True)
+        context.view_layer.objects.active = obj
+
+    def print_baking_info(bake_name, objects):
         print("Baking " + bake_name + " for objects: " + ",".join(obj.name for obj in objects))
 
-        if clear:
-            if "SCRIPT_" + bake_name + ".png" in bpy.data.images:
-                image = bpy.data.images["SCRIPT_" + bake_name + ".png"]
-                image.user_clear()
-                bpy.data.images.remove(image)
-
-            bpy.ops.image.new(name="SCRIPT_" + bake_name + ".png", width=bake_size[0], height=bake_size[1], color=background_color,
-                              generated_type="BLANK", alpha=True)
+    def clear_image_if_exists(bake_name):
+        if "SCRIPT_" + bake_name + ".png" in bpy.data.images:
             image = bpy.data.images["SCRIPT_" + bake_name + ".png"]
-            image.filepath = bpy.path.abspath("//Tuxedo Bake/" + "SCRIPT_" + bake_name + ".png")
-            image.alpha_mode = "STRAIGHT"
-            image.generated_color = background_color
-            image.generated_width = bake_size[0]
-            image.generated_height = bake_size[1]
-            image.scale(bake_size[0], bake_size[1])
-            if bake_type == 'NORMAL' or bake_type == 'ROUGHNESS':
-                image.colorspace_settings.name = 'Non-Color'
-            if bake_name == 'diffuse' or bake_name == 'metallic':  # For packing smoothness to alpha
-                image.alpha_mode = 'CHANNEL_PACKED'
-            image.pixels[:] = background_color * bake_size[0] * bake_size[1]
-        image = bpy.data.images["SCRIPT_" + bake_name + ".png"]
+            image.user_clear()
+            bpy.data.images.remove(image)
 
-        # Select only objects we're baking
+    def create_new_image(bake_name, bake_size, background_color):
+        bpy.ops.image.new(name="SCRIPT_" + bake_name + ".png", width=bake_size[0], height=bake_size[1], color=background_color,
+                          generated_type="BLANK", alpha=True)
+        image = bpy.data.images["SCRIPT_" + bake_name + ".png"]
+        image.filepath = bpy.path.abspath("//Tuxedo Bake/" + "SCRIPT_" + bake_name + ".png")
+        image.alpha_mode = "STRAIGHT"
+        image.generated_color = background_color
+        image.generated_width = bake_size[0]
+        image.generated_height = bake_size[1]
+        image.scale(bake_size[0], bake_size[1])
+        return image
+
+    def set_image_colorspace(image, bake_type, bake_name):
+        if bake_type == 'NORMAL' or bake_type == 'ROUGHNESS':
+            image.colorspace_settings.name = 'Non-Color'
+        if bake_name == 'diffuse' or bake_name == 'metallic':  # For packing smoothness to alpha
+            image.alpha_mode = 'CHANNEL_PACKED'
+
+    def set_image_pixels(image, background_color, bake_size):
+        image.pixels[:] = background_color * bake_size[0] * bake_size[1]
+
+    def select_objects_for_baking(objects):
         if not objects:
             print("No objects selected!")
             return
-
         for obj in objects:
             obj.select_set(True)
-            context.view_layer.objects.active = obj
 
-        # For all materials in use, change any value node labeled "bake_<bake_name>" to 1., then back to 0..
+    def change_value_node_for_materials(objects, bake_name):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
@@ -589,7 +592,7 @@ class BakeButton(bpy.types.Operator):
                         if node.type == "VALUE" and node.label == "bake_" + bake_name:
                             node.outputs["Value"].default_value = 1
 
-        # For all materials in all objects, add or repurpose an image texture node named "SCRIPT_BAKE"
+    def assign_bake_node_for_materials(objects, bake_name):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
@@ -609,7 +612,7 @@ class BakeButton(bpy.types.Operator):
                         node.location.x += 500
                         node.location.y -= 500
 
-        # Run bake.
+    def run_bake(context, bake_type, bake_pass_filter, bake_samples, clear, bake_active, bake_margin, bake_multires, normal_space, bake_ray_distance):
         context.scene.cycles.bake_type = bake_type
         context.scene.cycles.use_denoising = False # https://developer.blender.org/T94573
         context.scene.render.bake.use_pass_direct = "DIRECT" in bake_pass_filter
@@ -636,7 +639,8 @@ class BakeButton(bpy.types.Operator):
                             cage_extrusion=bake_ray_distance,
                             normal_space=normal_space
                             )
-        # For all materials in use, change any value node labeled "bake_<bake_name>" to 1., then back to 0..
+
+    def reset_value_node_for_materials(objects, bake_name):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
@@ -644,7 +648,7 @@ class BakeButton(bpy.types.Operator):
                         if node.type == "VALUE" and node.label == "bake_" + bake_name:
                             node.outputs["Value"].default_value = 0
 
-
+    def optimize_solid_materials(context, objects, bake_size, solidmaterialcolors, bake_name, image):
         #solid material optimization making 4X4 squares of solid color for this pass - @989onan
         if (context.scene.bake_optimize_solid_materials and
             (not any(plat.use_decimation for plat in context.scene.bake_platforms)) and
@@ -664,8 +668,6 @@ class BakeButton(bpy.types.Operator):
                     if material.name in solidmaterialcolors and (bake_name+"_color") in solidmaterialcolors[material.name]:
                         index = list(solidmaterialcolors.keys()).index(material.name)
 
-
-
                         #in pixels
                         #Thanks to @Sacred#9619 on discord for this one.
                         X = margin/2 + margin * int( index % n )
@@ -681,7 +683,27 @@ class BakeButton(bpy.types.Operator):
                                     old_pixels[(((y*bake_size[0])+x)*4)+channel] = rgba
             image.pixels[:] = old_pixels[:]
 
-
+    # "Bake pass" function. Run a single bake to "<bake_name>.png" against all selected objects.
+    def bake_pass(self, context, bake_name, bake_type, bake_pass_filter, objects, bake_size, bake_samples, bake_ray_distance, background_color, clear, bake_margin, bake_active=None, bake_multires=False,
+                      normal_space='TANGENT',solidmaterialcolors=dict()):
+        BakeButton.deselect_all_objects()
+        if bake_active is not None:
+            BakeButton.select_and_set_active_object(context, bake_active)
+        BakeButton.print_baking_info(bake_name, objects)
+        if clear:
+            BakeButton.clear_image_if_exists(bake_name)
+            image = BakeButton.create_new_image(bake_name, bake_size, background_color)
+            BakeButton.set_image_colorspace(image, bake_type, bake_name)
+            BakeButton.set_image_pixels(image, background_color, bake_size)
+        image = bpy.data.images["SCRIPT_" + bake_name + ".png"]
+        BakeButton.select_objects_for_baking(objects)
+        for obj in objects:
+            BakeButton.select_and_set_active_object(context, obj)
+        BakeButton.change_value_node_for_materials(objects, bake_name)
+        BakeButton.assign_bake_node_for_materials(objects, bake_name)
+        BakeButton.run_bake(context, bake_type, bake_pass_filter, bake_samples, clear, bake_active, bake_margin, bake_multires, normal_space, bake_ray_distance)
+        BakeButton.reset_value_node_for_materials(objects, bake_name)
+        BakeButton.optimize_solid_materials(context, objects, bake_size, solidmaterialcolors, bake_name, image)
 
     def copy_ob(self, ob, parent, collection):
         # copy ob
