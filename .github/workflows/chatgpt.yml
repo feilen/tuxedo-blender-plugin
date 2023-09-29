@@ -1,21 +1,28 @@
 name: ChatGPT Code Review
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
-  pull_request:
-    types: [opened, synchronize]
+  pull_request_target:
+    types: [opened, reopened, synchronize]
 
 jobs:
-  hello_world_job:
+  test:
+    # if: ${{ contains(github.event.*.labels.*.name, 'gpt review') }} # Optional; to run only when a label is attached
     runs-on: ubuntu-latest
-    name: ChatGPT Code Review
     steps:
-      - name: ChatGPT Code Review
-        uses: cirolini/chatgpt-github-actions@v1.3
-        with:
-          openai_api_key: ${{ secrets.openai_api_key }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_pr_id: ${{ github.event.number }}
-          #openai_engine: "text-davinci-002" #optional
-          #openai_temperature: 0.5 #optional
-          #openai_max_tokens: 2048 #optional
-          mode: patch # file or patch 
+      - uses: anc95/ChatGPT-CodeReview@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Optional
+          LANGUAGE: English
+          # OPENAI_API_ENDPOINT: https://api.openai.com/v1
+          #MODEL: gpt-3.5-turbo # https://platform.openai.com/docs/models
+          #PROMPT: Please identify any major code regressions or significant improvements in the following python diff.
+          #top_p: 1 # https://platform.openai.com/docs/api-reference/chat/create#chat/create-top_p
+          #temperature: 1 # https://platform.openai.com/docs/api-reference/chat/create#chat/create-temperature
+          max_tokens: 5000
+          #MAX_PATCH_LENGTH: 10000 # if the patch/diff length is large than MAX_PATCH_LENGTH, will be ignored and won't review. By default, with no MAX_PATCH_LENGTH set, there is also no limit for the patch/diff length.
