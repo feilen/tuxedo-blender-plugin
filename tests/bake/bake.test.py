@@ -419,7 +419,7 @@ class TestAddon(unittest.TestCase):
             bpy.context.scene.bake_sharpen = filter_img
             result = bpy.ops.tuxedo_bake.bake()
 
-            # take a random sampling of each image result, confirm it's what we expect
+            # Confirm that the expected image result is randomly sampled
             self.assertTrue(test_name in sampling_lookup)
             for (bakename, cases) in sampling_lookup[test_name].items():
                 self.assertTrue(bakename in bpy.data.images, bakename)
@@ -430,20 +430,20 @@ class TestAddon(unittest.TestCase):
                     if not filter_img:
                         for i in range(4):
                             self.assertTrue(color[i] - 2 <= foundcolor[i] <= color[i] + 2,
-                                         "{}@({}, {}): {} != {} ({})".format(bakename,
-                                                                             coordinate[0],
-                                                                             coordinate[1],
-                                                                             color, foundcolor,
-                                                                             foundraw))
+                                             "{}@({}, {}): {} != {} ({})".format(bakename,
+                                                                                 coordinate[0],
+                                                                                 coordinate[1],
+                                                                                 color, foundcolor,
+                                                                                 foundraw))
                     else:
                         for i in range(4):
                             # Wide margins, since sharpening actually does change it (on purpose)
                             self.assertTrue(color[i] - 40 <= foundcolor[i] <= color[i] + 40,
-                                         "{}@({}, {}): {} != {} ({})".format(bakename,
-                                                                             coordinate[0],
-                                                                             coordinate[1],
-                                                                             color, foundcolor,
-                                                                             foundraw))
+                                             "{}@({}, {}): {} != {} ({})".format(bakename,
+                                                                                 coordinate[0],
+                                                                                 coordinate[1],
+                                                                                 color, foundcolor,
+                                                                                 foundraw))
             test_collection_names = {
                 'bake.bakematerialtest.blend': set([
                     'Tuxedo Bake Second Life',
