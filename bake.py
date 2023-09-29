@@ -1160,7 +1160,10 @@ class BakeButton(bpy.types.Operator):
 
                 if pack_uvs:
                     if not context.scene.uvp_lock_islands:
-                        bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+                        if bpy.app.version < (3, 6, 0) or not is_unittest:
+                            bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+                        else:
+                            bpy.ops.uv.pack_islands(rotate=True, margin=margin, rotate_method="AXIS_ALIGNED")
 
                     # detect if UVPackMaster installed and configured: apparently UVP doesn't always
                     # self-initialize? So just force it
@@ -1194,7 +1197,10 @@ class BakeButton(bpy.types.Operator):
                             for _ in range(1, 3):
                                 bpy.ops.uvpackmaster2.uv_pack()
                         except:
-                            bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+                            if bpy.app.version < (3, 6, 0) or not is_unittest:
+                                bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+                            else:
+                                bpy.ops.uv.pack_islands(rotate=True, margin=margin, rotate_method="AXIS_ALIGNED")
                             pass
 
                 bpy.ops.object.mode_set(mode='OBJECT')
