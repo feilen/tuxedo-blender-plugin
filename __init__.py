@@ -10,7 +10,7 @@ bl_info = {
     'author': 'Feilen',
     'location': 'View 3D > Tool Shelf > Tuxedo',
     'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
-    'version': (0, 1, 0),
+    'version': (0, 2, 0),
     'blender': (2, 80, 0),
     'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
     'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
