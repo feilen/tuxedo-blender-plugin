@@ -40,7 +40,7 @@ jobs:
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
       run: |
-        mkdir -p ${HOME}/.config/blender/{2.93,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9}/scripts/addons
+        mkdir -p ${HOME}/.config/blender/{2.93,3.0,3.1,3.2,3.3,3.4,3.5,3.6,4.0,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9}/scripts/addons
         ln -s ${PWD} ${HOME}/.config/blender/2.93/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.0/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.1/scripts/addons/tuxedo-blender-plugin
