@@ -35,7 +35,7 @@ jobs:
         sudo snap install blender_33 --channel 3.3lts/stable --classic
         sudo snap install blender_34 --channel 3.4/stable --classic
         sudo snap install blender_35 --channel 3.5/stable --classic
-        sudo snap install blender_36 --channel 3.6/stable --classic
+        sudo snap install blender_36 --channel 3.6lts/stable --classic
         sudo snap install blender_40 --channel 4.0/stable --classic
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
