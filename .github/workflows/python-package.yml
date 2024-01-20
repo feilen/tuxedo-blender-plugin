@@ -35,6 +35,8 @@ jobs:
         sudo snap install blender_33 --channel 3.3lts/stable --classic
         sudo snap install blender_34 --channel 3.4/stable --classic
         sudo snap install blender_35 --channel 3.5/stable --classic
+        sudo snap install blender_36 --channel 3.6/stable --classic
+        sudo snap install blender_40 --channel 4.0/stable --classic
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
       run: |
@@ -47,9 +49,16 @@ jobs:
         ln -s ${PWD} ${HOME}/.config/blender/3.4/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.5/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.6/scripts/addons/tuxedo-blender-plugin
-        ln -s ${PWD} ${HOME}/.config/blender/3.7/scripts/addons/tuxedo-blender-plugin
-        ln -s ${PWD} ${HOME}/.config/blender/3.8/scripts/addons/tuxedo-blender-plugin
-        ln -s ${PWD} ${HOME}/.config/blender/3.9/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.0/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.1/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.2/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.3/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.4/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.5/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.6/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.7/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.8/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.9/scripts/addons/tuxedo-blender-plugin
     - name: run unit tests for all versions
       run: |
         python3 ./tests/run.py --blend=blender_293 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
@@ -59,6 +68,8 @@ jobs:
         python3 ./tests/run.py --blend=blender_33 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_34 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_35 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_36 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_40 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_293 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_30 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
@@ -67,4 +78,6 @@ jobs:
         python3 ./tests/run.py --blend=blender_33 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_34 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_35 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_36 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_40 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
