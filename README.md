@@ -4,8 +4,11 @@
 
 <img src="images/quest-anim.gif" width="500" />
 
-### What is it?
+### Features and How-Tos
 
+<details>
+  <summary>Bake a super-performant avatar from just about any starting point!</summary>
+  
 <img src="assets/markdown-img-paste-20220320212122901.png" width="500" />
 <img src="assets/markdown-img-paste-20220320212335931.png" width="500" />
 
@@ -32,10 +35,6 @@ _Down/Left: Nearly the same model, but running in Garry's Mod. Down/Right: Same 
 - **Bone-capable props** - Add props to your VRChat avatar without incurring an extra performance penalty. Props are created by moving the resulting geometry to extra bones which are shrunk out of sight - adding a tiny skinning cost, instead of adding more draw calls.
 
 ![](assets/markdown-img-paste-20230325190736861.png)
-
-### Installation:
-
-Installation is pretty standard. Grab the latest .zip off the [releases](https://github.com/feilen/tuxedo-blender-plugin/releases) page and install using Blender's addon settings.
 
 ### Quick start:
 For most people, all you'll have to do is:
@@ -253,3 +252,22 @@ exit()"
 ![image](https://cdn.discordapp.com/attachments/790488253764730920/791146826774216744/unknown.png)
 
 _'Dawn' model by [@zombies_in_soup](https://twitter.com/zombies_in_soup)_
+</details>
+
+<details>
+<summary>Generate twist bones automatically for more realistic avatar movement</summary>
+	
+[See '5-minute twistbones' on the wiki](https://github.com/feilen/tuxedo-blender-plugin/wiki/5-Minute-Twistbones)
+	
+</details>
+
+<details>
+<summary>Generate facial tracking shapekeys instantly from visemes!</summary>
+	
+### Generate shapekeys on the fly using just the AA, OH and CH visemes (together with the blink/smile/frown keys)!
+<img src="https://github.com/feilen/tuxedo-blender-plugin/assets/1109288/773d7325-2e68-4d90-931a-8bcf03b0667b" width="500" />
+</details>
+
+### Installation:
+
+Installation is pretty standard. Grab the latest .zip off the [releases](https://github.com/feilen/tuxedo-blender-plugin/releases) page and install using Blender's addon settings.
