@@ -13,6 +13,13 @@ from subprocess import DEVNULL
 from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel
 from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
+if bpy.app.version >= (4, 0, 0):
+    EMISSION_INPUT = "Emission Color"
+    SPECULAR_INPUT = "Specular IOR Level"
+else:
+    EMISSION_INPUT = "Emission"
+    SPECULAR_INPUT = "Specular"
+
 class BakeTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.tutorial'
     bl_label = t('tuxedo_bake.tutorial_button.label')
@@ -68,8 +75,8 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
                                           or len(set(node.inputs["Roughness"].default_value for node in bsdf_nodes)) > 1)
 
     # Emit: similar to diffuse
-    context.scene.bake_pass_emit = (any(node.inputs["Emission"].is_linked for node in bsdf_nodes)
-                                    or len(set(node.inputs["Emission"].default_value[:] for node in bsdf_nodes)) > 1)
+    context.scene.bake_pass_emit = (any(node.inputs[EMISSION_INPUT].is_linked for node in bsdf_nodes)
+                                    or len(set(node.inputs[EMISSION_INPUT].default_value[:] for node in bsdf_nodes)) > 1)
 
     # Transparency: similar to diffuse
     context.scene.bake_pass_alpha = (any(node.inputs["Alpha"].is_linked for node in bsdf_nodes)
@@ -196,10 +203,10 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
             item.diffuse_alpha_pack = "TRANSPARENCY"
         else:
             item.diffuse_alpha_pack = "NONE"
-        
+
         item.use_decimation = max(get_tricount(obj) for obj in objects) > 9950
-            
-        
+
+
 
 def img_channels_as_nparray(image_name):
     image = bpy.data.images[image_name]
@@ -432,7 +439,7 @@ class BakeButton(bpy.types.Operator):
 
     # For every found BSDF, duplicate it, rename the new one to '.BAKE', and set bake-able defaults
     # Attach the links and copy the dv, but only for desired_inputs
-    def genericize_bsdfs(self, objects, desired_inputs, base_black=False):
+    def genericize_bsdfs(self, objects, desired_inputs, base_black=False, flat_ior=False):
         desired_material_trees = {slot.material.node_tree for obj in objects
                                    for slot in obj.material_slots if slot.material}
         desired_material_trees |= {node_group for node_group in bpy.data.node_groups}
@@ -461,14 +468,23 @@ class BakeButton(bpy.types.Operator):
                         bake_node.inputs["Base Color"].default_value = [0., 0., 0., 1.]
                     else:
                         bake_node.inputs["Base Color"].default_value = [1., 1., 1., 1.]
-                    bake_node.inputs["Subsurface"].default_value = 0.0
+                    if bpy.app.version < (4, 0, 0):
+                        bake_node.inputs["Subsurface"].default_value = 0.0
+                    elif flat_ior:
+                        bake_node.inputs["IOR"].default_value = 1.0 # Without this, diffuse color gets all messed up
                     bake_node.inputs["Metallic"].default_value = 0.0
-                    bake_node.inputs["Specular"].default_value = 0.5
+                    bake_node.inputs[SPECULAR_INPUT].default_value = 0.5
                     bake_node.inputs["Roughness"].default_value = 0.5
                     bake_node.inputs["Alpha"].default_value = 1.0
 
                     for desired_input, connect_to in desired_inputs.items():
-                        bake_node.inputs[connect_to].default_value = node.inputs[desired_input].default_value
+                        if type(bake_node.inputs[connect_to].default_value) != type(node.inputs[desired_input].default_value):
+                            # Assume for color
+                            assert connect_to == "Base Color"
+                            dv = node.inputs[desired_input].default_value
+                            bake_node.inputs[connect_to].default_value = [dv, dv, dv, 1.]
+                        else:
+                            bake_node.inputs[connect_to].default_value = node.inputs[desired_input].default_value
 
     # Find generated bakenodes and restore their outputs, then delete them
     def restore_bsdfs(self, objects):
@@ -495,14 +511,14 @@ class BakeButton(bpy.types.Operator):
 
     # filter_node_create is a function which, given a tree, returns a tuple of
     # (input, output)
-    def filter_image(self, context, image, filter_create, use_linear=False, save_srgb=False):
+    def filter_image(self, context, image, filter_create, use_linear=False):
         # This is performed in our throwaway scene, so we don't have to keep settings
-        context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
         context.scene.view_settings.view_transform = "Standard"
         orig_colorspace = bpy.data.images[image].colorspace_settings.name
         # Bizarrely, getting the pixels from a render result is extremely difficult.
         # To keep things simple, we perform a render here and then reload from disk.
         bpy.data.images[image].save()
+        bpy.data.images[image].colorspace_settings.name = 'sRGB'
         # set up compositor
         context.scene.use_nodes = True
         tree = context.scene.node_tree
@@ -569,7 +585,7 @@ class BakeButton(bpy.types.Operator):
         return image
 
     def set_image_colorspace(image, bake_type, bake_name):
-        if bake_type == 'NORMAL' or bake_type == 'ROUGHNESS':
+        if bake_name == 'normal' or bake_name == 'world' or bake_name == 'smoothness':
             image.colorspace_settings.name = 'Non-Color'
         if bake_name == 'diffuse' or bake_name == 'metallic':  # For packing smoothness to alpha
             image.alpha_mode = 'CHANNEL_PACKED'
@@ -805,7 +821,7 @@ class BakeButton(bpy.types.Operator):
 
     #needed because it likes to pause blender entirely for a key input in console and we don't want that garbage - @989onan
     def compile_gmod_tga(self,steam_library_path,images_path,texturename):
-        
+
         print("Start Texture bake for \""+texturename+"\".")
         #this prevents the sub process for asking for stoopid key input. YEET! Or is supposed to... https://stackoverflow.com/a/23478570
         proc = subprocess.Popen([steam_library_path+"steamapps/common/GarrysMod/bin/vtex.exe", "-nopause", "-mkdir", images_path+"materialsrc/"+texturename])
@@ -964,7 +980,7 @@ class BakeButton(bpy.types.Operator):
                             }
                             for (use_pass, pass_key, pass_slot) in [
                                     (pass_diffuse, "diffuse", "Base Color"),
-                                    (pass_emit, "emit", "Emission"),
+                                    (pass_emit, "emit", EMISSION_INPUT),
                                     (pass_smoothness, "smoothness", "Roughness"),
                                     (pass_metallic, "metallic", "Metallic"),
                                     (pass_alpha, "alpha", "Alpha"),
@@ -1256,18 +1272,19 @@ class BakeButton(bpy.types.Operator):
 
         # Perform 'Bake' renders: non-normal that never perform ray-tracing
         for (bake_conditions, bake_name, bake_type, bake_pass_filter, background_color,
-             desired_inputs, use_linear, invert) in [
-                 (pass_diffuse, "diffuse", "DIFFUSE", {"COLOR"}, [0.5, 0.5, 0.5, 1.], {"Base Color": "Base Color"}, False, False),
-                 (pass_smoothness, "smoothness", "ROUGHNESS", set(), [1., 1., 1., 1.], {"Roughness": "Roughness"}, True, True),
-                 (pass_alpha, "alpha", "DIFFUSE", {"COLOR"}, [1, 1, 1, 1.], {"Alpha": "Alpha"}, False, False),
-                 (pass_metallic, "metallic", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], {"Metallic": "Metallic"}, False, True),
-                 (pass_emit and not emit_indirect, "emission", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
-                 (pass_detail, "detail", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
+             desired_inputs, use_linear, invert, flat_ior) in [
+                 (pass_diffuse, "diffuse", "DIFFUSE", {"COLOR"}, [0.5, 0.5, 0.5, 1.], {"Base Color": "Base Color"}, False, False, True),
+                 (pass_smoothness, "smoothness", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], {"Roughness": "Base Color"}, True, True, True),
+                 (pass_alpha, "alpha", "DIFFUSE", {"COLOR"}, [1, 1, 1, 1.], {"Alpha": "Alpha"}, False, False, True),
+                 (pass_metallic, "metallic", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], {"Metallic": "Metallic"}, False, True, True),
+                 (pass_emit and not emit_indirect, "emission", "EMIT", set(), [0, 0, 0, 1.], {EMISSION_INPUT: EMISSION_INPUT, "Emission Strength": "Emission Strength"}, False, False, True),
+                 (pass_detail, "detail", "EMIT", set(), [0, 0, 0, 1.], {EMISSION_INPUT: EMISSION_INPUT}, False, False, True),
         ]:
             # TODO: Linearity will be determined by end channel. Alpha is linear, RGB is sRGB
             if bake_conditions:
                 self.genericize_bsdfs(get_objects(collection.all_objects, {"MESH"}),
-                                      desired_inputs)
+                                      desired_inputs, flat_ior=flat_ior)
+                #assert bake_name != "smoothness"
                 self.bake_pass(context, bake_name, bake_type, bake_pass_filter,
                                get_objects(collection.all_objects, {"MESH"}),
                                (resolution, resolution), 1 if draft_render else 32, 0,
@@ -1980,7 +1997,13 @@ class BakeButton(bpy.types.Operator):
             tree = mat.node_tree
             bsdfnode = next(node for node in tree.nodes if node.type == "BSDF_PRINCIPLED")
             if bsdf_original is not None:
+                bsdfnode.distribution = bsdf_original.distribution
+                bsdfnode.subsurface_method = bsdf_original.subsurface_method
+
                 for bsdfinput in bsdfnode.inputs:
+                    if bpy.app.version >= (4, 0, 0) and bsdfinput.is_unavailable:
+                        # In 4.0, there's defined inputs that don't neccesarily exist. Just skip
+                        continue
                     bsdfinput.default_value = bsdf_original.inputs[bsdfinput.identifier].default_value
             if pass_normal:
                 normaltexnode = tree.nodes.new("ShaderNodeTexImage")
@@ -2151,7 +2174,7 @@ class BakeButton(bpy.types.Operator):
                 emittexnode.image = bpy.data.images[platform_img("emission")]
                 emittexnode.location.x -= 800
                 emittexnode.location.y -= 150
-                tree.links.new(bsdfnode.inputs["Emission"], emittexnode.outputs["Color"])
+                tree.links.new(bsdfnode.inputs[EMISSION_INPUT], emittexnode.outputs["Color"])
 
             # Rebake diffuse to vertex colors: Incorperates AO
             if pass_diffuse and diffuse_vertex_colors:
@@ -2195,7 +2218,8 @@ class BakeButton(bpy.types.Operator):
                 if not bakeconditions:
                     continue
                 image = bpy.data.images[platform_img(bakepass)]
-                context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
+                if bpy.app.version < (4, 0, 0):
+                    context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
                 context.scene.view_settings.view_transform = "Raw" if use_linear else "Standard"
                 image.save_render(bpy.path.abspath(image.filepath), scene=context.scene)
                 if export_format == "GMOD":
@@ -2342,10 +2366,10 @@ class BakeButton(bpy.types.Operator):
                             outfile.write(line.replace("{BODYNAME}", orig_largest_obj_name)
                                           .replace("{IFDEFNAME}", orig_largest_obj_name.upper().replace(" ", "_"))
                                           .replace("{ARMATURENAME}", plat_arm_copy['tuxedoForcedExportName']))
-            
-            
-            
-            
+
+
+
+
             # Delete our duplicate scene
             #edit, Users who wanna see what the script creates and make any last minute changes will want this disabled for gmod.
             if export_format != "GMOD":

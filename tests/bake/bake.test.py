@@ -61,6 +61,7 @@ sampling_lookup = {
         },
         'SCRIPT_smoothness.png': {
             (0,0): (0,0,0,255),
+            (96,165): (128,128,128,255),
             (215,24): (122,122,122,255),
             (215,17): (234,234,234,255)
         },
@@ -435,6 +436,7 @@ class TestAddon(unittest.TestCase):
             self.assertTrue(test_name in sampling_lookup)
             for (bakename, cases) in sampling_lookup[test_name].items():
                 self.assertTrue(bakename in bpy.data.images, bakename)
+                #bpy.data.images[bakename].save()
                 for (coordinate, color) in cases.items():
                     pxoffset = (coordinate[0] + (coordinate[1] * 256 )) * 4
                     foundcolor = tuple(round(px*255) for px in bpy.data.images[bakename].pixels[pxoffset:pxoffset+4])
