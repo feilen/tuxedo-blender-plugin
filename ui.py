@@ -5,12 +5,10 @@ from . import bake as Bake
 from .tools import t, get_meshes_objects, get_armature
 from .tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
 from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-from .tools import FitClothes
+from .tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft
 
-from bpy.types import UIList, Operator
+from bpy.types import UIList, Operator, Panel
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty
-
 button_height = 1
 
 class Bake_Platform_List(UIList):
@@ -114,7 +112,7 @@ class Choose_Steam_Library(Operator, ImportHelper):
         context.scene.bake_steam_library = self.directory
         return{'FINISHED'}
 
-class ToolPanel(bpy.types.Panel):
+class ToolPanel(Panel):
     bl_label = "Tools"
     bl_idname = 'VIEW3D_PT_tuxtools'
     bl_category = 'Tuxedo'
@@ -196,7 +194,7 @@ class ToolPanel(bpy.types.Panel):
         row.scale_y = 1.2
         row.operator(FitClothes.bl_idname, icon='MOD_CLOTH')
 
-class BakePanel(bpy.types.Panel):
+class BakePanel(Panel):
     bl_label = "Tuxedo Bake"
     bl_idname = 'VIEW3D_PT_tuxbake'
     bl_category = 'Tuxedo'
@@ -631,3 +629,109 @@ class BakePanel(bpy.types.Panel):
                 row.separator()
                 row.label(text=name + ": " + "{}".format(len(bpy.data.objects[name].data.uv_layers)), icon="OBJECT_DATA")
 
+
+# -------------------------------------------------------------------
+# User Interface
+# -------------------------------------------------------------------
+
+class FT_Shapes_UL(Panel):
+    bl_label = "Face Tracking Generation"
+    bl_idname = "FT Shapes"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Tuxedo"
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        ft_mesh = scene.ft_mesh
+
+        #Start Layout
+        col = layout.column()
+
+        #Mesh Selection
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(context.scene, 'ft_mesh', icon='MESH_DATA')
+        col.separator()
+        row = col.row(align=True)
+
+        #Viseme Selection
+        col.separator()
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.label(text="Create from Visemes:", icon='SHADERFX')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_aa', icon='SHAPEKEY_DATA')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_ch', icon='SHAPEKEY_DATA')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_oh', icon='SHAPEKEY_DATA')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_blink', icon='SHAPEKEY_DATA')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_smile', icon='SHAPEKEY_DATA')
+        row = col.row(align=True)
+        row.scale_y = 1.1
+        row.prop(scene, 'ft_frown', icon='SHAPEKEY_DATA')
+
+        #Check mesh selections
+        if ft_mesh and has_shapekeys(bpy.data.objects[ft_mesh]):
+            #Info
+
+            row = col.row(align=True)
+            row.scale_y = 1.1
+            row.label(text='Select shape keys to create FT shape keys.', icon='INFO')
+            col.separator()
+            row = col.row(align=True)
+            row.scale_y = 1.1
+            row.label(text='Specifying above will attempt to create them for you.', icon='INFO')
+            col.separator()
+            row = col.row(align=True)
+            row.scale_y = 1.1
+            row.label(text='Currently requires rotation to be applied.', icon='INFO')
+            col.separator()
+
+            #Start Box
+            box = layout.box()
+            col = box.column(align=True)
+
+            #Start List of Shapekeys from VRCFT labels list
+            for i in range(len(SRanipal_Labels)):
+                row = col.row(align=True)
+                row.scale_y = 1.1
+                row.label(text = SRanipal_Labels[i] + ":")
+                row.prop(scene, 'ft_shapekey_' + str(i), icon='SHAPEKEY_DATA')
+                row.prop(scene, 'ft_shapekey_enable_' + str(i), icon='CHECKMARK')
+                # Determine whether this key is already going to be auto-populated
+                label = SRanipal_Labels[i]
+                basis = get_shapekeys_ft(self, context)[0][0]
+                if any(string in label for string in ['Blink', 'squeeze', 'Wide']):
+                    if context.scene.ft_blink != basis:
+                        row.enabled = False
+                if any(string in label for string in ['Jaw']):
+                    if context.scene.ft_aa != basis:
+                        row.enabled = False
+                if any(string in label for string in ['Upper_Up', 'Lower_Down', 'Upper_Left', 'Lower_Right', 'Upper_Right', 'Lower_Left', 'Inside', 'Pout', 'Mouth_Left', 'Mouth_Right', 'Smile', 'Sad']):
+                    if (context.scene.ft_ch != basis and
+                        context.scene.ft_oh != basis):
+                        row.enabled = False
+                if any(string in label for string in ['Smile']):
+                    if context.scene.ft_smile != basis:
+                        row.enabled = False
+                if any(string in label for string in ['Sad']):
+                    if context.scene.ft_frown != basis:
+                        row.enabled = False
+
+            row = layout.row()
+            row.operator("ft.create_shapekeys", icon='MESH_MONKEY')
+        else:
+            row = col.row(align=True)
+            row.scale_y = 1.1
+            row.label(text='Select the mesh with face shape keys.', icon='INFO')
+            col.separator()

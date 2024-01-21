@@ -1,8 +1,10 @@
 import bpy
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
-from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation
+from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL
 from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest, RepairShapekeys, ExportGmodPlayermodel, ConvertToValveButton, PoseToRest
+from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
 from .properties import register_properties
+from bpy.types import Scene
 
 bl_info = {
     'name': 'Tuxedo Blender Plugin',
@@ -10,100 +12,76 @@ bl_info = {
     'author': 'Feilen',
     'location': 'View 3D > Tool Shelf > Tuxedo',
     'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
-    'version': (0, 2, 0),
-    'blender': (2, 80, 0),
+    'version': (0, 4, 0),
+    'blender': (2, 93, 0),
     'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
     'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
     'warning': '',
 }
 
-def register():
+classes = (
     # Auto decimate fns
-    bpy.utils.register_class(AutoDecimatePresetGood)
-    bpy.utils.register_class(AutoDecimatePresetExcellent)
-    bpy.utils.register_class(AutoDecimatePresetQuest)
+    AutoDecimatePresetGood,
+    AutoDecimatePresetExcellent,
+    AutoDecimatePresetQuest,
 
     # Bake fns
-    bpy.utils.register_class(BakeAddCopyOnly)
-    bpy.utils.register_class(BakeAddProp)
-    bpy.utils.register_class(BakeButton)
-    bpy.utils.register_class(BakePresetAll)
-    bpy.utils.register_class(BakePresetDesktop)
-    bpy.utils.register_class(BakePresetGmod)
-    bpy.utils.register_class(BakePresetGmodPhong)
-    bpy.utils.register_class(BakePresetQuest)
-    bpy.utils.register_class(BakePresetSecondlife)
-    bpy.utils.register_class(BakeRemoveCopyOnly)
-    bpy.utils.register_class(BakeRemoveProp)
-    bpy.utils.register_class(BakeTutorialButton)
+    BakeAddCopyOnly,
+    BakeAddProp,
+    BakeButton,
+    BakePresetAll,
+    BakePresetDesktop,
+    BakePresetGmod,
+    BakePresetGmodPhong,
+    BakePresetQuest,
+    BakePresetSecondlife,
+    BakeRemoveCopyOnly,
+    BakeRemoveProp,
+    BakeTutorialButton,
 
     # UI
-    bpy.utils.register_class(ToolPanel)
-    bpy.utils.register_class(BakePanel)
-    bpy.utils.register_class(Bake_Lod_Delete)
-    bpy.utils.register_class(Bake_Lod_New)
-    bpy.utils.register_class(Bake_Platform_Delete)
-    bpy.utils.register_class(Bake_Platform_List)
-    bpy.utils.register_class(Bake_Platform_New)
-    bpy.utils.register_class(Choose_Steam_Library)
-    bpy.utils.register_class(Open_GPU_Settings)
+    ToolPanel,
+    BakePanel,
+    Bake_Lod_Delete,
+    Bake_Lod_New,
+    Bake_Platform_Delete,
+    Bake_Platform_List,
+    Bake_Platform_New,
+    Choose_Steam_Library,
+    Open_GPU_Settings,
 
     # Utilities
-    bpy.utils.register_class(ConvertToSecondlifeButton)
-    bpy.utils.register_class(FitClothes)
-    bpy.utils.register_class(GenerateTwistBones)
-    bpy.utils.register_class(TwistTutorialButton)
-    bpy.utils.register_class(SmartDecimation)
-    bpy.utils.register_class(RepairShapekeys)
-    bpy.utils.register_class(ExportGmodPlayermodel)
-    bpy.utils.register_class(ConvertToValveButton)
-    bpy.utils.register_class(PoseToRest)
+    ConvertToSecondlifeButton,
+    FitClothes,
+    GenerateTwistBones,
+    TwistTutorialButton,
+    SmartDecimation,
+    RepairShapekeys,
+    ExportGmodPlayermodel,
+    ConvertToValveButton,
+    PoseToRest,
+
+    # Face Tracking
+    FT_OT_CreateShapeKeys,
+    FT_Shapes_UL,
+)
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     # Properties
     register_properties()
 
 def unregister():
-    # Autodecimate fns
-    bpy.utils.unregister_class(AutoDecimatePresetGood)
-    bpy.utils.unregister_class(AutoDecimatePresetExcellent)
-    bpy.utils.unregister_class(AutoDecimatePresetQuest)
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
-    # Bake fns
-    bpy.utils.unregister_class(BakeAddCopyOnly)
-    bpy.utils.unregister_class(BakeAddProp)
-    bpy.utils.unregister_class(BakeButton)
-    bpy.utils.unregister_class(BakePresetAll)
-    bpy.utils.unregister_class(BakePresetDesktop)
-    bpy.utils.unregister_class(BakePresetGmod)
-    bpy.utils.unregister_class(BakePresetGmodPhong)
-    bpy.utils.unregister_class(BakePresetQuest)
-    bpy.utils.unregister_class(BakePresetSecondlife)
-    bpy.utils.unregister_class(BakeRemoveCopyOnly)
-    bpy.utils.unregister_class(BakeRemoveProp)
-    bpy.utils.unregister_class(BakeTutorialButton)
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        delattr(Scene, "ft_shapekey_" + str(i))
 
-    # UI
-    bpy.utils.unregister_class(BakePanel)
-    bpy.utils.unregister_class(Bake_Lod_Delete)
-    bpy.utils.unregister_class(Bake_Lod_New)
-    bpy.utils.unregister_class(Bake_Platform_Delete)
-    bpy.utils.unregister_class(Bake_Platform_List)
-    bpy.utils.unregister_class(Bake_Platform_New)
-    bpy.utils.unregister_class(Choose_Steam_Library)
-    bpy.utils.unregister_class(Open_GPU_Settings)
-    bpy.utils.unregister_class(ToolPanel)
-
-    # Utilities
-    bpy.utils.unregister_class(ConvertToSecondlifeButton)
-    bpy.utils.unregister_class(FitClothes)
-    bpy.utils.unregister_class(GenerateTwistBones)
-    bpy.utils.unregister_class(TwistTutorialButton)
-    bpy.utils.unregister_class(SmartDecimation)
-    bpy.utils.unregister_class(RepairShapekeys)
-    bpy.utils.unregister_class(ExportGmodPlayermodel)
-    bpy.utils.unregister_class(ConvertToValveButton)
-    bpy.utils.unregister_class(PoseToRest)
-
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        delattr(Scene, "ft_shapekey_enable_" + str(i))
 
 if __name__ == '__main__':
     register()

@@ -2,7 +2,7 @@ from bpy.types import Scene, PropertyGroup
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools import t
+from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels
 
 def register_properties():
     # Bake
@@ -500,3 +500,29 @@ def register_properties():
         description=t('Scene.decimation_remove_doubles.desc'),
         default=True
     )
+
+    # Mesh Select
+    Scene.ft_mesh = EnumProperty(name='Mesh', description='Mesh to apply FT shape keys', items=get_meshes)
+
+    # Viseme select
+    Scene.ft_aa = EnumProperty(name='aa/Jaw Down', description='This shapekey should ideally only move the mouth down.', items=get_shapekeys_ft)
+    Scene.ft_ch = EnumProperty(name='ch/Cheese', description='This shapekey should ideally only move the lips to expose the teeth.', items=get_shapekeys_ft)
+    Scene.ft_oh = EnumProperty(name='oh/Shock/aa/Jaw Down', description='This shapekey should move the bottom lips more than CH but not the top lips,  and may need to be created. Often AA works too.', items=get_shapekeys_ft)
+    Scene.ft_blink = EnumProperty(name='blink', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+    Scene.ft_smile = EnumProperty(name='smile', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+    Scene.ft_frown = EnumProperty(name='frown', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+
+    # Shape Keys
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        setattr(Scene, "ft_shapekey_" + str(i), EnumProperty(
+            name='',
+            description='Select shapekey to use for SRanipal',
+            items=get_shapekeys_ft)
+        )
+    # Enable Shape Key Creation
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        setattr(Scene, "ft_shapekey_enable_" + str(i), BoolProperty(
+            name='',
+            description='Enable SRanipal Shapekey Creation',
+            default=True)
+        )

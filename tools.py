@@ -6,16 +6,16 @@ import os
 import webbrowser
 import operator
 import numpy as np
-import copy
 import time
 import subprocess
 import shutil
 from mathutils import Matrix
 import itertools
 
+from bpy.types import Operator
+
 from io_scene_fbx import fbx_utils
 from mathutils.geometry import intersect_point_line
-
 
 
 translation_dictionary = dict()
@@ -34,30 +34,30 @@ bone_names = {
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
-    "pinkie_0_r": ["littlefinger0r","pinkie0r","pinkiemetacarpalr"],
-    "pinkie_1_r": ["littlefinger1r","pinkie1r","pinkieproximalr"],
-    "pinkie_2_r": ["littlefinger2r","pinkie2r","pinkieintermediater"],
-    "pinkie_3_r": ["littlefinger3r","pinkie3r","pinkiedistalr"],
+    "pinkie_0_r": ["littlefinger0r", "pinkie0r", "pinkiemetacarpalr"],
+    "pinkie_1_r": ["littlefinger1r", "pinkie1r", "pinkieproximalr"],
+    "pinkie_2_r": ["littlefinger2r", "pinkie2r", "pinkieintermediater"],
+    "pinkie_3_r": ["littlefinger3r", "pinkie3r", "pinkiedistalr"],
 
-    "ring_0_r": ["ringfinger0r","ring0r","ringmetacarpalr"],
-    "ring_1_r": ["ringfinger1r","ring1r","ringproximalr"],
-    "ring_2_r": ["ringfinger2r","ring2r","ringintermediater"],
-    "ring_3_r": ["ringfinger3r","ring3r","ringdistalr"],
+    "ring_0_r": ["ringfinger0r", "ring0r", "ringmetacarpalr"],
+    "ring_1_r": ["ringfinger1r", "ring1r", "ringproximalr"],
+    "ring_2_r": ["ringfinger2r", "ring2r", "ringintermediater"],
+    "ring_3_r": ["ringfinger3r", "ring3r", "ringdistalr"],
 
-    "middle_0_r": ["middlefinger0r","middle0r","middlemetacarpalr"],
-    "middle_1_r": ["middlefinger1r","middle1r","middleproximalr"],
-    "middle_2_r": ["middlefinger2r","middle2r","middleintermediater"],
-    "middle_3_r": ["middlefinger3r","middle3r","middledistalr"],
+    "middle_0_r": ["middlefinger0r", "middle0r", "middlemetacarpalr"],
+    "middle_1_r": ["middlefinger1r", "middle1r", "middleproximalr"],
+    "middle_2_r": ["middlefinger2r", "middle2r", "middleintermediater"],
+    "middle_3_r": ["middlefinger3r", "middle3r", "middledistalr"],
 
-    "index_0_r": ["indexfinger0r","index0r","indexmetacarpalr"],
-    "index_1_r": ["indexfinger1r","index1r","indexproximalr"],
-    "index_2_r": ["indexfinger2r","index2r","indexintermediater"],
-    "index_3_r": ["indexfinger3r","index3r","indexdistalr"],
+    "index_0_r": ["indexfinger0r", "index0r", "indexmetacarpalr"],
+    "index_1_r": ["indexfinger1r", "index1r", "indexproximalr"],
+    "index_2_r": ["indexfinger2r", "index2r", "indexintermediater"],
+    "index_3_r": ["indexfinger3r", "index3r", "indexdistalr"],
 
-    "thumb_0_r": ["thumb0r","thumbmetacarpalr"],
-    "thumb_1_r": ['thumb0r',"thumbproximalr"],
-    "thumb_2_r": ['thumb1r',"thumbintermediater"],
-    "thumb_3_r": ['thumb2r',"thumbdistalr"],
+    "thumb_0_r": ["thumb0r", "thumbmetacarpalr"],
+    "thumb_1_r": ["thumb0r", "thumbproximalr"],
+    "thumb_2_r": ["thumb1r", "thumbintermediater"],
+    "thumb_3_r": ["thumb2r", "thumbdistalr"],
 
     "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "thighr", "rightupperleg", "uplegr", "rupleg"],
     "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rightlowerleg", "lowlegr", "rlowleg"],
@@ -70,44 +70,44 @@ bone_names = {
     "left_wrist": ["leftwrist", "wristl", "rwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
-    "pinkie_0_l": ["pinkiefinger0l","pinkie0l","pinkiemetacarpall"],
-    "pinkie_1_l": ["littlefinger1l","pinkie1l","pinkieproximall"],
-    "pinkie_2_l": ["littlefinger2l","pinkie2l","pinkieintermediatel"],
-    "pinkie_3_l": ["littlefinger3l","pinkie3l","pinkiedistall"],
+    "pinkie_0_l": ["pinkiefinger0l", "pinkie0l", "pinkiemetacarpall"],
+    "pinkie_1_l": ["littlefinger1l", "pinkie1l", "pinkieproximall"],
+    "pinkie_2_l": ["littlefinger2l", "pinkie2l", "pinkieintermediatel"],
+    "pinkie_3_l": ["littlefinger3l", "pinkie3l", "pinkiedistall"],
 
-    "ring_0_l": ["ringfinger0l","ring0l","ringmetacarpall"],
-    "ring_1_l": ["ringfinger1l","ring1l","ringproximall"],
-    "ring_2_l": ["ringfinger2l","ring2l","ringintermediatel"],
-    "ring_3_l": ["ringfinger3l","ring3l","ringdistall"],
+    "ring_0_l": ["ringfinger0l", "ring0l", "ringmetacarpall"],
+    "ring_1_l": ["ringfinger1l", "ring1l", "ringproximall"],
+    "ring_2_l": ["ringfinger2l", "ring2l", "ringintermediatel"],
+    "ring_3_l": ["ringfinger3l", "ring3l", "ringdistall"],
 
-    "middle_0_l": ["middlefinger0l","middle0l","middlemetacarpall"],
-    "middle_1_l": ["middlefinger1l","middle_1l","middleproximall"],
-    "middle_2_l": ["middlefinger2l","middle_2l","middleintermediatel"],
-    "middle_3_l": ["middlefinger3l","middle_3l","middledistall"],
+    "middle_0_l": ["middlefinger0l", "middle0l", "middlemetacarpall"],
+    "middle_1_l": ["middlefinger1l", "middle_1l", "middleproximall"],
+    "middle_2_l": ["middlefinger2l", "middle_2l", "middleintermediatel"],
+    "middle_3_l": ["middlefinger3l", "middle_3l", "middledistall"],
 
-    "index_0_l": ["indexfinger0l","index0l","indexmetacarpall"],
-    "index_1_l": ["indexfinger1l","index1l","indexproximall"],
-    "index_2_l": ["indexfinger2l","index2l","indexintermediatel"],
-    "index_3_l": ["indexfinger3l","index3l","indexdistall"],
+    "index_0_l": ["indexfinger0l", "index0l", "indexmetacarpall"],
+    "index_1_l": ["indexfinger1l", "index1l", "indexproximall"],
+    "index_2_l": ["indexfinger2l", "index2l", "indexintermediatel"],
+    "index_3_l": ["indexfinger3l", "index3l", "indexdistall"],
 
-    "thumb_0_l": ["thumb0l","thumbmetacarpall"],
-    "thumb_1_l": ['thumb0l',"thumbproximall"],
-    "thumb_2_l": ['thumb1l',"thumbintermediatel"],
-    "thumb_3_l": ['thumb2l',"thumbdistall"],
+    "thumb_0_l": ["thumb0l", "thumbmetacarpall"],
+    "thumb_1_l": ["thumb0l", "thumbproximall"],
+    "thumb_2_l": ["thumb1l", "thumbintermediatel"],
+    "thumb_3_l": ["thumb2l", "thumbdistall"],
 
     "left_leg": ["leftleg", "legl", "rleg", "upperlegl", "thighl", "leftupperleg", "uplegl", "lupleg"],
-    "left_knee": ["leftknee", "kneel", "rknee", "lowerlegl", "calfl", "leftlowerleg", 'lowlegl', 'llowleg'],
+    "left_knee": ["leftknee", "kneel", "rknee", "lowerlegl", "calfl", "leftlowerleg", "lowlegl", "llowleg"],
     "left_ankle": ["leftankle", "anklel", "rankle", "leftfoot", "footl", "leftfoot", "leftfeet", "feetleft", "lfeet", "feetl"],
     "left_toe": ["lefttoe", "toeleft", "toel", "ltoe", "toesl", "ltoes"],
 
-    'hips': ["pelvis", "hips"],
-    'spine': ["torso", "spine"],
-    'chest': ["chest"],
-    'upper_chest': ["upperchest"],
-    'neck': ["neck"],
-    'head': ["head"],
-    'left_eye': ["eyeleft", "lefteye", "eyel", "leye"],
-    'right_eye': ["eyeright", "righteye", "eyer", "reye"],
+    "hips": ["pelvis", "hips"],
+    "spine": ["torso", "spine"],
+    "chest": ["chest"],
+    "upper_chest": ["upperchest"],
+    "neck": ["neck"],
+    "head": ["head"],
+    "left_eye": ["eyeleft", "lefteye", "eyel", "leye"],
+    "right_eye": ["eyeright", "righteye", "eyer", "reye"],
 }
 
 # array taken from cats
@@ -203,7 +203,7 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
                     if vgroup_lookup[g.group] in bone_names:
                         bone = armature.data.bones[vgroup_lookup[g.group]]
                         if bone.parent and bone.parent.name in obj.vertex_groups:
-                           obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
+                            obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
                 except Exception as e:
                     print("\nerror below is because it attempted to read a null vertex's vertex groups.\n")
                     print(e)
@@ -237,6 +237,15 @@ def get_bid_name(bid):
     else:
         return bid.name
 
+def get_meshes(self, context):
+    choices = []
+
+    for mesh in get_meshes_objects(context):
+        choices.append((mesh.name, mesh.name, mesh.name))
+
+    bpy.types.Object.Enum = sorted(choices, key=lambda x: tuple(x[0].lower()))
+    return bpy.types.Object.Enum
+
 def get_meshes_objects(context, armature_name=None):
     arm = get_armature(context, armature_name)
     if arm:
@@ -256,6 +265,7 @@ def t(str_key):
 def add_shapekey(obj, shapekey_name, from_mix=False):
     if not has_shapekeys(obj) or shapekey_name not in obj.data.shape_keys.key_blocks:
         shape_key = obj.shape_key_add(name=shapekey_name, from_mix=from_mix)
+        return shape_key
 
 def get_armature(context, armature_name=None):
     if armature_name:
@@ -286,7 +296,7 @@ def apply_modifier(mod):
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 def join_meshes(context, armature_name):
-    armature = bpy.data.objects[armature_name]
+    bpy.data.objects[armature_name]
     meshes = get_meshes_objects(context, armature_name)
     if not meshes:
         return
@@ -361,6 +371,7 @@ class FitClothes(bpy.types.Operator):
 def get_children_recursive(parent):
     if bpy.app.version < (3, 1):
         objs = []
+
         def get_child_names(obj):
             for child in obj.children:
                 objs.append(child)
@@ -504,7 +515,6 @@ class SmartDecimation(bpy.types.Operator):
             join_meshes(context, armature.name)
         meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
 
-
         if len(meshes_obj) == 0:
             self.report({'INFO'}, "No meshes found.")
             return {'FINISHED'}
@@ -520,7 +530,6 @@ class SmartDecimation(bpy.types.Operator):
             tris_count += get_tricount(mesh.data.polygons)
             add_shapekey(mesh, 'Tuxedo Basis', False)
 
-
         decimation = 1. + ((tuxedo_max_tris - tris_count) / tris_count)
 
         print("Decimation total: " + str(decimation))
@@ -534,7 +543,6 @@ class SmartDecimation(bpy.types.Operator):
                     print("Decimation to reduce mesh "+mesh.name+"less than max tris per mesh: " + str(decimation))
                     self.extra_decimation_weights(context, animation_weighting, mesh, armature, animation_weighting_factor, decimation)
                     decimated_a_mesh = True
-
 
             if not decimated_a_mesh:
                 self.report({'INFO'}, "No Decimation needed.")
@@ -552,11 +560,9 @@ class SmartDecimation(bpy.types.Operator):
             for mesh in meshes_obj:
                 tris = get_tricount(mesh)
 
-                newdecimation = decimation if not ( math.ceil(tris*decimation) > self.max_single_mesh_tris) else (1. + ((self.max_single_mesh_tris - tris) / tris))
+                newdecimation = decimation if not (math.ceil(tris*decimation) > self.max_single_mesh_tris) else (1. + ((self.max_single_mesh_tris - tris) / tris))
 
                 self.extra_decimation_weights(context, animation_weighting, mesh, armature, animation_weighting_factor, newdecimation)
-
-
 
         return {'FINISHED'}
 
@@ -570,7 +576,6 @@ class SmartDecimation(bpy.types.Operator):
             mesh.vertex_groups[-1].name = "Tuxedo Animation"
             for idx, weight in newweights.items():
                 mesh.vertex_groups[-1].add([idx], weight, "REPLACE")
-
 
         context.view_layer.objects.active = mesh
         # Smart
@@ -608,8 +613,6 @@ class SmartDecimation(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all(action="INVERT")
 
-
-
         effective_ratio = decimation if not animation_weighting else (decimation * (1-animation_weighting_factor))
         bpy.ops.mesh.decimate(ratio=effective_ratio,
                               #use_vertex_group=animation_weighting,
@@ -627,7 +630,6 @@ class SmartDecimation(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='OBJECT')
             mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks["Tuxedo Basis"])
             mesh.active_shape_key_index = 0
-
 
     def get_animation_weighting(self, context, mesh, armature):
         print("Performing animation weighting for {}".format(mesh.name))
@@ -2767,6 +2769,376 @@ $Sequence \"idle\" {
         print("Wow that took a long time...")
         return {'FINISHED'}
 
+# -------------------------------------------------------------------
+# SRanipal Facetracking Shapekey List
+# -------------------------------------------------------------------
+
+SRanipal_Labels = [
+    "Eye_Left_squeeze",
+    "Eye_Right_squeeze",
+    "Eye_Left_Blink",
+    "Eye_Left_Right",
+    "Eye_Left_Left",
+    "Eye_Left_Down",
+    "Eye_Left_Up",
+    "Eye_Right_Blink",
+    "Eye_Right_Right",
+    "Eye_Right_Left",
+    "Eye_Right_Down",
+    "Eye_Right_Up",
+    "Eye_Left_Wide",
+    "Eye_Right_Wide",
+    "Eye_Left_Dilation",
+    "Eye_Left_Constrict",
+    "Eye_Right_Dilation",
+    "Eye_Right_Constrict",
+    "Jaw_Right",
+    "Jaw_Left",
+    "Jaw_Forward",
+    "Jaw_Open",
+    "Mouth_Ape_Shape",
+    "Mouth_Left",
+    "Mouth_Right",
+    "Mouth_Upper_Right",
+    "Mouth_Upper_Left",
+    "Mouth_Lower_Right",
+    "Mouth_Lower_Left",
+    "Mouth_Smile_Right",
+    "Mouth_Smile_Left",
+    "Mouth_Sad_Right",
+    "Mouth_Sad_Left",
+    "Mouth_Pout",
+    "Cheek_Puff_Right",
+    "Cheek_Puff_Left",
+    "Cheek_Suck",
+    "Mouth_Upper_Up",
+    "Mouth_Lower_Down",
+    "Mouth_Upper_UpRight",
+    "Mouth_Upper_UpLeft",
+    "Mouth_Lower_DownRight",
+    "Mouth_Lower_DownLeft",
+    "Mouth_O_Shape",
+    "Mouth_Upper_Overturn",
+    "Mouth_Lower_Overturn",
+    "Mouth_Upper_Inside",
+    "Mouth_Lower_Inside",
+    "Mouth_Lower_Overlay",
+    "Tongue_LongStep1",
+    "Tongue_LongStep2",
+    "Tongue_Down",
+    "Tongue_Up",
+    "Tongue_Right",
+    "Tongue_Left",
+    "Tongue_Roll",
+    "Tongue_UpRight_Morph",
+    "Tongue_UpLeft_Morph",
+    "Tongue_DownRight_Morph",
+    "Tongue_DownLeft_Morph",
+]
+
+# -------------------------------------------------------------------
+# Functions
+# -------------------------------------------------------------------
+
+def duplicate_shapekey(string):
+    active_object = bpy.context.active_object
+
+    #Check shape keys if duplicate
+    if active_object.data.shape_keys.key_blocks.find(string) >= 0:
+        #print("Duplicate shape key found!")
+        return True
+    else:
+        return False
+
+def version_2_79_or_older():
+    return bpy.app.version < (2, 80)
+
+def unselect_all():
+    for obj in get_objects():
+        select(obj, False)
+
+def get_objects():
+    return bpy.context.scene.objects if version_2_79_or_older() else bpy.context.view_layer.objects
+
+def set_active(obj, skip_sel=False):
+    if not skip_sel:
+        select(obj)
+    if version_2_79_or_older():
+        bpy.context.scene.objects.active = obj
+    else:
+        bpy.context.view_layer.objects.active = obj
+
+def select(obj, sel=True):
+    if sel:
+        hide(obj, False)
+    if version_2_79_or_older():
+        obj.select = sel
+    else:
+        obj.select_set(sel)
+
+def hide(obj, val=True):
+    if hasattr(obj, 'hide'):
+        obj.hide = val
+    if not version_2_79_or_older():
+        obj.hide_set(val)
+
+def get_shapekeys_ft(self, context):
+    return get_shapekeys(context, [], False, False)
+
+def get_shapekeys(context, names, no_basis, return_list):
+    choices = []
+    choices_simple = []
+    meshes_list = get_meshes_objects(context)
+
+    if meshes_list:
+        meshes = [get_objects().get(context.scene.ft_mesh)]
+    else:
+        bpy.types.Object.Enum = choices
+        return bpy.types.Object.Enum
+
+    for mesh in meshes:
+        if not mesh or not has_shapekeys(mesh):
+            bpy.types.Object.Enum = choices
+            return bpy.types.Object.Enum
+
+        for shapekey in mesh.data.shape_keys.key_blocks:
+            name = shapekey.name
+            if name in choices_simple:
+                continue
+            if no_basis and name == 'Basis':
+                continue
+            # 1. Will be returned by context.scene
+            # 2. Will be shown in lists
+            # 3. will be shown in the hover description (below description)
+            choices.append((name, name, ''))
+            choices_simple.append(name)
+
+#    choices.sort(key=lambda x: tuple(x[0].lower()))
+
+    choices2 = []
+    for name in names:
+        if name in choices_simple and len(choices) > 1 and choices[0][0] != name:
+            choices2.append((name, name, name))
+
+    for choice in choices:
+        choices2.append(choice)
+
+    bpy.types.Object.Enum = choices2
+
+    if return_list:
+        shape_list = []
+        for choice in choices2:
+            shape_list.append(choice[0])
+        return shape_list
+
+    return bpy.types.Object.Enum
+
+# Returns [delta_v in 3 parts, by vert idx], and a bounding box (-x, +x, -y, +y, -z, +z)
+def get_shapekey_delta(mesh, shapekey_name):
+    bounding_box = [math.inf, -math.inf, math.inf, -math.inf, math.inf, -math.inf]
+
+    basis_key = mesh.data.shape_keys.key_blocks["Basis"]
+    basis_key_data = np.empty((len(basis_key.data), 3), dtype=np.float32)
+    basis_key.data.foreach_get("co", np.ravel(basis_key_data))
+    active_key = mesh.data.shape_keys.key_blocks[shapekey_name]
+    active_key_data = np.empty((len(active_key.data), 3), dtype=np.float32)
+    active_key.data.foreach_get("co", np.ravel(active_key_data))
+    deltas = (active_key_data - basis_key_data)
+    absolute_difference = np.sum(np.abs(deltas), axis=1)
+    for idx, delta_total in enumerate(absolute_difference):
+        # If this vertex moved any, adjust our bounding box
+        if delta_total > 0.001:
+            bounding_box[0] = min(bounding_box[0], basis_key_data[idx][0])
+            bounding_box[1] = max(bounding_box[1], basis_key_data[idx][0])
+            bounding_box[2] = min(bounding_box[2], basis_key_data[idx][1])
+            bounding_box[3] = max(bounding_box[3], basis_key_data[idx][1])
+            bounding_box[4] = min(bounding_box[4], basis_key_data[idx][2])
+            bounding_box[5] = max(bounding_box[5], basis_key_data[idx][2])
+
+    return deltas, bounding_box
+
+# Map a range 0-1 where the middle e.g. 0.2x is linearly interpolated
+def crossfade(val, min_x, max_x, middle_percent):
+    val_norm = (val - min_x) / (max_x - min_x)
+    if val_norm < (.5 - (middle_percent / 2)):
+        # full
+        return 1
+    if val_norm > (.5 + (middle_percent / 2)):
+        # other side
+        return 0
+    else:
+        # middle, linear falloff
+        return 1 - ((val_norm - (.5 - (middle_percent / 2))) / middle_percent)
+
+# -------------------------------------------------------------------
+# Shape Key Operators
+# -------------------------------------------------------------------
+
+class FT_OT_CreateShapeKeys(Operator):
+    """Creates SRanipal Facetracking Shape Keys"""
+    bl_label = "Create SRanipal Face Tracking Shape Keys"
+    bl_idname = "ft.create_shapekeys"
+
+    def execute(self, context):
+
+        object = bpy.context.object
+        scene = context.scene
+        ft_mesh = scene.ft_mesh
+        active_object = bpy.context.active_object
+        mesh = bpy.ops.mesh
+        ops = bpy.ops
+
+        #Set the selected mesh to active object
+        mesh = get_objects()[ft_mesh]
+        self.report({'INFO'}, "Selected mesh is: " + str(ft_mesh))
+        set_active(mesh)
+
+        #Check if there is shape keys on the mesh
+        if object.data.shape_keys:
+
+            #Create beginning seperation marker for VRCFT Shape Keys
+            if duplicate_shapekey("~~ SRanipal Face Tracking ~~") == False :
+                object.shape_key_add(name="~~ SRanipal Face Tracking ~~", from_mix=False)
+
+            #Clear all existing values for shape keys
+            ops.object.shape_key_clear()
+
+            basis_key = get_shapekeys_ft(self, context)[0][0]
+            basis_key_ref = object.data.shape_keys.key_blocks[basis_key]
+            basis_key_data = np.empty((len(basis_key_ref.data), 3), dtype=np.float32)
+            basis_key_ref.data.foreach_get("co", np.ravel(basis_key_data))
+            if context.scene.ft_ch != basis_key:
+                ch_deltas, bounding_box = get_shapekey_delta(object, context.scene.ft_ch)
+                crossfade_l = lambda f: crossfade(f, bounding_box[0], bounding_box[1], 0.2)
+                crossfade_factors = np.vectorize(crossfade_l)(basis_key_data[:, 0])
+            for x in range(len(SRanipal_Labels)):
+                curr_key = eval("scene.ft_shapekey_" + str(x))
+                curr_key_enable = eval("scene.ft_shapekey_enable_" + str(x))
+                #Skip key if shape is disabled
+                if not curr_key_enable:
+                    continue
+                # determine if we're going to be working with visemes
+                label = SRanipal_Labels[x]
+                generate_eyes = (any(string in label for string in ['Blink', 'squeeze', 'Wide']) and
+                    context.scene.ft_blink != basis_key )
+                generate_jaw = (any(string in label for string in ['Jaw']) and context.scene.ft_aa != basis_key)
+                generate_mouth = (any(string in label for string in ['Upper_Up', 'Lower_Down', 'Upper_Left', 'Lower_Right', 'Upper_Right', 'Lower_Left', 'Inside', 'Pout', 'Mouth_Left', 'Mouth_Right']) and context.scene.ft_ch != basis_key and context.scene.ft_oh != basis_key)
+                generate_smile = (any(string in label for string in ['Smile']) and context.scene.ft_smile != basis_key)
+                generate_frown = (any(string in label for string in ['Sad']) and context.scene.ft_frown != basis_key)
+                if context.scene.ft_ch != basis_key:
+                    crossfade_arr = 1 - crossfade_factors if 'Left' in label else crossfade_factors
+
+                #Check if blend with 'Basis' shape key
+                if curr_key == "Basis" and not (generate_eyes or generate_jaw or generate_frown or generate_mouth or generate_smile):
+                    #Check for duplicates
+                    if not duplicate_shapekey(SRanipal_Labels[x]):
+                        object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                    #Do not overwrite if the shape key exists and is on 'Basis'
+
+                else:
+                    #Check for duplicates
+                    if not duplicate_shapekey(SRanipal_Labels[x]):
+                        # Special handling for visemes
+                        if generate_eyes:
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                            deltas, _ = get_shapekey_delta(object, context.scene.ft_blink)
+                            factor = 1
+                            if 'squeeze' in label:
+                                factor = 1.1
+                            elif 'Wide' in label:
+                                factor = -0.15
+                            if 'Left' in label:
+                                side_relevant = basis_key_data[:, 0] > 0
+                            if 'Right' in label:
+                                side_relevant = basis_key_data[:, 0] < 0
+                            deltas[~side_relevant] = 0.0
+                            object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(basis_key_data + (deltas * factor)))
+                        elif generate_mouth:
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                            oh_deltas, _ = get_shapekey_delta(object, context.scene.ft_oh)
+                            # consider vertices where delta(v_ch) > delta(v_oh) upper lip, and vice versa
+                            ch_should_be_greater = 'Upper' in label
+                            both_lips = any(string in label for string in ['Pout', 'Mouth_Left', 'Mouth_Right'])
+
+                            ch_greater = np.linalg.norm(ch_deltas, axis=1) > np.linalg.norm(oh_deltas, axis=1)
+                            lip_magnitude = np.linalg.norm(ch_deltas, axis=1)
+                            if not both_lips:
+                                if ch_should_be_greater:
+                                    lip_mask = ch_greater
+                                else:
+                                    lip_mask = ~ch_greater
+                                lip_magnitude[~lip_mask] = 0.0
+                            new_key = basis_key_data
+                            if any(string in label for string in ['Upper_Left', 'Lower_Right', 'Upper_Right', 'Lower_Left', 'Mouth_Left', 'Mouth_Right']):
+                                # instead of blending, we take the magnitude of movement * .1 and direct it to the left/right
+                                multiplier = 1
+                                if 'Right' in label:
+                                    multiplier = -1
+                                new_key[:, 0] -= lip_magnitude * 0.75 * multiplier
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            elif any(string in label for string in ['Inside']):
+                                new_key[:, 1] += lip_magnitude * 0.75
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            elif any(string in label for string in ['Pout']):
+                                new_key[:, 1] -= lip_magnitude * 0.75
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            else:
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((ch_deltas * crossfade_arr[:, None] * (lip_mask).astype(float)[:, None]) + basis_key_data))
+                        elif generate_smile:
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                            smile_deltas, _ = get_shapekey_delta(object, context.scene.ft_smile)
+
+                            object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((smile_deltas * crossfade_arr[:, None] + basis_key_data)))
+                        elif generate_frown:
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                            frown_deltas, _ = get_shapekey_delta(object, context.scene.ft_frown)
+
+                            object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((frown_deltas * crossfade_arr[:, None] + basis_key_data)))
+                        elif generate_jaw:
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
+                            aa_deltas, _ = get_shapekey_delta(object, context.scene.ft_aa)
+                            jaw_magnitude = np.linalg.norm(aa_deltas, axis=1)
+
+                            new_key = basis_key_data
+                            if any(string in label for string in ['Left', 'Right']):
+                                # instead of blending, we take the magnitude of movement * .1 and direct it to the left/right
+                                multiplier = 1
+                                if 'Right' in label:
+                                    multiplier = -1
+                                new_key[:, 0] -= jaw_magnitude * 0.75 * multiplier
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            elif any(string in label for string in ['Forward']):
+                                new_key[:, 1] -= jaw_magnitude * 0.5
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            else:
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(aa_deltas * 2.0 + basis_key_data))
+                        else:
+                            # Find shapekey enterred and mix to create new shapekey
+                            object.active_shape_key_index = active_object.data.shape_keys.key_blocks.find(curr_key)
+                            object.data.shape_keys.key_blocks[curr_key].value = 1
+                            object.shape_key_add(name=SRanipal_Labels[x], from_mix=True)
+                    else:
+                        #Mix to existing shape key duplicate
+                        object.active_shape_key_index = active_object.data.shape_keys.key_blocks.find(SRanipal_Labels[x])
+                        object.data.shape_keys.key_blocks[curr_key].value = 1
+                        ops.object.mode_set(mode='EDIT', toggle=False)
+                        bpy.ops.mesh.select_mode(type="VERT")
+                        ops.mesh.select_all(action='SELECT')
+                        ops.mesh.blend_from_shape(shape=curr_key, blend=1.0, add=False)
+                        self.report({'INFO'}, "Existing SRanipal face tracking shape key: " + SRanipal_Labels[x] + " has been overwritten with: " + curr_key)
+                    #Clear shape key weights
+                    ops.object.shape_key_clear()
+
+            self.report({'INFO'}, "SRanipal face tracking shapekeys have been created on mesh")
 
 
+            #Cleanup mode state
+            ops.object.mode_set(mode='OBJECT', toggle=False)
 
+            #Move active shape to 'Basis'
+            active_object.active_shape_key_index = 0
+
+        else:
+            #Error message if basis does not exist
+            self.report({'WARNING'}, "No shape keys found on mesh")
+        return{'FINISHED'}
