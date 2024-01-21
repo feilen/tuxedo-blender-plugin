@@ -100,10 +100,6 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
     elif any(plat.use_decimation for plat in context.scene.bake_platforms) and context.scene.bake_pass_normal:
         context.scene.bake_uv_overlap_correction = 'UNMIRROR'
 
-    # Unfortunately, though it's technically faster, this makes things ineligible as Quest fallback avatars. So leave it off.
-    # For Quest Medium, they already can't be fallbacks, so whatever.
-    item.optimize_static = platform == "DESKTOP"
-
     # Quest has no use for twistbones
     item.merge_twistbones = platform != "DESKTOP"
 
@@ -251,7 +247,6 @@ class BakePresetQuest(bpy.types.Operator):
         itemmedium = context.scene.bake_platforms.add()
         itemmedium.name = "VRChat Quest Medium"
         autodetect_passes(self, context, itemmedium, 15000, "QUEST")
-        itemmedium.optimize_static_shapekeys = True
         context.scene.bake_animation_weighting = True
         return {'FINISHED'}
 
@@ -1533,7 +1528,6 @@ class BakeButton(bpy.types.Operator):
             smoothness_premultiply_ao = platform.smoothness_premultiply_ao
             smoothness_premultiply_opacity = platform.smoothness_premultiply_opacity
             use_decimation = platform.use_decimation
-            optimize_static = platform.optimize_static
             preserve_seams = platform.preserve_seams
             diffuse_vertex_colors = platform.diffuse_vertex_colors
             translate_bone_names = platform.translate_bone_names
@@ -2248,12 +2242,6 @@ class BakeButton(bpy.types.Operator):
                         if name[-5:] == "_bake":
                             mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks[name])
 
-            if optimize_static:
-                for mesh in plat_collection.all_objects:
-                    if mesh.type == 'MESH' and mesh.data.shape_keys is not None:
-                        context.view_layer.objects.active = mesh
-                        bpy.ops.tuxedo.optimize_static_shapekeys()
-
             # Remove all materials for export - blender will try to embed materials but it doesn't work with our setup
             #exception is Gmod because Gmod needs textures to be applied to work - @989onan
             if export_format not in ["GMOD"] and copy_only_handling != "COPY":
@@ -2298,16 +2286,14 @@ class BakeButton(bpy.types.Operator):
                             modifier.render_levels = modifier.total_levels
 
                 bpy.ops.object.select_all(action='DESELECT')
-                for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
-                                       filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
+                for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"}):
                     obj.select_set(True)
 
                 # Join to save on skinned mesh renderers
                 # 989onan - We don't want this for Gmod since Gmod allows for multiple object groups.
                 if export_format != "GMOD":
                     join_meshes(context, armature_name=plat_arm_copy.name)
-                    for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"},
-                                           filter_func=lambda obj: obj['tuxedoForcedExportName'] != "Static"):
+                    for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"}):
                         obj['tuxedoForcedExportName'] = orig_largest_obj_name
 
             # Prep export group 1
@@ -2358,17 +2344,6 @@ class BakeButton(bpy.types.Operator):
                         for slot in obj.material_slots:
                             if slot.material == None:
                                 slot.material = mat
-
-            if optimize_static and export_format != "GMOD":
-                with open(os.path.dirname(os.path.abspath(__file__)) + "/BakeFixer.cs", 'r') as infile:
-                    with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/") + "BakeFixer.cs", 'w') as outfile:
-                        for line in infile:
-                            outfile.write(line.replace("{BODYNAME}", orig_largest_obj_name)
-                                          .replace("{IFDEFNAME}", orig_largest_obj_name.upper().replace(" ", "_"))
-                                          .replace("{ARMATURENAME}", plat_arm_copy['tuxedoForcedExportName']))
-
-
-
 
             # Delete our duplicate scene
             #edit, Users who wanna see what the script creates and make any last minute changes will want this disabled for gmod.

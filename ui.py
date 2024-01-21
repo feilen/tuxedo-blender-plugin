@@ -3,7 +3,7 @@ import addon_utils
 
 from . import bake as Bake
 from .tools import t, get_meshes_objects, get_armature
-from .tools import OptimizeStaticShapekeys, GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
+from .tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
 from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import FitClothes
 
@@ -153,10 +153,6 @@ class ToolPanel(bpy.types.Panel):
 
         col.separator()
         col.separator()
-
-        row = col.row(align=True)
-        row.scale_y = button_height
-        row.operator(OptimizeStaticShapekeys.bl_idname, icon='MESH_DATA')
 
         row = col.row(align=True)
         row.scale_y = button_height
@@ -327,8 +323,6 @@ class BakePanel(bpy.types.Panel):
                     row = col.row(align=True)
                     row.operator(Bake_Lod_New.bl_idname)
                     row.operator(Bake_Lod_Delete.bl_idname)
-                row = col.row(align=True)
-                row.prop(item, 'optimize_static', expand=True)
                 row = col.row(align=True)
                 row.prop(item, 'merge_twistbones', expand=True)
                 row = col.row(align=True)

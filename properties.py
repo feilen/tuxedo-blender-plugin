@@ -81,11 +81,6 @@ def register_properties():
             description=t('Scene.bake_preserve_seams.desc'),
             default=False
         )
-        optimize_static: BoolProperty(
-            name=t("optimize_static_shapekeys"),
-            description=t("seperate_vertices_unaffected_by_shape_keys_into_their_own_mesh_this_adds_a_drawcall_but_comes_with_a_significant_gpu_cost_savings_especially_on_mobile"),
-            default=False
-        )
         merge_twistbones: BoolProperty(
             name=t("merge_twist_bones"),
             description=t("merge_any_bone_with_twist_in_the_name_useful_as_quest_does_not_support_constraints"),
