@@ -3056,25 +3056,24 @@ class FT_OT_CreateShapeKeys(Operator):
                         elif generate_mouth:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
                             oh_deltas, _ = get_shapekey_delta(object, context.scene.ft_oh)
+
                             # consider vertices where delta(v_ch) > delta(v_oh) upper lip, and vice versa
                             ch_should_be_greater = 'Upper' in label
                             both_lips = any(string in label for string in ['Pout', 'Mouth_Left', 'Mouth_Right'])
 
-                            ch_greater = np.linalg.norm(ch_deltas, axis=1) > np.linalg.norm(oh_deltas, axis=1)
                             lip_magnitude = np.linalg.norm(ch_deltas, axis=1)
                             if not both_lips:
+                                ch_greater = np.linalg.norm(ch_deltas, axis=1) >= np.linalg.norm(oh_deltas, axis=1)
                                 if ch_should_be_greater:
                                     lip_mask = ch_greater
                                 else:
                                     lip_mask = ~ch_greater
                                 lip_magnitude[~lip_mask] = 0.0
-                            new_key = basis_key_data
+                            new_key = basis_key_data.copy()
                             if any(string in label for string in ['Upper_Left', 'Lower_Right', 'Upper_Right', 'Lower_Left', 'Mouth_Left', 'Mouth_Right']):
                                 # instead of blending, we take the magnitude of movement * .1 and direct it to the left/right
-                                multiplier = 1
-                                if 'Right' in label:
-                                    multiplier = -1
-                                new_key[:, 0] -= lip_magnitude * 0.75 * multiplier
+                                multiplier = -1 if 'Right' in label else 1
+                                new_key[:, 0] = new_key[:, 0] - (lip_magnitude * 0.75 * multiplier)
                                 object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
                             elif any(string in label for string in ['Inside']):
                                 new_key[:, 1] += lip_magnitude * 0.75
@@ -3082,8 +3081,12 @@ class FT_OT_CreateShapeKeys(Operator):
                             elif any(string in label for string in ['Pout']):
                                 new_key[:, 1] -= lip_magnitude * 0.75
                                 object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
+                            elif any(string in label for string in ['UpLeft', 'UpRight', 'DownLeft', 'DownRight']):
+                                new_key += (ch_deltas * crossfade_arr[:, None] * (lip_mask).astype(float)[:, None])
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
                             else:
-                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((ch_deltas * crossfade_arr[:, None] * (lip_mask).astype(float)[:, None]) + basis_key_data))
+                                new_key += (ch_deltas * (lip_mask).astype(float)[:, None])
+                                object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
                         elif generate_smile:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
                             smile_deltas, _ = get_shapekey_delta(object, context.scene.ft_smile)
@@ -3099,12 +3102,10 @@ class FT_OT_CreateShapeKeys(Operator):
                             aa_deltas, _ = get_shapekey_delta(object, context.scene.ft_aa)
                             jaw_magnitude = np.linalg.norm(aa_deltas, axis=1)
 
-                            new_key = basis_key_data
+                            new_key = basis_key_data.copy()
                             if any(string in label for string in ['Left', 'Right']):
                                 # instead of blending, we take the magnitude of movement * .1 and direct it to the left/right
-                                multiplier = 1
-                                if 'Right' in label:
-                                    multiplier = -1
+                                multiplier = -1 if 'Right' in label else 1
                                 new_key[:, 0] -= jaw_magnitude * 0.75 * multiplier
                                 object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
                             elif any(string in label for string in ['Forward']):
