@@ -81,3 +81,13 @@ jobs:
         python3 ./tests/run.py --blend=blender_36 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_40 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_293 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_30 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_31 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_32 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_33 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_34 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_35 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_36 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_40 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_latest --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
