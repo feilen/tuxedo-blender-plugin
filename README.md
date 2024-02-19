@@ -249,7 +249,7 @@ exit()"
 ```
 
 ### Additional examples
-![image](https://cdn.discordapp.com/attachments/790488253764730920/791146826774216744/unknown.png)
+![image](https://cdn.discordapp.com/attachments/790488253764730920/791146826774216744/unknown.png) 
 
 _'Dawn' model by [@zombies_in_soup](https://twitter.com/zombies_in_soup)_
 </details>
