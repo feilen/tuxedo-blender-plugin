@@ -160,7 +160,7 @@ For most people, all you'll have to do is:
 ### Reccomended Texture Settings
 
 
-<img src="images/bake-kaiser.png"/>
+<img src="images/bake-kaiser.png"/> 
 
 **Quest:**
 (Important: I reccomend you set your project's texture format to ASTC, as [reccomended in the docs](https://developer.oculus.com/documentation/unreal/unreal-ide-guide-android/). This doesn't allow crunch compression, but the VRAM size can often be halved or less.)
