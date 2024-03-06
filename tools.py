@@ -1831,30 +1831,30 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         #This code makes it perfect, since gmod likes to make this stuff twist really badly if it isn't perfectly straight - @989onan
         #This needing to be done is weird because every other game requires the exact opposite - @989onan
         
-        positiony = body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1]
-        positionz = body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2]
+        positiony = body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1]
+        positionz = body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2]
         
         
         #we do head here to get the shoulder joint
-        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1] = positiony
-        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1] = positiony
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2] = positionz
         
-        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[1] = positiony
-        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[1] = positiony
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[2] = positionz
         
         #we do tail here to get the elbow joint
-        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[1] = positiony 
-        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[1] = positiony 
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[2] = positionz
         
-        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[1] = positiony
-        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[1] = positiony
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[2] = positionz
         
         #we do tail here again to get the wrist joint
-        body_armature.edit_bones["ValveBiped.Bip01_L_LowerArm"].tail[1] = positiony
-        body_armature.edit_bones["ValveBiped.Bip01_L_LowerArm"].tail[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_Forearm"].tail[1] = positiony
+        body_armature.data.edit_bones["ValveBiped.Bip01_L_Forearm"].tail[2] = positionz
         
-        body_armature.edit_bones["ValveBiped.Bip01_R_LowerArm"].tail[1] = positiony
-        body_armature.edit_bones["ValveBiped.Bip01_R_LowerArm"].tail[2] = positionz
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_Forearm"].tail[1] = positiony
+        body_armature.data.edit_bones["ValveBiped.Bip01_R_Forearm"].tail[2] = positionz
         
         
         Set_Mode(context, "OBJECT")
