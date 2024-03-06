@@ -34,30 +34,30 @@ bone_names = {
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
-    "pinkie_0_r": ["littlefinger0r","pinkie0r","pinkiemetacarpalr"],
-    "pinkie_1_r": ["littlefinger1r","pinkie1r","pinkieproximalr"],
-    "pinkie_2_r": ["littlefinger2r","pinkie2r","pinkieintermediater"],
-    "pinkie_3_r": ["littlefinger3r","pinkie3r","pinkiedistalr"],
+    "pinkie_0_r": ["littlefinger0r","pinkie0r","rpinkie0","pinkiemetacarpalr"],
+    "pinkie_1_r": ["littlefinger1r","pinkie1r","rpinkie1","pinkieproximalr"],
+    "pinkie_2_r": ["littlefinger2r","pinkie2r","rpinkie2","pinkieintermediater"],
+    "pinkie_3_r": ["littlefinger3r","pinkie3r","rpinkie3","pinkiedistalr"],
 
-    "ring_0_r": ["ringfinger0r","ring0r","ringmetacarpalr"],
-    "ring_1_r": ["ringfinger1r","ring1r","ringproximalr"],
-    "ring_2_r": ["ringfinger2r","ring2r","ringintermediater"],
-    "ring_3_r": ["ringfinger3r","ring3r","ringdistalr"],
+    "ring_0_r": ["ringfinger0r","ring0r","rring0","ringmetacarpalr"],
+    "ring_1_r": ["ringfinger1r","ring1r","rring1","ringproximalr"],
+    "ring_2_r": ["ringfinger2r","ring2r","rring2","ringintermediater"],
+    "ring_3_r": ["ringfinger3r","ring3r","rring3","ringdistalr"],
 
-    "middle_0_r": ["middlefinger0r","middle0r","middlemetacarpalr"],
-    "middle_1_r": ["middlefinger1r","middle1r","middleproximalr"],
-    "middle_2_r": ["middlefinger2r","middle2r","middleintermediater"],
-    "middle_3_r": ["middlefinger3r","middle3r","middledistalr"],
+    "middle_0_r": ["middlefinger0r","middle0r","rmiddle0","middlemetacarpalr"],
+    "middle_1_r": ["middlefinger1r","middle1r","rmiddle1","middleproximalr"],
+    "middle_2_r": ["middlefinger2r","middle2r","rmiddle2","middleintermediater"],
+    "middle_3_r": ["middlefinger3r","middle3r","rmiddle3","middledistalr"],
 
-    "index_0_r": ["indexfinger0r","index0r","indexmetacarpalr"],
-    "index_1_r": ["indexfinger1r","index1r","indexproximalr"],
-    "index_2_r": ["indexfinger2r","index2r","indexintermediater"],
-    "index_3_r": ["indexfinger3r","index3r","indexdistalr"],
+    "index_0_r": ["indexfinger0r","index0r","rindex0","indexmetacarpalr"],
+    "index_1_r": ["indexfinger1r","index1r","rindex1","indexproximalr"],
+    "index_2_r": ["indexfinger2r","index2r","rindex2","indexintermediater"],
+    "index_3_r": ["indexfinger3r","index3r","rindex3","indexdistalr"],
 
-    "thumb_0_r": ["thumb0r","thumbmetacarpalr"],
-    "thumb_1_r": ['thumb0r',"thumbproximalr"],
-    "thumb_2_r": ['thumb1r',"thumbintermediater"],
-    "thumb_3_r": ['thumb2r',"thumbdistalr"],
+    "thumb_0_r": ["thumb0r","rthumb0","thumbmetacarpalr"],
+    "thumb_1_r": ['thumb0r',"rthumb0","thumbproximalr"],
+    "thumb_2_r": ['thumb1r',"rthumb1","thumbintermediater"],
+    "thumb_3_r": ['thumb2r',"rthumb2","thumbdistalr"],
 
     "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "rupperleg", "thighr", "rightupperleg", "uplegr", "rupleg"],
     "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rlowerleg", "rcalf", "rightlowerleg", "lowlegr", "rlowleg"],
@@ -70,30 +70,30 @@ bone_names = {
     "left_wrist": ["leftwrist", "wristl", "lwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
-    "pinkie_0_l": ["pinkiefinger0l","pinkie0l","pinkiemetacarpall"],
-    "pinkie_1_l": ["littlefinger1l","pinkie1l","pinkieproximall"],
-    "pinkie_2_l": ["littlefinger2l","pinkie2l","pinkieintermediatel"],
-    "pinkie_3_l": ["littlefinger3l","pinkie3l","pinkiedistall"],
+    "pinkie_0_l": ["pinkiefinger0l","pinkie0l","lpinkie0","pinkiemetacarpall"],
+    "pinkie_1_l": ["littlefinger1l","pinkie1l","lpinkie1","pinkieproximall"],
+    "pinkie_2_l": ["littlefinger2l","pinkie2l","lpinkie2","pinkieintermediatel"],
+    "pinkie_3_l": ["littlefinger3l","pinkie3l","lpinkie3","pinkiedistall"],
 
-    "ring_0_l": ["ringfinger0l","ring0l","ringmetacarpall"],
-    "ring_1_l": ["ringfinger1l","ring1l","ringproximall"],
-    "ring_2_l": ["ringfinger2l","ring2l","ringintermediatel"],
-    "ring_3_l": ["ringfinger3l","ring3l","ringdistall"],
+    "ring_0_l": ["ringfinger0l","ring0l","lring0","ringmetacarpall"],
+    "ring_1_l": ["ringfinger1l","ring1l","lring1","ringproximall"],
+    "ring_2_l": ["ringfinger2l","ring2l","lring2","ringintermediatel"],
+    "ring_3_l": ["ringfinger3l","ring3l","lring3","ringdistall"],
 
-    "middle_0_l": ["middlefinger0l","middle0l","middlemetacarpall"],
-    "middle_1_l": ["middlefinger1l","middle_1l","middleproximall"],
-    "middle_2_l": ["middlefinger2l","middle_2l","middleintermediatel"],
-    "middle_3_l": ["middlefinger3l","middle_3l","middledistall"],
+    "middle_0_l": ["middlefinger0l","middle0l","lmiddle0","middlemetacarpall"],
+    "middle_1_l": ["middlefinger1l","middle_1l","lmiddle1","middleproximall"],
+    "middle_2_l": ["middlefinger2l","middle_2l","lmiddle2","middleintermediatel"],
+    "middle_3_l": ["middlefinger3l","middle_3l","lmiddle3","middledistall"],
 
-    "index_0_l": ["indexfinger0l","index0l","indexmetacarpall"],
-    "index_1_l": ["indexfinger1l","index1l","indexproximall"],
-    "index_2_l": ["indexfinger2l","index2l","indexintermediatel"],
-    "index_3_l": ["indexfinger3l","index3l","indexdistall"],
+    "index_0_l": ["indexfinger0l","index0l","lindex0","indexmetacarpall"],
+    "index_1_l": ["indexfinger1l","index1l","lindex1","indexproximall"],
+    "index_2_l": ["indexfinger2l","index2l","lindex2","indexintermediatel"],
+    "index_3_l": ["indexfinger3l","index3l","lindex3","indexdistall"],
 
-    "thumb_0_l": ["thumb0l","thumbmetacarpall"],
-    "thumb_1_l": ['thumb0l',"thumbproximall"],
-    "thumb_2_l": ['thumb1l',"thumbintermediatel"],
-    "thumb_3_l": ['thumb2l',"thumbdistall"],
+    "thumb_0_l": ["thumb0l","lthumb0","thumbmetacarpall"],
+    "thumb_1_l": ['thumb0l',"lthumb0","thumbproximall"],
+    "thumb_2_l": ['thumb1l',"lthumb1","thumbintermediatel"],
+    "thumb_3_l": ['thumb2l',"lthumb2","thumbdistall"],
 
     "left_leg": ["leftleg", "legl", "lleg", "upperlegl", "lupperleg", "thighl", "leftupperleg", "uplegl", "lupleg"],
     "left_knee": ["leftknee", "kneel", "lknee", "lowerlegl", "llowerleg", "calfl", "lcalf", "leftlowerleg", 'lowlegl', 'llowleg'],
@@ -1819,7 +1819,45 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.armature.select_all(action='SELECT')
         bpy.ops.armature.roll_clear()
         Set_Mode(context, "OBJECT")
+        
+        
+        print("straightening arm bones")
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = body_armature
+        Set_Mode(context, "EDIT")
 
+        #bpy.ops.pose.select_all(action='SELECT')
+        #Set arms straight in edit mode. if the arm bones are messed up by this, user was told to make it t-pose that is user error not our issue. - @989onan
+        #This code makes it perfect, since gmod likes to make this stuff twist really badly if it isn't perfectly straight - @989onan
+        #This needing to be done is weird because every other game requires the exact opposite - @989onan
+        
+        positiony = body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1]
+        positionz = body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2]
+        
+        
+        #we do head here to get the shoulder joint
+        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1] = positiony
+        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2] = positionz
+        
+        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[1] = positiony
+        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[2] = positionz
+        
+        #we do tail here to get the elbow joint
+        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[1] = positiony 
+        body_armature.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[2] = positionz
+        
+        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[1] = positiony
+        body_armature.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[2] = positionz
+        
+        #we do tail here again to get the wrist joint
+        body_armature.edit_bones["ValveBiped.Bip01_L_LowerArm"].tail[1] = positiony
+        body_armature.edit_bones["ValveBiped.Bip01_L_LowerArm"].tail[2] = positionz
+        
+        body_armature.edit_bones["ValveBiped.Bip01_R_LowerArm"].tail[1] = positiony
+        body_armature.edit_bones["ValveBiped.Bip01_R_LowerArm"].tail[2] = positionz
+        
+        
+        Set_Mode(context, "OBJECT")
         print("a-posing armature, if this failed, you do not have standard bone names!")
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = body_armature
