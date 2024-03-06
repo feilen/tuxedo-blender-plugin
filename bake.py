@@ -54,11 +54,14 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
                         output_mat_nodes.append(node)
                     if node.type == "BSDF_PRINCIPLED":
                         bsdf_nodes.append(node)
+                        print("A bunch of node inputs")
+                        for k,input in enumerate(node.inputs):
+                            print(input.name+ " number: "+str(k))
 
     # Decimate if we're over the limit
     total_tricount = sum(get_tricount(obj) for obj in objects)
     item.use_decimation = total_tricount > tricount
-
+    
     # Diffuse: on if >1 unique color input or if any has non-default base color input on bsdf
     context.scene.bake_pass_diffuse = (any(node.inputs["Base Color"].is_linked for node in bsdf_nodes)
                                        or len(set(node.inputs["Base Color"].default_value[:] for node in bsdf_nodes)) > 1)
@@ -68,8 +71,8 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
                                           or len(set(node.inputs["Roughness"].default_value for node in bsdf_nodes)) > 1)
 
     # Emit: similar to diffuse
-    context.scene.bake_pass_emit = (any(node.inputs["Emission"].is_linked for node in bsdf_nodes)
-                                    or len(set(node.inputs["Emission"].default_value[:] for node in bsdf_nodes)) > 1)
+    context.scene.bake_pass_emit = (any(node.inputs["Emission Color"].is_linked for node in bsdf_nodes)
+                                    or len(set(node.inputs["Emission Color"].default_value[:] for node in bsdf_nodes)) > 1)
 
     # Transparency: similar to diffuse
     context.scene.bake_pass_alpha = (any(node.inputs["Alpha"].is_linked for node in bsdf_nodes)
@@ -461,9 +464,9 @@ class BakeButton(bpy.types.Operator):
                         bake_node.inputs["Base Color"].default_value = [0., 0., 0., 1.]
                     else:
                         bake_node.inputs["Base Color"].default_value = [1., 1., 1., 1.]
-                    bake_node.inputs["Subsurface"].default_value = 0.0
+                    bake_node.inputs["Subsurface Weight"].default_value = 0.0
                     bake_node.inputs["Metallic"].default_value = 0.0
-                    bake_node.inputs["Specular"].default_value = 0.5
+                    bake_node.inputs["Specular IOR Level"].default_value = 0.5
                     bake_node.inputs["Roughness"].default_value = 0.5
                     bake_node.inputs["Alpha"].default_value = 1.0
 
@@ -497,7 +500,7 @@ class BakeButton(bpy.types.Operator):
     # (input, output)
     def filter_image(self, context, image, filter_create, use_linear=False, save_srgb=False, matgroupnum=0):
         # This is performed in our throwaway scene, so we don't have to keep settings
-        context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
+        context.scene.display_settings.display_device = 'Rec.2020' if use_linear else 'sRGB'
         context.scene.view_settings.view_transform = "Standard"
         orig_colorspace = bpy.data.images[image].colorspace_settings.name
         # Bizarrely, getting the pixels from a render result is extremely difficult.
@@ -972,7 +975,7 @@ class BakeButton(bpy.types.Operator):
                             }
                             for (use_pass, pass_key, pass_slot) in [
                                     (pass_diffuse, "diffuse", "Base Color"),
-                                    (pass_emit, "emit", "Emission"),
+                                    (pass_emit, "emit", "Emission Color"),
                                     (pass_smoothness, "smoothness", "Roughness"),
                                     (pass_metallic, "metallic", "Metallic"),
                                     (pass_alpha, "alpha", "Alpha"),
@@ -1372,8 +1375,8 @@ class BakeButton(bpy.types.Operator):
                  (pass_smoothness, "smoothness", "ROUGHNESS", set(), [1., 1., 1., 1.], {"Roughness": "Roughness"}, True, True),
                  (pass_alpha, "alpha", "DIFFUSE", {"COLOR"}, [1, 1, 1, 1.], {"Alpha": "Alpha"}, False, False),
                  (pass_metallic, "metallic", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], {"Metallic": "Metallic"}, False, True),
-                 (pass_emit and not emit_indirect, "emission", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
-                 (pass_detail, "detail", "EMIT", set(), [0, 0, 0, 1.], {"Emission": "Emission"}, False, False),
+                 (pass_emit and not emit_indirect, "emission", "EMIT", set(), [0, 0, 0, 1.], {"Emission Color": "Emission Color"}, False, False),
+                 (pass_detail, "detail", "EMIT", set(), [0, 0, 0, 1.], {"Emission Color": "Emission Color"}, False, False),
         ]:
             # TODO: Linearity will be determined by end channel. Alpha is linear, RGB is sRGB
             if bake_conditions:
@@ -1513,11 +1516,13 @@ class BakeButton(bpy.types.Operator):
              # the MOST correct way to bake subsurface light only would be to set Base Color to black,
              # multiply Base Color and Subsurface Color and plug into Subsurface Color, then bake Diffuse color
              # then multiply by normalized thickness.
+             # TODO: FIXME: @989onan - Subsurface nuked it's color field. This is going to be a terrible implmentation but I will use base color and weight according to https://blenderartists.org/t/where-did-the-sss-color-go-and-why/1493306 
+             #It will be fine for now.
             (pass_diffuse and diffuse_indirect, True, "diffuse_indirect", "DIFFUSE", {"INDIRECT"}, [0., 0., 0., 1.], (1,1,1), None, False),
             # bake 'thickness' by baking subsurface as albedo, normalizing, and inverting
-                 (pass_thickness, True, "thickness", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], None, {"Subsurface": "Alpha"}, False),
+                 (pass_thickness, True, "thickness", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], None, {"Subsurface Weight": "Alpha"}, False),
              # bake 'subsurface' by baking Diffuse Color when Base Color is black
-                 (False, True, "subsurface", "DIFFUSE", {"COLOR"}, [0., 0., 0., 1.], None, {"Subsurface Color": "Subsurface Color", "Subsurface": "Subsurface"}, True),
+                 (False, True, "subsurface", "DIFFUSE", {"COLOR"}, [0., 0., 0., 1.], None, {"Base Color": "Base Color", "Subsurface": "Subsurface"}, True),
              ]:
             if bake_conditions:
                 if world_color:
@@ -1884,7 +1889,7 @@ class BakeButton(bpy.types.Operator):
                     uv_layers = [layer.name for layer in obj.data.uv_layers]
                     while uv_layers:
                         layer = uv_layers.pop()
-                        if layer != "Tuxedo UV Super" and layer != "Tuxedo UV" and layer != "Detail Map":
+                        if ("Tuxedo" not in layer) and layer != "Detail Map":
                             print("Removing UV {}".format(layer))
                             obj.data.uv_layers.remove(obj.data.uv_layers[layer])
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
@@ -2136,7 +2141,7 @@ class BakeButton(bpy.types.Operator):
                     if export_format == "GMOD":
                         vmtfile += "\n    \"$phong\" 1"
                         vmtfile += "\n    \"$phongboost\" 1.0"
-                        vmtfile += "\n    \"$phongfresnelranges\" \"[0 0.5 1.0\"]"
+                        vmtfile += "\n    \"$phongfresnelranges\" \"[0 0.5 1.0]\""
                         vmtfile += "\n    \"$phongexponenttexture\" \"models/"+sanitized_model_name+"/"+sanitized_name(platform_img("phong"+ str(group_num))).replace(".tga","")+"\""
 
                     if pass_metallic:
@@ -2156,8 +2161,9 @@ class BakeButton(bpy.types.Operator):
                 
                 bsdfnode = next(node for node in tree.nodes if node.type == "BSDF_PRINCIPLED")
                 if bsdf_original is not None:
-                    for bsdfinput in bsdfnode.inputs:
-                        bsdfinput.default_value = bsdf_original.inputs[bsdfinput.identifier].default_value
+                    #this was failing catestrophically. Putting a number based one.
+                    for k,bsdfinput in enumerate(bsdfnode.inputs):
+                        bsdfinput.default_value = bsdf_original.inputs[k].default_value
                 if pass_normal:
                     normaltexnode = tree.nodes.new("ShaderNodeTexImage")
                     normaltexnode.image = bpy.data.images["SCRIPT_world"+str(group_num)+".png"]
@@ -2223,15 +2229,7 @@ class BakeButton(bpy.types.Operator):
                                     key.value = shapekey_values[key.name]
 
 
-                # Remove Tuxedo UV Super
-                if generate_uvmap and supersample_normals:
-                    for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                        uv_layers = [layer.name for layer in obj.data.uv_layers]
-                        while uv_layers:
-                            layer = uv_layers.pop()
-                            if layer == "Tuxedo UV Super":
-                                print("Removing UV {}".format(layer))
-                                obj.data.uv_layers.remove(obj.data.uv_layers[layer])
+                
 
                 # Always remove existing vertex colors here
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
@@ -2326,7 +2324,7 @@ class BakeButton(bpy.types.Operator):
                     emittexnode.image = bpy.data.images[platform_img("emission"+str(group_num))]
                     emittexnode.location.x -= 800
                     emittexnode.location.y -= 150
-                    tree.links.new(bsdfnode.inputs["Emission"], emittexnode.outputs["Color"])
+                    tree.links.new(bsdfnode.inputs["Emission Color"], emittexnode.outputs["Color"])
 
                 
                 if pass_diffuse and diffuse_vertex_colors:
@@ -2348,6 +2346,18 @@ class BakeButton(bpy.types.Operator):
                     collection = bpy.data.collections["Tuxedo Bake"]
             
             #material merging and combining ends here.
+            
+            # Remove Tuxedo UV Super
+            if generate_uvmap and supersample_normals:
+                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
+                    uv_layers = [layer.name for layer in obj.data.uv_layers]
+                    while uv_layers:
+                        layer = uv_layers.pop()
+                        if layer == "Tuxedo UV Super":
+                            print("Removing UV {}".format(layer))
+                            obj.data.uv_layers.remove(obj.data.uv_layers[layer])
+            
+            
             
             # Try to only output what you'll end up importing into unity.
             context.scene.render.image_settings.file_format = 'TARGA' if export_format == "GMOD" else 'PNG'
@@ -2374,7 +2384,7 @@ class BakeButton(bpy.types.Operator):
                     if export_format == "GMOD":
                         image.filepath_raw = images_path+"materialsrc/"+sanitized_name(image.name)
                         image.save_render(image.filepath_raw,scene=context.scene)
-                        if(os.stat(image.filepath_raw.st_size) > 33554400):
+                        if(os.stat(image.filepath_raw).st_size > 33554400):
                             raise Exception("Your file named "+sanitized_name(image.name)+" is bigger than the max (33,554,432 bytes) allowed VTF Size!!! EXITING!")
                         self.compile_gmod_tga(steam_library_path,images_path,sanitized_name(image.name))
                         if os.path.isfile(target_dir+"/"+sanitized_name(image.name).replace(".tga",".vtf")):
@@ -2541,12 +2551,15 @@ class BakeButton(bpy.types.Operator):
         # Delete our duplicate scene and the platform-agnostic Tuxedo Bake
         bpy.context.window.scene = bpy.data.scenes[bpy.data.scenes.find("Tuxedo Scene")]
         bpy.ops.scene.delete()
+        
+        try:
+            for obj in get_objects(collection.objects):
+                bpy.data.objects.remove(obj, do_unlink=True)
 
-        for obj in get_objects(collection.objects):
-            bpy.data.objects.remove(obj, do_unlink=True)
-
-        bpy.data.collections.remove(collection)
-
+            bpy.data.collections.remove(collection)
+        except:
+            print("huh couldn't delete the baking scenes. Oh well.")
+        
         #clean unused data
         if not is_unittest:
             bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)

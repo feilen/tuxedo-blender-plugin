@@ -29,8 +29,8 @@ with open(os.path.dirname(os.path.abspath(__file__)) + "/translations.csv", 'r')
 # Note from @989onan: Please make sure to make your names are lowercase in this array. I banged my head metaphorically till I figured that out...
 bone_names = {
     "right_shoulder": ["rightshoulder", "shoulderr", "rshoulder"],
-    "right_arm": ["rightarm", "armr", "rarm", "upperarmr", "rightupperarm", "uparmr", "ruparm"],
-    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr", "lowarmr", "rlowarm"],
+    "right_arm": ["rightarm", "armr", "rarm", "upperarmr", "rupperarm", "rightupperarm", "uparmr", "ruparm"],
+    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr","rlowerarm", "lowarmr", "rlowarm"],
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
@@ -59,15 +59,15 @@ bone_names = {
     "thumb_2_r": ['thumb1r',"thumbintermediater"],
     "thumb_3_r": ['thumb2r',"thumbdistalr"],
 
-    "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "thighr", "rightupperleg", "uplegr", "rupleg"],
-    "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rightlowerleg", "lowlegr", "rlowleg"],
-    "right_ankle": ["rightankle", "ankler", "rankle", "rightfoot", "footr", "rightfoot", "rightfeet", "feetright", "rfeet", "feetr"],
+    "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "rupperleg", "thighr", "rightupperleg", "uplegr", "rupleg"],
+    "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rlowerleg", "rcalf", "rightlowerleg", "lowlegr", "rlowleg"],
+    "right_ankle": ["rightankle", "ankler", "rankle", "rightfoot", "footr", "rfoot", "rightfoot", "rightfeet", "feetright", "rfeet", "feetr"],
     "right_toe": ["righttoe", "toeright", "toer", "rtoe", "toesr", "rtoes"],
 
-    "left_shoulder": ["leftshoulder", "shoulderl", "rshoulder"],
-    "left_arm": ["leftarm", "arml", "rarm", "upperarml", "leftupperarm", "uparml", "luparm"],
-    "left_elbow": ["leftelbow", "elbowl", "relbow", "lowerarml", "leftlowerarm", "lowerarml", "lowarml", "llowarm"],
-    "left_wrist": ["leftwrist", "wristl", "rwrist", "handl", "lefthand", "lhand"],
+    "left_shoulder": ["leftshoulder", "shoulderl", "lshoulder"],
+    "left_arm": ["leftarm", "arml", "rarm", "upperarml", "lupperarm", "leftupperarm", "uparml", "luparm"],
+    "left_elbow": ["leftelbow", "elbowl", "lelbow", "lowerarml", "leftlowerarm", "lowerarml", "llowerarm", "lowarml", "llowarm"],
+    "left_wrist": ["leftwrist", "wristl", "lwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
     "pinkie_0_l": ["pinkiefinger0l","pinkie0l","pinkiemetacarpall"],
@@ -95,9 +95,9 @@ bone_names = {
     "thumb_2_l": ['thumb1l',"thumbintermediatel"],
     "thumb_3_l": ['thumb2l',"thumbdistall"],
 
-    "left_leg": ["leftleg", "legl", "rleg", "upperlegl", "thighl", "leftupperleg", "uplegl", "lupleg"],
-    "left_knee": ["leftknee", "kneel", "rknee", "lowerlegl", "calfl", "leftlowerleg", 'lowlegl', 'llowleg'],
-    "left_ankle": ["leftankle", "anklel", "rankle", "leftfoot", "footl", "leftfoot", "leftfeet", "feetleft", "lfeet", "feetl"],
+    "left_leg": ["leftleg", "legl", "lleg", "upperlegl", "lupperleg", "thighl", "leftupperleg", "uplegl", "lupleg"],
+    "left_knee": ["leftknee", "kneel", "lknee", "lowerlegl", "llowerleg", "calfl", "lcalf", "leftlowerleg", 'lowlegl', 'llowleg'],
+    "left_ankle": ["leftankle", "anklel", "rankle", "leftfoot", "footl", "lfoot", "leftfoot", "leftfeet", "feetleft", "lfeet", "feetl"],
     "left_toe": ["lefttoe", "toeleft", "toel", "ltoe", "toesl", "ltoes"],
 
     'hips': ["pelvis", "hips"],
@@ -1103,7 +1103,7 @@ class PoseToRest(bpy.types.Operator):
         # active object e.g., the user has multiple armatures opened in pose mode, but a different armature is currently
         # active. We can use an operator override to tell the operator to treat armature_obj as if it's the active
         # object even if it's not, skipping the need to actually set armature_obj as the active object.
-        bpy.ops.pose.armature_apply({'active_object': armature_obj})
+        with bpy.context.temp_override(active_object = armature_obj): bpy.ops.pose.armature_apply()
 
         # Stop pose mode after operation
         armature = get_armature(context,self.armature_name)
@@ -1147,20 +1147,22 @@ class PoseToRest(bpy.types.Operator):
         # modifier will have ended up with a different name
         mod_name = armature_mod.name
         # Context override to let us run the modifier operators on mesh_obj, even if it's not the active object
-        context_override = {'object': mesh_obj}
         # Moving the modifier to the first index will prevent an Info message about the applied modifier not being
         # first and potentially having unexpected results.
-        if bpy.app.version >= (2, 90, 0):
-            # modifier_move_to_index was added in Blender 2.90
-            bpy.ops.object.modifier_move_to_index(context_override, modifier=mod_name, index=0)
-        else:
-            # The newly created modifier will be at the bottom of the list
-            armature_mod_index = len(mesh_obj.modifiers) - 1
-            # Move the modifier up until it's at the top of the list
-            for _ in range(armature_mod_index):
-                bpy.ops.object.modifier_move_up(context_override, modifier=mod_name)
-        bpy.ops.object.modifier_apply(context_override, modifier=mod_name)
-
+        with bpy.context.temp_override(object= mesh_obj):
+            if bpy.app.version >= (2, 90, 0):
+                # modifier_move_to_index was added in Blender 2.90
+                bpy.ops.object.modifier_move_to_index(modifier=mod_name, index=0)
+            else:
+                # The newly created modifier will be at the bottom of the list
+                armature_mod_index = len(mesh_obj.modifiers) - 1
+                # Move the modifier up until it's at the top of the list
+                for _ in range(armature_mod_index):
+                    bpy.ops.object.modifier_move_up( modifier=mod_name)
+            bpy.ops.object.modifier_apply( modifier=mod_name)
+        
+        
+    
     @staticmethod
     def apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, scene):
         # The active shape key will be changed, so save the current active index, so it can be restored afterwards
@@ -1630,12 +1632,12 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
     def execute(self, context):
         print("===============START GMOD EXPORT PROCESS===============")
-
+        
         model_name = self.gmod_model_name
         platform_name = self.platform_name
         sanitized_model_name = ""
         offical_model_name = ""
-
+        
         try:
             Set_Mode(context, "OBJECT")
         except:
@@ -1795,7 +1797,9 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         for obj in refcoll.objects:
             obj.select_set(True)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
+        
+        update_viewport()
+        
         print("getting meshes in ref collection")
                 
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
@@ -1816,7 +1820,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.armature.roll_clear()
         Set_Mode(context, "OBJECT")
 
-        print("a-posing armature")
+        print("a-posing armature, if this failed, you do not have standard bone names!")
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = body_armature
         Set_Mode(context, "POSE")
@@ -1831,7 +1835,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("doing an apply rest pose")
         bpy.ops.tuxedo.pose_to_rest()
         Set_Mode(context, "OBJECT")
-
+        
         update_viewport()
 
         print("grabbing barney armature")
@@ -1848,7 +1852,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = barney_armature
         barney_armature.select_set(True)
-        bpy.ops.object.duplicate({"object" : barney_armature, "selected_objects" : [barney_armature]}, linked=False)
+        with bpy.context.temp_override(object = barney_armature, selected_objects = [barney_armature]): bpy.ops.object.duplicate( linked=False)
+        
         barney_armature = context.object
         
 
@@ -1900,6 +1905,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.tuxedo.pose_to_rest()
         Set_Mode(context, "OBJECT")
         
+        update_viewport()
+        
         
         print("putting barney armature bones on your model")
         merge_armature_stage_one(context, body_armature_name, barney_armature_name)
@@ -1909,7 +1916,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         
         
         #twisted_armature_bone_names may not be referenced because I thought it was causing issues - @989onan
-        #TODO: Verify this. I probably put it back idk. This is a note for future me.
+        #TODO: what the hell does above mean? - @989onan
+        
         twisted_armature = bpy.data.objects[body_armature_name]
         twisted_armature_bone_names = list(set([j.name for j in children_bone_recursive(twisted_armature.pose.bones["ValveBiped.Bip01_Pelvis"])]) - set(barney_pose_bone_names))
         
@@ -2474,7 +2482,17 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         animationnames = [j.name for j in bpy.data.actions]
         for animationname in animationnames:
             bpy.data.actions.remove(bpy.data.actions[animationname])
+            
         
+        dummy_anim = Make_And_Key_Animation(context, "dummy", body_armature)
+        
+        print("adding animation data thats a dummy to every armature because otherwise it causes errors with the exporter...")
+        for rig in bpy.data.objects:
+            if rig.type == "ARMATURE":
+                rig.animation_data_create()
+                rig.data.vs.action_selection = "CURRENT"
+                rig.data.vs.implicit_zero_bone = False
+                rig.animation_data.action = dummy_anim
 
         print("making animation for idle body")
         Make_And_Key_Animation(context, "idle", body_armature)
@@ -2506,8 +2524,8 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         print("making animation for idle arms")
         armscoll = bpy.data.collections[sanitized_model_name+"_arms"]
         parentobj, arms_armature = Get_Meshes_And_Armature(context, armscoll)
-        Make_And_Key_Animation(context, "idle_arms", arms_armature)
-        arms_armature.animation_data.action = None
+        idle_arms_anim = Make_And_Key_Animation(context, "idle_arms", arms_armature)
+        arms_armature.animation_data.action = idle_arms_anim
         
         print("making copy of reference armature to export idle")
         parentobj, idle_armature = Get_Meshes_And_Armature(context, refcoll)
@@ -2576,20 +2594,12 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         
         update_viewport()
         
-        print("adding animation data to every armature because otherwise it causes errors with the exporter...")
-        for rig in bpy.data.objects:
-            if rig.type == "ARMATURE":
-                rig.animation_data_create()
-                rig.vs.action_filter = "*"
-                rig.data.vs.action_selection = "FILTERED"
-                rig.data.vs.implicit_zero_bone = False
-        
         print("setting export settings")
         bpy.context.scene.vs.subdir = "anims"
         Set_Mode(context, "OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
         time.sleep(1)
-        bpy.context.scene.vs.action_selection = "FILTERED"
+        bpy.context.scene.vs.action_selection = "CURRENT"
         
         print("making body groups, you're almost to exporting!")
         refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
