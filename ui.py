@@ -7,10 +7,13 @@ from .tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, Rep
 from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft, materials_list_update
 
+from .class_register import wrapper_registry
+
 from bpy.types import UIList, Operator, Panel
 from bpy_extras.io_utils import ImportHelper
 button_height = 1
 
+@wrapper_registry
 class Bake_Platform_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
@@ -23,6 +26,7 @@ class Bake_Platform_List(UIList):
             layout.label(text="", icon = custom_icon)
 
 
+@wrapper_registry
 class Material_Grouping_UL_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
@@ -40,6 +44,7 @@ class Material_Grouping_UL_List(UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon = custom_icon)
 
+@wrapper_registry
 class Material_Grouping_UL_List_Reload(Operator):
     bl_idname = "tuxedo_bake.materials_reload"
     bl_label = "Reload Materials"
@@ -49,6 +54,7 @@ class Material_Grouping_UL_List_Reload(Operator):
 
         return{'FINISHED'}
 
+@wrapper_registry
 class Bake_Platform_New(Operator):
     bl_idname = "tuxedo_bake.platform_add"
     bl_label = "Add"
@@ -58,6 +64,7 @@ class Bake_Platform_New(Operator):
 
         return{'FINISHED'}
 
+@wrapper_registry
 class Bake_Platform_Delete(Operator):
     bl_idname = "tuxedo_bake.platform_remove"
     bl_label = "Delete"
@@ -75,6 +82,7 @@ class Bake_Platform_Delete(Operator):
 
         return{'FINISHED'}
 
+@wrapper_registry
 class Bake_Lod_New(Operator):
     bl_idname = "tuxedo_bake.lod_add"
     bl_label = "Add"
@@ -92,6 +100,7 @@ class Bake_Lod_New(Operator):
 
         return{'FINISHED'}
 
+@wrapper_registry
 class Bake_Lod_Delete(Operator):
     bl_idname = "tuxedo_bake.lod_remove"
     bl_label = "Delete"
@@ -112,7 +121,7 @@ class Bake_Lod_Delete(Operator):
 
         return{'FINISHED'}
 
-
+@wrapper_registry
 class Open_GPU_Settings(Operator):
     bl_idname = "tuxedo_bake.open_gpu_settings"
     bl_label = "Open GPU Settings (Top of the page)"
@@ -123,22 +132,9 @@ class Open_GPU_Settings(Operator):
 
         return{'FINISHED'}
 
-class Choose_Steam_Library(Operator, ImportHelper):
-    bl_idname = "tuxedo_bake.choose_steam_library"
-    bl_label = "Choose Steam Library"
 
-    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
-    @classmethod
-    def poll(cls, context):
-        bake_platforms = context.scene.bake_platforms
-        index = context.scene.bake_platform_index
-
-        return bake_platforms[index].export_format == "GMOD"
-    def execute(self, context):
-        context.scene.bake_steam_library = self.directory
-        return{'FINISHED'}
-
+@wrapper_registry
 class ToolPanel(Panel):
     bl_label = "Tools"
     bl_idname = 'VIEW3D_PT_tuxtools'
@@ -221,6 +217,7 @@ class ToolPanel(Panel):
         row.scale_y = 1.2
         row.operator(FitClothes.bl_idname, icon='MOD_CLOTH')
 
+@wrapper_registry
 class BakePanel(Panel):
     bl_label = "Tuxedo Bake"
     bl_idname = 'VIEW3D_PT_tuxbake'
@@ -305,7 +302,7 @@ class BakePanel(Panel):
         row.operator(Bake_Platform_New.bl_idname)
         row.operator(Bake_Platform_Delete.bl_idname)
         col.separator()
-
+        
         if context.scene.bake_platform_index >= 0 and context.scene.bake_platforms:
             item = context.scene.bake_platforms[context.scene.bake_platform_index]
 
@@ -449,14 +446,6 @@ class BakePanel(Panel):
                 row = col.row(align=True)
                 row.separator()
                 row.prop(item, 'image_export_format')
-                if item.export_format == "GMOD":
-                    row = col.row(align=True)
-                    row.operator(Choose_Steam_Library.bl_idname, icon="FILE_FOLDER")
-                    row = col.row(align=True)
-                    row.prop(context.scene, "bake_steam_library", expand=True)
-                    row = col.row(align=True)
-                    row.prop(item, "gmod_model_name", expand=True)
-                    row = col.row(align=True)
         # END ADVANCED PLATFORM OPTIONS
 
         if context.scene.bake_platforms:
@@ -669,6 +658,7 @@ class BakePanel(Panel):
 # User Interface
 # -------------------------------------------------------------------
 
+@wrapper_registry
 class FT_Shapes_UL(Panel):
     bl_label = "Face Tracking Generation"
     bl_idname = "FT Shapes"

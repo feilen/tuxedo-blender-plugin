@@ -12,6 +12,8 @@ import shutil
 from mathutils import Matrix
 import itertools
 
+from .class_register import wrapper_registry
+
 from bpy.types import Operator
 
 from io_scene_fbx import fbx_utils
@@ -345,6 +347,7 @@ def remove_doubles(mesh, margin):
     bm.free()
     mesh.data.update()
 
+@wrapper_registry
 class FitClothes(bpy.types.Operator):
     bl_idname = 'tuxedo.fit_clothes'
     bl_label = 'Attach to selected'
@@ -408,6 +411,7 @@ def get_children_recursive(parent):
     else:
         return parent.children_recursive
 
+@wrapper_registry
 class AutoDecimatePresetGood(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_good'
     bl_label = t('DecimationPanel.preset.good.label')
@@ -418,6 +422,7 @@ class AutoDecimatePresetGood(bpy.types.Operator):
         bpy.context.scene.tuxedo_max_tris = 70000
         return {'FINISHED'}
 
+@wrapper_registry
 class AutoDecimatePresetExcellent(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_excellent'
     bl_label = t('DecimationPanel.preset.excellent.label')
@@ -428,6 +433,7 @@ class AutoDecimatePresetExcellent(bpy.types.Operator):
         bpy.context.scene.tuxedo_max_tris = 32000
         return {'FINISHED'}
 
+@wrapper_registry
 class AutoDecimatePresetQuest(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_quest'
     bl_label = t('DecimationPanel.preset.quest.label')
@@ -446,6 +452,7 @@ def triangulate_mesh(mesh):
     bm.free()
     mesh.data.update()
 
+@wrapper_registry
 class RepairShapekeys(bpy.types.Operator):
     bl_idname = 'tuxedo.repair_shapekeys'
     bl_label = 'Repair Broken Shapekeys'
@@ -510,6 +517,7 @@ class RepairShapekeys(bpy.types.Operator):
         self.report({'INFO'}, "Repair complete.")
         return {'FINISHED'}
 
+@wrapper_registry
 class SmartDecimation(bpy.types.Operator):
     bl_idname = 'tuxedo.smart_decimation'
     bl_label = 'Smart Decimate'
@@ -752,6 +760,7 @@ class SmartDecimation(bpy.types.Operator):
 
         return newweights
 
+@wrapper_registry
 class GenerateTwistBones(bpy.types.Operator):
     bl_idname = 'tuxedo.generate_twist_bones'
     bl_label = "Generate Twist Bones"
@@ -824,6 +833,7 @@ class GenerateTwistBones(bpy.types.Operator):
         self.report({'INFO'}, t('RemoveConstraints.success'))
         return {'FINISHED'}
 
+@wrapper_registry
 class TwistTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo.twist_tutorial'
     bl_label = "Twistbones Tutorial"
@@ -842,7 +852,7 @@ def get_tricount(obj):
     bmesh.ops.triangulate(bmesh_mesh, faces=bmesh_mesh.faces[:])
     return len(bmesh_mesh.faces)
 
-
+@wrapper_registry
 class ConvertToSecondlifeButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_secondlife'
     bl_label = 'Convert Bones To Second Life'
@@ -978,6 +988,7 @@ def delete(obj):
     objs = bpy.data.objects
     objs.remove(objs[obj.name], do_unlink=True)
 
+@wrapper_registry
 class PoseToRest(bpy.types.Operator):
     bl_idname = 'tuxedo.pose_to_rest'
     bl_label = "apply pose as rest pose"
@@ -1416,7 +1427,7 @@ def update_viewport(): #this isn't needed nessarily, it's a hack for asthetic pu
 
 # @989onan - I'm sorry for the mess below, but at least I refactored it since this is new place for this code. The most permanent solution is a temporary one.
 
-
+@wrapper_registry
 class ConvertToValveButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_valve'
     bl_label = 'Convert Bones To Valve'
@@ -1544,7 +1555,7 @@ class ConvertToValveButton(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
+@wrapper_registry
 class ExportGmodPlayermodel(bpy.types.Operator):
     bl_idname = "tuxedo.export_gmod_addon"
     bl_label = "Export Gmod Addon"
@@ -3054,6 +3065,7 @@ def crossfade(val, min_x, max_x, middle_percent):
 # Shape Key Operators
 # -------------------------------------------------------------------
 
+@wrapper_registry
 class FT_OT_CreateShapeKeys(Operator):
     """Creates SRanipal Facetracking Shape Keys"""
     bl_label = "Create SRanipal Face Tracking Shape Keys"

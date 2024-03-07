@@ -10,6 +10,8 @@ import shutil
 import threading
 from subprocess import DEVNULL
 
+from .class_register import wrapper_registry
+
 from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel, materials_list_update
 from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
@@ -20,6 +22,7 @@ else:
     EMISSION_INPUT = "Emission"
     SPECULAR_INPUT = "Specular"
 
+@wrapper_registry
 class BakeTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.tutorial'
     bl_label = t('tuxedo_bake.tutorial_button.label')
@@ -219,6 +222,7 @@ def nparray_channels_to_img(image_name, nparr):
     assert(nparr.shape[1] == image.size[0] * image.size[1])
     image.pixels.foreach_set(np.ravel(nparr, order='F'))
 
+@wrapper_registry
 class BakePresetDesktop(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_desktop'
     bl_label = t('tuxedo_bake.preset_desktop.label')
@@ -234,6 +238,7 @@ class BakePresetDesktop(bpy.types.Operator):
         autodetect_passes(self, context, itemgood, 70000, "DESKTOP")
         return {'FINISHED'}
 
+@wrapper_registry
 class BakePresetQuest(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_quest'
     bl_label = t('tuxedo_bake.preset_quest.label')
@@ -253,6 +258,7 @@ class BakePresetQuest(bpy.types.Operator):
         context.scene.bake_animation_weighting = True
         return {'FINISHED'}
 
+@wrapper_registry
 class BakePresetSecondlife(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_secondlife'
     bl_label = 'Second Life'
@@ -265,6 +271,7 @@ class BakePresetSecondlife(bpy.types.Operator):
         autodetect_passes(self, context, item, 21844, "SECONDLIFE")
         return {'FINISHED'}
 
+@wrapper_registry
 class BakePresetGmod(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod'
     bl_label = "GMod Metallic (Experimental)"
@@ -277,6 +284,7 @@ class BakePresetGmod(bpy.types.Operator):
         autodetect_passes(self, context, item, 65500, "GMOD")
         return {'FINISHED'}
 
+@wrapper_registry
 class BakePresetGmodPhong(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod_phong'
     bl_label = "GMod Organic (Experimental)"
@@ -289,6 +297,7 @@ class BakePresetGmodPhong(bpy.types.Operator):
         autodetect_passes(self, context, item, 65500, "GMOD", use_phong=True)
         return {'FINISHED'}
 
+@wrapper_registry
 class BakePresetAll(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_all'
     bl_label = "Autodetect All"
@@ -301,6 +310,7 @@ class BakePresetAll(bpy.types.Operator):
         bpy.ops.tuxedo_bake.preset_secondlife()
         return {'FINISHED'}
 
+@wrapper_registry
 class BakeAddCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_copyonly'
     bl_label = "Set CopyOnly"
@@ -316,6 +326,7 @@ class BakeAddCopyOnly(bpy.types.Operator):
             obj['bakeCopyOnly'] = True
         return {'FINISHED'}
 
+@wrapper_registry
 class BakeRemoveCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_copyonly'
     bl_label = "Unset CopyOnly"
@@ -331,6 +342,7 @@ class BakeRemoveCopyOnly(bpy.types.Operator):
             obj['bakeCopyOnly'] = False
         return {'FINISHED'}
 
+@wrapper_registry
 class BakeAddProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_prop'
     bl_label = "Set Prop"
@@ -346,6 +358,7 @@ class BakeAddProp(bpy.types.Operator):
             obj['generatePropBones'] = True
         return {'FINISHED'}
 
+@wrapper_registry
 class BakeRemoveProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_prop'
     bl_label = "Unset Prop"
@@ -361,6 +374,7 @@ class BakeRemoveProp(bpy.types.Operator):
             obj['generatePropBones'] = False
         return {'FINISHED'}
 
+@wrapper_registry
 class BakeButton(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.bake'
     bl_label = t('tuxedo_bake.bake.label')
@@ -2232,7 +2246,9 @@ class BakeButton(bpy.types.Operator):
                     #               (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors)
                     image = bpy.data.images[platform_img("normal"+str(group_num))]
                     image.colorspace_settings.name = 'Non-Color'
-                    normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"] #I have lost paticence, it keeps throwing an error about these images not being here. why are they not being generated then!? - @989onan
+                    #I have lost paticence, it keeps throwing an error about these images not being here. why are they not being generated then!? - @989onan
+                    #context: I talked about this in the dev channel on the discord where I was loosing my mind, but when I chose normals it kept throwing angy errors
+                    normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"] 
                     image.pixels.foreach_set(normal_image.pixels[:])
                     if export_format == "GMOD":
                         vmtfile += "\n    \"$bumpmap\" \"models/"+sanitized_model_name+"/"+sanitized_name(image.name).replace(".tga","")+"\""
