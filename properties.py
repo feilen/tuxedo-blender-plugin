@@ -2,8 +2,7 @@ from bpy.types import Scene, PropertyGroup
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools import t
-from .tools import materials_list_update
+from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels
 
 def register_properties():
     # Bake
@@ -80,11 +79,6 @@ def register_properties():
         preserve_seams: BoolProperty(
             name=t('Scene.bake_preserve_seams.label'),
             description=t('Scene.bake_preserve_seams.desc'),
-            default=False
-        )
-        optimize_static: BoolProperty(
-            name=t("optimize_static_shapekeys"),
-            description=t("seperate_vertices_unaffected_by_shape_keys_into_their_own_mesh_this_adds_a_drawcall_but_comes_with_a_significant_gpu_cost_savings_especially_on_mobile"),
             default=False
         )
         merge_twistbones: BoolProperty(
@@ -532,4 +526,28 @@ def register_properties():
         description=t('Scene.decimation_remove_doubles.desc'),
         default=True
     )
-    
+    # Mesh Select
+    Scene.ft_mesh = EnumProperty(name='Mesh', description='Mesh to apply FT shape keys', items=get_meshes)
+
+    # Viseme select
+    Scene.ft_aa = EnumProperty(name='aa/Jaw Down', description='This shapekey should ideally only move the mouth down.', items=get_shapekeys_ft)
+    Scene.ft_ch = EnumProperty(name='ch/Cheese', description='This shapekey should ideally only move the lips to expose the teeth.', items=get_shapekeys_ft)
+    Scene.ft_oh = EnumProperty(name='oh/Shock/aa/Jaw Down', description='This shapekey should move the bottom lips more than CH but not the top lips,  and may need to be created. Often AA works too.', items=get_shapekeys_ft)
+    Scene.ft_blink = EnumProperty(name='blink', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+    Scene.ft_smile = EnumProperty(name='smile', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+    Scene.ft_frown = EnumProperty(name='frown', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+
+    # Shape Keys
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        setattr(Scene, "ft_shapekey_" + str(i), EnumProperty(
+            name='',
+            description='Select shapekey to use for SRanipal',
+            items=get_shapekeys_ft)
+        )
+    # Enable Shape Key Creation
+    for i, ft_shape in enumerate(SRanipal_Labels):
+        setattr(Scene, "ft_shapekey_enable_" + str(i), BoolProperty(
+            name='',
+            description='Enable SRanipal Shapekey Creation',
+            default=True)
+        )
