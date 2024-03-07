@@ -2225,14 +2225,14 @@ class BakeButton(bpy.types.Operator):
                             else:
                                 obj.data.uv_layers["Tuxedo UV"].active_render = True
                 
-
+                
                 if pass_normal:
                     # Bake tangent normals
                     #self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
                     #               (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors)
                     image = bpy.data.images[platform_img("normal"+str(group_num))]
                     image.colorspace_settings.name = 'Non-Color'
-                    normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"]
+                    normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"] #I have lost paticence, it keeps throwing an error about these images not being here. why are they not being generated then!? - @989onan
                     image.pixels.foreach_set(normal_image.pixels[:])
                     if export_format == "GMOD":
                         vmtfile += "\n    \"$bumpmap\" \"models/"+sanitized_model_name+"/"+sanitized_name(image.name).replace(".tga","")+"\""
@@ -2256,7 +2256,7 @@ class BakeButton(bpy.types.Operator):
                         for idx in range(1, len(pixel_buffer), 4):
                             pixel_buffer[idx] = 1. - pixel_buffer[idx]
                         image.pixels[:] = pixel_buffer
-
+                    
                 # Reapply keys
                 if not apply_keys:
                     for obj in get_objects(plat_collection.all_objects):
