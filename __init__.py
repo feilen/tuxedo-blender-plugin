@@ -1,6 +1,6 @@
 import bpy
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
-from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL
+from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL, Material_Grouping_UL_List, Material_Grouping_UL_List_Reload
 from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest, RepairShapekeys, ExportGmodPlayermodel, ConvertToValveButton, PoseToRest
 from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
 from .properties import register_properties
@@ -49,6 +49,9 @@ classes = (
     Bake_Platform_New,
     Choose_Steam_Library,
     Open_GPU_Settings,
+    Material_Grouping_UL_List,
+    Material_Grouping_UL_List_Reload,
+    
 
     # Utilities
     ConvertToSecondlifeButton,

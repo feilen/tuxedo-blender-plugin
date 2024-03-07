@@ -509,7 +509,7 @@ class BakeButton(bpy.types.Operator):
 
     # filter_node_create is a function which, given a tree, returns a tuple of
     # (input, output)
-    def filter_image(self, context, image, filter_create, use_linear=False):
+    def filter_image(self, context, image, filter_create, matgroupnum, use_linear=False):
         # This is performed in our throwaway scene, so we don't have to keep settings
         context.scene.view_settings.view_transform = "Standard"
         orig_colorspace = bpy.data.images[image].colorspace_settings.name
@@ -663,7 +663,7 @@ class BakeButton(bpy.types.Operator):
                             node.outputs["Value"].default_value = 0
     
     #delete meshes with no polygons since they're fucked anyway - @989onan
-    def remove_no_polygon_meshes(objects):
+    def remove_no_polygon_meshes(context, objects):
         bpy.ops.object.select_all(action='DESELECT')
         # Shallow copy for this array. I hate python sometimes and I know this is bad code. - @989onan
         newarray = []
@@ -722,11 +722,11 @@ class BakeButton(bpy.types.Operator):
 
     # "Bake pass" function. Run a single bake to "<bake_name>.png" against all selected objects.
     def bake_pass(self, context, bake_name, bake_type, bake_pass_filter, objects, bake_size, bake_samples, bake_ray_distance, background_color, clear, bake_margin, bake_active=None, bake_multires=False,
-                      normal_space='TANGENT',solidmaterialcolors=dict()):
+                      normal_space='TANGENT',solidmaterialcolors=dict(),material_name_groups=dict()):
         BakeButton.deselect_all_objects()
         if bake_active is not None:
             BakeButton.select_and_set_active_object(context, bake_active)
-        objects = remove_no_polygon_meshes(objects)
+        objects = BakeButton.remove_no_polygon_meshes(context, objects)
         BakeButton.print_baking_info(bake_name, objects)
         reverse_material_name_dict = {}
         
@@ -737,9 +737,9 @@ class BakeButton(bpy.types.Operator):
         for group_num,group in material_name_groups.items():
             if clear:
                 BakeButton.clear_image_if_exists(bake_name + str(group_num))
-                image = BakeButton.create_new_image(bake_name, bake_name + str(group_num), background_color)
+                image = BakeButton.create_new_image(bake_name + str(group_num), bake_size, background_color)
                 BakeButton.set_image_colorspace(image, bake_type, bake_name + str(group_num))
-                BakeButton.set_image_pixels(image, background_color, bake_name + str(group_num))
+                BakeButton.set_image_pixels(image, background_color, bake_size)
             image = bpy.data.images["SCRIPT_" + bake_name + str(group_num) + ".png"]
             images.append(image)
         BakeButton.select_objects_for_baking(objects)
@@ -2013,227 +2013,6 @@ class BakeButton(bpy.types.Operator):
             
             
             # Remove all other materials if we've done at least one bake pass
-            for obj in get_objects(plat_collection.all_objects):
-                if obj.type == 'MESH':
-                    context.view_layer.objects.active = obj
-                    while len(obj.material_slots) > 0:
-                        obj.active_material_index = 0  # select the top material
-                        bpy.ops.object.material_slot_remove()
-
-            # Apply generated material (object normals -> normal map -> BSDF normal and other textures)
-            mat = bpy.data.materials.get("Tuxedo Baked " + platform_name)
-            if mat is not None:
-                bpy.data.materials.remove(mat, do_unlink=True)
-            # create material
-            mat = bpy.data.materials.new(name="Tuxedo Baked " + platform_name)
-            mat.use_nodes = True
-            mat.use_backface_culling = True
-            # add a normal map and image texture to connect the world texture, if it exists
-            tree = mat.node_tree
-            bsdfnode = next(node for node in tree.nodes if node.type == "BSDF_PRINCIPLED")
-            if bsdf_original is not None:
-                bsdfnode.distribution = bsdf_original.distribution
-                bsdfnode.subsurface_method = bsdf_original.subsurface_method
-
-                for bsdfinput in bsdfnode.inputs:
-                    if bpy.app.version >= (4, 0, 0) and bsdfinput.is_unavailable:
-                        # In 4.0, there's defined inputs that don't neccesarily exist. Just skip
-                        continue
-                    bsdfinput.default_value = bsdf_original.inputs[bsdfinput.identifier].default_value
-            if pass_normal:
-                normaltexnode = tree.nodes.new("ShaderNodeTexImage")
-                normaltexnode.image = bpy.data.images["SCRIPT_world.png"]
-                # If not supersampling, sample SCRIPT_WORLD 1:1 so we don't blur it
-                if not supersample_normals:
-                    normaltexnode.interpolation = "Closest"
-                normaltexnode.location.x -= 500
-                normaltexnode.location.y -= 200
-
-                normalmapnode = tree.nodes.new("ShaderNodeNormalMap")
-                normalmapnode.space = "OBJECT"
-                normalmapnode.location.x -= 200
-                normalmapnode.location.y -= 200
-
-                tree.links.new(normalmapnode.inputs["Color"], normaltexnode.outputs["Color"])
-                tree.links.new(bsdfnode.inputs["Normal"], normalmapnode.outputs["Normal"])
-
-                if generate_uvmap:
-                    for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                        if supersample_normals:
-                            obj.data.uv_layers["Tuxedo UV Super"].active_render = True
-                        else:
-                            obj.data.uv_layers["Tuxedo UV"].active_render = True
-            for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                obj.data.materials.append(mat)
-            
-            # Update material preview
-            #tree.nodes.remove(diffusetexnode)
-            diffusevertnode = tree.nodes.new("ShaderNodeVertexColor")
-            diffusevertnode.layer_name = "Col"
-            diffusevertnode.location.x -= 300
-            diffusevertnode.location.y += 500
-            tree.links.new(bsdfnode.inputs["Base Color"], diffusevertnode.outputs["Color"])
-            
-            if pass_normal:
-                # Bake tangent normals
-                self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
-                               (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors, material_name_groups=material_name_groups)
-                image = bpy.data.images[platform_img("normal")]
-                image.colorspace_settings.name = 'Non-Color'
-                normal_image = bpy.data.images["SCRIPT_normal.png"]
-                image.pixels.foreach_set(normal_image.pixels[:])
-                if export_format == "GMOD":
-                    vmtfile += "\n    \"$bumpmap\" \"models/"+sanitized_model_name+"/"+sanitized_name(image.name).replace(".tga","")+"\""
-                if normal_alpha_pack != "NONE":
-                    print("Packing to normal alpha")
-                    if normal_alpha_pack == "SPECULAR":
-                        alpha_image = bpy.data.images[platform_img("specular")]
-                        if export_format == "GMOD":
-                            vmtfile += "\n    \"$normalmapalphaenvmapmask\" 1"
-                            vmtfile += "\n    \"$envmap\" env_cubemap"
-                    elif normal_alpha_pack == "SMOOTHNESS":
-                        # 'There must be a Phong mask. The alpha channel of a bump map acts as a Phong mask by default.'
-                        alpha_image = bpy.data.images[platform_img("smoothness")]
-                    pixel_buffer = list(image.pixels)
-                    alpha_buffer = alpha_image.pixels[:]
-                    for idx in range(3, len(pixel_buffer), 4):
-                        pixel_buffer[idx] = (alpha_buffer[idx - 3] * 0.299) + (alpha_buffer[idx - 2] * 0.587) + (alpha_buffer[idx - 1] * 0.114)
-                    image.pixels[:] = pixel_buffer
-                if normal_invert_g:
-                    pixel_buffer = list(image.pixels)
-                    for idx in range(1, len(pixel_buffer), 4):
-                        pixel_buffer[idx] = 1. - pixel_buffer[idx]
-                    image.pixels[:] = pixel_buffer
-
-            # Reapply keys
-            if not apply_keys:
-                for obj in get_objects(plat_collection.all_objects):
-                    if has_shapekeys(obj):
-                        for key in obj.data.shape_keys.key_blocks:
-                            if key.name in shapekey_values:
-                                key.value = shapekey_values[key.name]
-
-
-            # Remove Tuxedo UV Super
-            if generate_uvmap and supersample_normals:
-                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                    uv_layers = [layer.name for layer in obj.data.uv_layers]
-                    while uv_layers:
-                        layer = uv_layers.pop()
-                        if layer == "Tuxedo UV Super":
-                            print("Removing UV {}".format(layer))
-                            obj.data.uv_layers.remove(obj.data.uv_layers[layer])
-
-            # Always remove existing vertex colors here
-            for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                if obj.data.vertex_colors is not None and len(obj.data.vertex_colors) > 0:
-                    while len(obj.data.vertex_colors) > 0:
-                        context.view_layer.objects.active = obj
-                        if bpy.app.version < (3, 4, 0):
-                            bpy.ops.mesh.vertex_color_remove()
-                        else:
-                            bpy.ops.geometry.color_attribute_remove()
-
-            # Update generated material to preview all of our passes
-            if pass_normal:
-                normaltexnode.image = bpy.data.images[platform_img("normal")]
-                normalmapnode.space = "TANGENT"
-                normaltexnode.interpolation = "Linear"
-            if pass_metallic:
-                metallictexnode = tree.nodes.new("ShaderNodeTexImage")
-                metallictexnode.image = bpy.data.images[platform_img("metallic")]
-                metallictexnode.location.x -= 300
-                metallictexnode.location.y += 200
-                seprgbnode = tree.nodes.new("ShaderNodeSeparateRGB")
-
-                tree.links.new(seprgbnode.inputs["Image"], metallictexnode.outputs["Color"])
-                tree.links.new(bsdfnode.inputs["Metallic"], seprgbnode.outputs["R"])
-            if pass_diffuse:
-                diffusetexnode = tree.nodes.new("ShaderNodeTexImage")
-                diffusetexnode.image = bpy.data.images[platform_img("diffuse")]
-                diffusetexnode.location.x -= 300
-                diffusetexnode.location.y += 500
-
-                # If AO, blend in AO.
-                if pass_ao and not diffuse_premultiply_ao:
-                    # AO -> Math (* ao_opacity + (1-ao_opacity)) -> Mix (Math, diffuse) -> Color
-                    multiplytexnode = tree.nodes.new("ShaderNodeMath")
-                    multiplytexnode.operation = "MULTIPLY_ADD"
-                    multiplytexnode.inputs[1].default_value = diffuse_premultiply_opacity
-                    multiplytexnode.inputs[2].default_value = 1. - diffuse_premultiply_opacity
-                    multiplytexnode.location.x -= 400
-                    multiplytexnode.location.y += 700
-                    if pass_metallic and metallic_pack_ao:
-                        tree.links.new(multiplytexnode.inputs[0], seprgbnode.outputs["G"])
-                    else:
-                        aotexnode = tree.nodes.new("ShaderNodeTexImage")
-                        aotexnode.image = bpy.data.images[platform_img("ao")]
-                        aotexnode.location.x -= 700
-                        aotexnode.location.y += 800
-                        tree.links.new(multiplytexnode.inputs[0], aotexnode.outputs["Color"])
-
-                    mixnode = tree.nodes.new("ShaderNodeMixRGB")
-                    mixnode.blend_type = "MULTIPLY"
-                    mixnode.inputs["Fac"].default_value = 1.0
-                    mixnode.location.x -= 200
-                    mixnode.location.y += 700
-                    tree.links.new(mixnode.inputs["Color1"], multiplytexnode.outputs["Value"])
-                    tree.links.new(mixnode.inputs["Color2"], diffusetexnode.outputs["Color"])
-
-                    tree.links.new(bsdfnode.inputs["Base Color"], mixnode.outputs["Color"])
-                else:
-                    tree.links.new(bsdfnode.inputs["Base Color"], diffusetexnode.outputs["Color"])
-            if pass_smoothness:
-                if pass_diffuse and (diffuse_alpha_pack == "SMOOTHNESS"):
-                    invertnode = tree.nodes.new("ShaderNodeInvert")
-                    diffusetexnode.location.x -= 200
-                    invertnode.location.x -= 200
-                    invertnode.location.y += 200
-                    tree.links.new(invertnode.inputs["Color"], diffusetexnode.outputs["Alpha"])
-                    tree.links.new(bsdfnode.inputs["Roughness"], invertnode.outputs["Color"])
-                elif pass_metallic and (metallic_alpha_pack == "SMOOTHNESS"):
-                    invertnode = tree.nodes.new("ShaderNodeInvert")
-                    metallictexnode.location.x -= 200
-                    invertnode.location.x -= 200
-                    invertnode.location.y += 100
-                    tree.links.new(invertnode.inputs["Color"], metallictexnode.outputs["Alpha"])
-                    tree.links.new(bsdfnode.inputs["Roughness"], invertnode.outputs["Color"])
-                else:
-                    smoothnesstexnode = tree.nodes.new("ShaderNodeTexImage")
-                    smoothnesstexnode.image = bpy.data.images[platform_img("smoothness")]
-                    invertnode = tree.nodes.new("ShaderNodeInvert")
-                    tree.links.new(invertnode.inputs["Color"], smoothnesstexnode.outputs["Color"])
-                    tree.links.new(bsdfnode.inputs["Roughness"], invertnode.outputs["Color"])
-            if pass_alpha:
-                if pass_diffuse and (diffuse_alpha_pack == "TRANSPARENCY"):
-                    tree.links.new(bsdfnode.inputs["Alpha"], diffusetexnode.outputs["Alpha"])
-                else:
-                    alphatexnode = tree.nodes.new("ShaderNodeTexImage")
-                    alphatexnode.image = bpy.data.images[platform_img("alpha")]
-                    tree.links.new(bsdfnode.inputs["Alpha"], alphatexnode.outputs["Color"])
-                mat.blend_method = 'CLIP'
-            if pass_emit:
-                emittexnode = tree.nodes.new("ShaderNodeTexImage")
-                emittexnode.image = bpy.data.images[platform_img("emission")]
-                emittexnode.location.x -= 800
-                emittexnode.location.y -= 150
-                tree.links.new(bsdfnode.inputs[EMISSION_INPUT], emittexnode.outputs["Color"])
-
-            # Rebake diffuse to vertex colors: Incorperates AO
-            if pass_diffuse and diffuse_vertex_colors:
-                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                    context.view_layer.objects.active = obj
-                    if bpy.app.version < (3, 4, 0):
-                        bpy.ops.mesh.vertex_color_add()
-                    else:
-                        bpy.ops.geometry.color_attribute_add()
-
-                self.genericize_bsdfs(get_objects(plat_collection.all_objects, {"MESH"}),
-                                      {"Base Color": "Base Color"})
-                self.bake_pass(context, "vertex_diffuse", "DIFFUSE", {"COLOR", "VERTEX_COLORS"}, get_objects(plat_collection.all_objects, {"MESH"}),
-                               (1, 1), 32, 0, [0.5, 0.5, 0.5, 1.], True, pixelmargin,material_name_groups=material_name_groups, material_name_groups=material_name_groups)
-                self.restore_bsdfs(get_objects(plat_collection.all_objects, {"MESH"}))
-                
             
             
             for group_num, group in material_name_groups.items():
@@ -2635,7 +2414,6 @@ class BakeButton(bpy.types.Operator):
                 if not bakeconditions:
                     continue
                 for group_num, group in material_name_groups.items():
-                if bpy.app.version < (4, 0, 0):
                     image = bpy.data.images[platform_img(bakepass+str(group_num))]
                     if bpy.app.version < (4, 0, 0):
                         context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
