@@ -598,15 +598,15 @@ class BakeButton(bpy.types.Operator):
         for obj in objects:
             obj.select_set(True)
 
-    def change_value_node_for_materials(objects, bake_name):
+    def change_value_node_for_materials(objects, bake_name, reverse_material_name_dict):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
                     for node in obj.active_material.node_tree.nodes:
-                        if node.type == "VALUE" and node.label == "bake_" + bake_name:
+                        if node.type == "VALUE" and node.label == "bake_" + bake_name + str(reverse_material_name_dict[slot.material.name]):
                             node.outputs["Value"].default_value = 1
 
-    def assign_bake_node_for_materials(objects, bake_name):
+    def assign_bake_node_for_materials(objects, bake_name, reverse_material_name_dict):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
@@ -689,7 +689,7 @@ class BakeButton(bpy.types.Operator):
         #solid material optimization making 4X4 squares of solid color for this pass - @989onan
         if (context.scene.bake_optimize_solid_materials and
             (not any(plat.use_decimation for plat in context.scene.bake_platforms)) and
-            (not context.scene.bake_pass_ao) and (not context.scene.bake_pass_normal)) and (not (material_name_groups == dict())):
+            (not context.scene.bake_pass_ao) and (not context.scene.bake_pass_normal)):
             #arranging old pixels and assignment to image pixels this way makes only one update per pass, so many many times faster - @989onan
             old_pixels = image.pixels[:]
             old_pixels = list(old_pixels)
@@ -745,8 +745,8 @@ class BakeButton(bpy.types.Operator):
         BakeButton.select_objects_for_baking(objects)
         for obj in objects:
             BakeButton.select_and_set_active_object(context, obj)
-        BakeButton.change_value_node_for_materials(objects, bake_name)
-        BakeButton.assign_bake_node_for_materials(objects, bake_name)
+        BakeButton.change_value_node_for_materials(objects, bake_name, reverse_material_name_dict)
+        BakeButton.assign_bake_node_for_materials(objects, bake_name, reverse_material_name_dict)
         materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
         BakeButton.run_bake(context, bake_type, bake_pass_filter, bake_samples, clear, bake_active, bake_margin, bake_multires, normal_space, bake_ray_distance)
         BakeButton.reset_value_node_for_materials(objects, bake_name)
@@ -844,7 +844,7 @@ class BakeButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
-        #this samples curve to recalculate original smoothness to new smoothness
+    #this samples curve to recalculate original smoothness to new smoothness
     def sample_curve_smoothness(self,sample_val):
         samplecurve = [0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000334,0.000678,0.001033,0.001400,0.001779,0.002170,0.002575,0.002993,0.003424,0.003871,0.004332,0.004808,0.005301,0.005810,0.006335,0.006878,0.007439,0.008018,0.008616,0.009233,0.009870,0.010527,0.011204,0.011903,0.012624,0.013367,0.014132,0.014920,0.015732,0.016568,0.017429,0.018314,0.019225,0.020163,0.021126,0.022117,0.023134,0.024180,0.025255,0.026358,0.027490,0.028652,0.029845,0.031068,0.032323,0.033610,0.034928,0.036280,0.037664,0.039083,0.040535,0.042022,0.043544,0.045102,0.046696,0.048327,0.049994,0.051699,0.053442,0.055224,0.057045,0.058905,0.060805,0.062745,0.064729,0.066758,0.068831,0.070948,0.073109,0.075311,0.077555,0.079841,0.082166,0.084531,0.086935,0.089377,0.091856,0.094371,0.096923,0.099510,0.102131,0.104786,0.107474,0.110195,0.112947,0.115729,0.118542,0.121385,0.124256,0.127155,0.130082,0.133035,0.136013,0.139018,0.142046,0.145098,0.148173,0.151270,0.154389,0.157529,0.160689,0.163868,0.167066,0.170282,0.173515,0.176765,0.180030,0.183310,0.186605,0.189914,0.193235,0.196569,0.199914,0.203270,0.206635,0.210011,0.213395,0.216786,0.220185,0.223591,0.227002,0.230418,0.233838,0.237263,0.240690,0.244119,0.247549,0.250980]
 
@@ -1721,6 +1721,7 @@ class BakeButton(bpy.types.Operator):
                 gmod_model_name = platform.gmod_model_name
                 sanitized_platform_name = sanitized_name(platform_name)
                 sanitized_model_name = sanitized_name(gmod_model_name)
+                vmtfile = "\"VertexlitGeneric\"\n{\n    \"$surfaceprop\" \"Flesh\""
                 
                 images_path = steam_library_path+"steamapps/common/GarrysMod/garrysmod/"
                 target_dir = steam_library_path+"steamapps/common/GarrysMod/garrysmod/addons/"+sanitized_model_name+"_playermodel/materials/models/"+sanitized_model_name
@@ -2064,7 +2065,15 @@ class BakeButton(bpy.types.Operator):
                             obj.data.uv_layers["Tuxedo UV"].active_render = True
             for obj in get_objects(plat_collection.all_objects, {"MESH"}):
                 obj.data.materials.append(mat)
-
+            
+            # Update material preview
+            #tree.nodes.remove(diffusetexnode)
+            diffusevertnode = tree.nodes.new("ShaderNodeVertexColor")
+            diffusevertnode.layer_name = "Col"
+            diffusevertnode.location.x -= 300
+            diffusevertnode.location.y += 500
+            tree.links.new(bsdfnode.inputs["Base Color"], diffusevertnode.outputs["Color"])
+            
             if pass_normal:
                 # Bake tangent normals
                 self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
@@ -2626,8 +2635,10 @@ class BakeButton(bpy.types.Operator):
                 if not bakeconditions:
                     continue
                 for group_num, group in material_name_groups.items():
+                if bpy.app.version < (4, 0, 0):
                     image = bpy.data.images[platform_img(bakepass+str(group_num))]
-                    context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
+                    if bpy.app.version < (4, 0, 0):
+                        context.scene.display_settings.display_device = 'None' if use_linear else 'sRGB'
                     context.scene.view_settings.view_transform = "Raw" if use_linear else "Standard"
                     image.save_render(bpy.path.abspath(image.filepath), scene=context.scene)
                     if export_format == "GMOD":
@@ -2756,12 +2767,16 @@ class BakeButton(bpy.types.Operator):
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
                     bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
                     print("Starting back up Tuxedo baking system")
+            
             # Reapply tuxedo material
             if export_format != "GMOD":
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                    for matindex,slot in enumerate(obj.material_slots):
-                        if slot.material == None:
-                            slot.material = bpy.data.materials[objmaterials[obj.name][matindex]]
+                    if len(obj.material_slots) == 0:
+                        obj.data.materials.append(mat)
+                    else:
+                        for slot in obj.material_slots:
+                            if slot.material == None:
+                                slot.material = mat
 
             # Delete our duplicate scene
             #edit, Users who wanna see what the script creates and make any last minute changes will want this disabled for gmod.
@@ -2769,7 +2784,6 @@ class BakeButton(bpy.types.Operator):
                 bpy.ops.scene.delete()
             else: #go back to the scene before, so that when we create the next one, it switches away from this one. therefore saving it from destruction
                 bpy.context.window.scene = bpy.data.scenes[bpy.data.scenes.find(bpy.context.scene.name)-1]
-
             
             # Move armature so we can see it
             if quick_compare and export_format != "GMOD":
