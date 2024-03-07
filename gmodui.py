@@ -27,7 +27,7 @@ class Choose_Steam_Library(Operator, ImportHelper):
 
 @wrapper_registry
 class GmodPanel(Panel):
-    bl_label = "Gmod"
+    bl_label = "Gmod Options For Current Selection"
     bl_idname = 'VIEW3D_PT_tuxgmod'
     bl_category = 'Tuxedo'
     bl_space_type = 'VIEW_3D'
@@ -38,6 +38,11 @@ class GmodPanel(Panel):
         return context.scene.bake_platforms[context.scene.bake_platform_index].export_format == "GMOD"
     
     def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        col = box.column(align=True)
+
+        row = col.row(align=True)
         item = context.scene.bake_platforms[context.scene.bake_platform_index]
         if item.export_format == "GMOD":
             row = col.row(align=True)

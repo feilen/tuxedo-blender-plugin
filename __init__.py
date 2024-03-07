@@ -1,12 +1,27 @@
-import bpy
+if "bpy" not in locals():
+    import bpy
+    is_reloading = False
+else:
+    is_reloading = True
+
 from .class_register import order_classes, classes
 
-#this is needed since it doesn't see them unless imported... - @989onan
-from . import bake, gmodui, properties, tools, ui
+if is_reloading:
+    import importlib
+    #reload our imports so they reload when we hit F8.
+    importlib.reload(bake)
+    importlib.reload(gmodui)
+    importlib.reload(properties)
+    importlib.reload(tools)
+    importlib.reload(ui)
+else:
+    from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
+    from .properties import register_properties
+    from bpy.types import Scene
+    #this is needed since it doesn't see them unless imported... - @989onan
+    from . import bake, gmodui, properties, tools, ui
 
-from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
-from .properties import register_properties
-from bpy.types import Scene
+
 
 bl_info = {
     'name': 'Tuxedo Blender Plugin',
