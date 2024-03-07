@@ -546,13 +546,34 @@ class BakeButton(bpy.types.Operator):
     # "Bake pass" function. Run a single bake to "<bake_name>.png" against all selected objects.
     def bake_pass(self, context, bake_name, bake_type, bake_pass_filter, objects, bake_size, bake_samples, bake_ray_distance, background_color, clear, bake_margin, bake_active=None, bake_multires=False,
                   normal_space='TANGENT',solidmaterialcolors=dict(),material_name_groups=dict()):
-        bpy.ops.object.select_all(action='DESELECT')
         
-        # Select only objects we're baking
+        bpy.ops.object.select_all(action='DESELECT')
         if not objects:
             print("No objects selected!")
             return
 
+        #delete meshes with no polygons since they're fucked anyway - @989onan
+        bpy.ops.object.select_all(action='DESELECT')
+        # Shallow copy for this array. I hate python sometimes and I know this is bad code. - @989onan
+        newarray = []
+        for obj in objects:
+            newarray.append(obj) 
+        
+        objects = []
+        no_polygons = []
+        for obj in newarray:
+            if obj.type != 'MESH':
+                objects.append(obj)
+                continue
+            me = obj.data
+            if len(me.polygons) > 0:
+                objects.append(obj)
+                continue
+            obj.select_set(True)
+        bpy.ops.object.delete(use_global=False)
+        bpy.ops.object.select_all(action='DESELECT')
+        
+        # Select only objects we're baking
         for obj in objects:
             obj.select_set(True)
             context.view_layer.objects.active = obj
@@ -1961,7 +1982,7 @@ class BakeButton(bpy.types.Operator):
                 self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
                                (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors,material_name_groups=material_name_groups)
             
-            # Rebake diffuse to vertex colors: Incorperates AO
+            # Rebake diffuse to vertex colors: Incorporates AO
             if pass_diffuse and diffuse_vertex_colors:
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
                     context.view_layer.objects.active = obj
@@ -2407,7 +2428,8 @@ class BakeButton(bpy.types.Operator):
                         if name[-5:] == "_bake":
                             mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks[name])
 
-            if optimize_static:
+            #TODO: FIX ME!!!!!! We need this but it keeps causing access violations!
+            if optimize_static and export_format != "GMOD":
                 for mesh in plat_collection.all_objects:
                     if mesh.type == 'MESH' and mesh.data.shape_keys is not None:
                         context.view_layer.objects.active = mesh
@@ -2511,9 +2533,10 @@ class BakeButton(bpy.types.Operator):
                                               export_animation_transformation_type=0, open_sim=False,
                                               limit_precision=False, keep_bind_info=False)
                 elif export_format == "GMOD":
-                    print("TODO: The gmod exporter needs more testing - @989onan")
+                    #print("TODO: The gmod exporter needs more testing - @989onan") <- probably fine. It works very well, we need live testing.
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
                     bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
+                    print("Starting back up Tuxedo baking system")
             # Reapply tuxedo material
             if export_format != "GMOD":
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
