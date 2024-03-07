@@ -2,7 +2,7 @@ from bpy.types import Scene, PropertyGroup
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels
+from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
 
 def register_properties():
     # Bake
