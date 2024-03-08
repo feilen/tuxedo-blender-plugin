@@ -59,26 +59,16 @@ class Bake_PT_bake_passes:
             row = col.row(align=True)
             row.separator()
             row.prop(context.scene, 'bake_illuminate_eyes', expand=True)
-            if context.scene.bake_illuminate_eyes:
-                multires_obj_names = []
-                for obj in get_meshes_objects(context):
-                    if obj.name not in context.view_layer.objects:
-                        continue
-                    if obj.hide_get():
-                        continue
-                    if any(mod.type == "MULTIRES" for mod in obj.modifiers):
-                        multires_obj_names.add(obj.name)
-
-                if main_panel.multires_obj_names:
-                    row = col.row(align=True)
-                    row.separator()
-                    row.label(text="One or more of your objects are using Multires.", icon="ERROR")
-                    row = col.row(align=True)
-                    row.separator()
-                    row.label(text="This has issues excluding the eyes, try adding")
-                    row = col.row(align=True)
-                    row.separator()
-                    row.label(text="'ambient occlusion' shape keys instead.")
+            if main_panel.multires_obj_names:
+                row = col.row(align=True)
+                row.separator()
+                row.label(text="One or more of your objects are using Multires.", icon="ERROR")
+                row = col.row(align=True)
+                row.separator()
+                row.label(text="This has issues excluding the eyes, try adding")
+                row = col.row(align=True)
+                row.separator()
+                row.label(text="'ambient occlusion' shape keys instead.")
 
         col.separator()
         row = col.row(align=True)

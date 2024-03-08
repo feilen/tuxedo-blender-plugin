@@ -106,7 +106,7 @@ def register():
                     gmod_path = library_path
     else:
         print("could not find steam install! Please check your steam installation!")
-    
+    print("========= FINISHED READING STEAM REGISTRY KEYS FOR GMOD =========")
     
 
 def unregister():

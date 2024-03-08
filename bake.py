@@ -178,7 +178,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
         item.export_format = "GMOD"
         item.image_export_format = "TGA"
         item.translate_bone_names = "VALVE"
-        item.gmod_model_name = "Missing No"
+        item.gmod_model_name = ""
         item.prop_bone_handling = "REMOVE"
         item.copy_only_handling = "REMOVE"
         if not use_phong:

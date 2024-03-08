@@ -309,6 +309,16 @@ class BakePanel(Panel):
                 self.current_props.add(obj.name)
             if 'bakeCopyOnly' in obj and obj['bakeCopyOnly']:
                 self.current_copyonlys.add(obj.name)
+        if context.scene.bake_pass_ao:
+            if context.scene.bake_illuminate_eyes:
+                self.multires_obj_names = []
+                for obj in get_meshes_objects(context):
+                    if obj.name not in context.view_layer.objects:
+                        continue
+                    if obj.hide_get():
+                        continue
+                    if any(mod.type == "MULTIRES" for mod in obj.modifiers):
+                        self.multires_obj_names.add(obj.name)
 
         col.label(text=t('BakePanel.autodetectlabel'))
         row = col.row(align=True)
