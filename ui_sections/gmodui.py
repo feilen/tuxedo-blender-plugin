@@ -43,9 +43,11 @@ class GmodPanel:
         item = context.scene.bake_platforms[context.scene.bake_platform_index]
         if item.export_format == "GMOD":
             row = col.row(align=True)
-            row.operator(Choose_Steam_Library.bl_idname, icon="FILE_FOLDER")
+            row.label(text="Click on the button below if the directory is incorrect.")
             row = col.row(align=True)
-            row.prop(context.scene, "bake_steam_library", expand=True)
+            split = row.split(factor = 0.3)
+            split.operator(Choose_Steam_Library.bl_idname, icon="FILE_FOLDER")
+            split.prop(context.scene, "bake_steam_library", expand=True)
             row = col.row(align=True)
             row.prop(item, "gmod_model_name", expand=True)
             row = col.row(align=True)

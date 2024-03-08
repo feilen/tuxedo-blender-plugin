@@ -226,7 +226,7 @@ uitabs = {}
 choices = []
 
 def register_ui_tab(cls):
-    print("registering a ui tab"+cls.bl_enum)
+    print("registering a ui tab with enum "+cls.bl_enum)
     choices.append(cls)
     uitabs[cls.bl_enum] = cls
     return cls
@@ -238,7 +238,6 @@ def tab_enums(self, context):
             options.append((cls.bl_enum,"",cls.bl_description, cls.icon, k))
         else:
             options.append((cls.bl_enum,"",cls.bl_description, "X", k))
-    print(options)
     return options
     
 
