@@ -3,6 +3,7 @@ import addon_utils
 import mathutils
 
 from .. import bake as Bake
+from ..properties import get_steam_library
 from ..tools import t, get_meshes_objects, get_armature, simplify_bonename, bone_names
 from ..tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
 from ..tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
@@ -92,7 +93,11 @@ class Bake_PT_warnings:
                     has_polygon_error = True
                     row = col.row(align=True)
                     row.label(text=obj.name+" Has more than 9900 polygons.", icon="MESH_DATA")
-            
+            if has_polygon_error:
+                row = col.row(align=True)
+                col2 = row.column(align=True)
+                col2.label(text="To keep under the hard limit of 10000 per mesh for Gmod,")
+                col2.label(text="meshes above 9900 will be reduced by Tuxedo during bake.")
             armature = get_armature(context)
             if armature:
                 reverse_bone_lookup = dict()
@@ -123,15 +128,18 @@ class Bake_PT_warnings:
                         has_gmod_error = True
                         row = col.row(align=True)
                         row.label(text="Your "+arm_bones[bone_name].name+" bone in edit mode is not in t-pose! difference:"+str(round((1-bone_vec)*1000)/10)+"%", icon="ARMATURE_DATA")
-                    
             
-            if has_polygon_error:
+            
+            if not get_steam_library(None):
                 row = col.row(align=True)
-                row.label(text="To keep under the hard limit of 10000 per mesh for Gmod, meshes above 9900 will be reduced by Tuxedo during bake.",  icon="EVENT_G")
+                has_gmod_error = True
+                col2 = row.column(align=True)
+                col2.label(text="Tuxedo was not able to find Gmod on your machine!", icon="ERROR")
+                col2.label(text="You may be on mac, linux, or don't have gmod with steam installed.", icon="ERROR")
+            
             if not has_gmod_error:
                 row = col.row(align=True)
                 row.label(text="No Gmod errors or warnings.", icon="CHECKMARK")
-            
             #add our gmod error to if we have errors, for displaying no error dialogue
             has_error = has_gmod_error or has_error
         

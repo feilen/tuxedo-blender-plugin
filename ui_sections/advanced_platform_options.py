@@ -21,7 +21,10 @@ class Bake_PT_advanced_platform_options:
     icon = "INFO"
     
     def poll(cls, context):
-        return context.scene.bake_platforms[context.scene.bake_platform_index] != None
+        try:
+            return context.scene.bake_platforms[context.scene.bake_platform_index] != None
+        except:
+            return False
     
     def draw_panel(main_panel, context, col):
     

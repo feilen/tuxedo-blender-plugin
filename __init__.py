@@ -22,7 +22,7 @@ if is_reloading:
         exec("importlib.reload("+ui_obj+")")
 else:
     from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
-    from .properties import register_properties, gmod_path
+    from .properties import register_properties, gmod_path, set_steam_library
     from bpy.types import Scene
     #this is needed since it doesn't see them unless imported... - @989onan
     from . import bake, properties, tools, ui
@@ -78,6 +78,7 @@ def register():
     # Properties
     register_properties()
     print("========= TUXEDO REGISTRY FINISHED =========")
+    #needs to be after registering properties, because it accesses a property - @989onan
     print("========= READING STEAM REGISTRY KEYS FOR GMOD =========")
     import subprocess
     import sys
@@ -98,12 +99,13 @@ def register():
             if line.strip().startswith("\"path\""):
                 print("found a library")
                 print("previous library didn't have garry's mod")
-                library_path = line.strip().replace("\\\\", "/").replace("\"path\"", "").strip().replace("\"","")
+                library_path = line.strip().replace("\\\\", "/").replace("\"path\"", "").strip().replace("\"","")+"/"
                 print(library_path)
             else:
                 if line.strip().startswith("\"4000\""):
                     print("above library has garrys mod, setting to that.")
-                    gmod_path = library_path
+                    set_steam_library(library_path)
+                    break
     else:
         print("could not find steam install! Please check your steam installation!")
     print("========= FINISHED READING STEAM REGISTRY KEYS FOR GMOD =========")

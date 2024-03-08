@@ -5,10 +5,18 @@ from bpy.utils import register_class
 from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
 from .ui import tab_enums
 
-gmod_path = "C:\\Program Files (x86)\\Steam\\"
+#this is basically a constant, set at launch. There is no reason to need to set this otherwise unless explictly giving only the user the option to do so.
+#this is set via the __init__ file and reads the steam libraries via registry keys at launch, so it will always
+#be able to find garry's mod. If it can't, then the game is pirated, so screw them anyway.
+gmod_path = {"path":""}
 
 def get_steam_library(self):
-    return gmod_path
+    return gmod_path["path"]
+
+#used by __init__ only. Don't touch for any other purpose.
+def set_steam_library(arg):
+    gmod_path["path"] = arg
+
 
 def register_properties():
     # Bake

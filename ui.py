@@ -18,6 +18,34 @@ from bpy_extras.io_utils import ImportHelper
 button_height = 1
 
 @wrapper_registry
+class ErrorNoSource_OT_Tuxedo(Operator):
+    bl_idname = "tuxedo_bake.nosource"
+    bl_label = "INSTALL SOURCE"
+    bl_options = {'INTERNAL'}
+    bl_icon = "ERROR"
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def check(self, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.label(text="To use Tuxedo Source features, you must use the BlenderSourceTools addon.")
+        row = col.row(align=True)
+        row.label(text="The currently running script may also have hit a critical error.")
+        row = col.row(align=True)
+        row.label(text="Doing an undo is highly suggested.")
+        
+
+@wrapper_registry
 class Bake_Platform_List(UIList):
     bl_label = ""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -368,9 +396,12 @@ class BakePanel(Panel):
         section = row.box()
         #display the current UI tab
         try:
-            uitabs[context.scene.ui_index].draw_panel(self, context, section)
+            if uitabs[context.scene.ui_index].poll(uitabs[context.scene.ui_index],context):
+                uitabs[context.scene.ui_index].draw_panel(self, context, section)
+            else:
+                section.label(text='This feature set is unavaliable with the current platform selection.', icon='INFO')
         except Exception as e:
-            section.label(text='ERROR! Panel is unable to render!')
+            section.label(text='ERROR! Panel is unable to render!', icon='ERROR')
             section = section.row(align=True)
             section.label(text=str(e))
             

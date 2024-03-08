@@ -208,9 +208,7 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
                         if bone.parent and bone.parent.name in obj.vertex_groups:
                             obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
                 except Exception as e:
-                    print("\nerror below is because it attempted to read a null vertex's vertex groups.\n")
-                    print(e)
-                    print("\n===== END ERROR =====\n")
+                    pass # this is because of null vertex group reading, and we kinda don't care all that much about it - @989onan
 
         for bone_name in bone_names:
             # remove old bones vertex groups
@@ -964,7 +962,7 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
         for bone in context.visible_bones:
             bone.tail[:] = bone.head[:]
             bone.tail[0] = bone.head[0] + 0.1
-            # TODO: clear rolls
+            bone.roll = 0
 
         context.object.data.use_mirror_x = old_mirror_setting
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -1581,18 +1579,17 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             pass
         # this is feilen's code
         def sanitized_name(orig_name):
-                #sanitizing name since everything needs to be simple characters and "_"'s
-                sanitized = ""
-                for i in orig_name.lower():
-                    if i.isalnum() or i == "_":
-                        sanitized += i
-                    else:
-                        sanitized += "_"
-                return sanitized
+            #sanitizing name since everything needs to be simple characters and "_"'s
+            sanitized = ""
+            for i in orig_name.lower():
+                if i.isalnum() or i == "_":
+                    sanitized += i
+                else:
+                    sanitized += "_"
+            return sanitized
         sanitized_model_name = sanitized_name(model_name)
         sanitized_platform_name = sanitized_name(platform_name)
         #feilen's code ends here
-
 
         #for name that appears in playermodel selection screen.
         for i in model_name:
@@ -1600,7 +1597,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 offical_model_name += i
             else:
                 offical_model_name += "_"
-
+        
         print("sanitized model name:"+sanitized_model_name)
         print("Playermodel Selection Menu Name"+offical_model_name)
         print("armature name:"+self.armature_name)
@@ -1624,23 +1621,6 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
 
 
-        #TODO: Ask the user to add an upper chest bone instead - @989onan
-        #print("checking if model has an upper chest or not.")
-        #context.view_layer.objects.active = armature
-        #Set_Mode(context, "OBJECT")
-        #bpy.ops.object.select_all(action='DESELECT')
-        #Set_Mode(context, "EDIT")
-        #if not ("ValveBiped.Bip01_Spine4" in armature.data.edit_bones):
-        #    print("Model does not have upper chest, auto generating...")
-        #    chest_bone = armature.data.edit_bones["ValveBiped.Bip01_Spine1"]
-        #    bpy.ops.armature.select_all(action='DESELECT')
-        #    chest_bone.select_head = True
-        #    chest_bone.select_tail = True
-        #    chest_bone.select = True
-        #    # There needs to be a parenting thing here, since subdivided bones keep the parents to the original bone
-        #    chest_bone.children[0].name = "ValveBiped.Bip01_Spine4"
-        #    bpy.ops.armature.subdivide()
-        #    bpy.ops.armature.select_all(action='DESELECT')
         armature = get_armature(context,self.armature_name)
         context.view_layer.objects.active = armature
 
@@ -1648,8 +1628,25 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         #putting objects and armature under a better collection.
         refcoll_list = [obj for obj in armature.children]
         refcoll_list.append(armature)
+        
+        #once we get our objects, before anything we wanna sanitize it.
+        #santitize object, material, and shapekey names
+        for obj in refcoll_list:
+            obj.name = sanitized_name(obj.name) #this is needed since objects (not just meshes) will throw errors if named weirdly
+            if obj.type == "MESH":
+                print("sanitizing material names for gmod for object "+obj.name)
+                for material in obj.material_slots:
+                    mat = material.material
+                    mat.name = sanitized_name(mat.name)
+                if has_shapekeys(obj):
+                    print("sanitizing shapekey names for gmod for object "+obj.name)
+                    for shapekey in obj.data.shape_keys.key_blocks:
+                        shapekey.name = sanitized_name(shapekey.name)
+        
+        self.armature_name = armature.name
+        
         refcoll = Move_to_New_Or_Existing_Collection(context, sanitized_model_name+"_ref", objects_alternative_list = refcoll_list) #put armature and children into alt object list
-
+        
 
         print("marking which models toggled off by default, and deleting always inactive objects for body groups.")
         hidden_by_default_bodygroups = []
@@ -1688,9 +1685,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         try:
             bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
         except AttributeError:
-            #TODO: Replace with tuxedo dialouge, since this is a pretty serious error. HIGH PRIORITY!
-            #bpy.ops.cats_importer.install_source('INVOKE_DEFAULT')
-            return
+            bpy.ops.tuxedo_bake.nosource('INVOKE_DEFAULT')
+            return {'FINISHED'}
 
         #clean imported stuff
         print("cleaning imported armature")
@@ -1703,18 +1699,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         barneycollection = Move_to_New_Or_Existing_Collection(context, "barney_collection", objects_alternative_list = [bpy.data.objects.get("barney_reference_skeleton")])
 
 
-        #santitize material names
-        for obj in refcoll.objects:
-            objname = obj.name
-            if bpy.data.objects[objname].type == "MESH":
-                print("sanitizing material names for gmod for object "+objname)
-                for material in bpy.data.objects[objname].material_slots:
-                    mat = material.material
-                    mat.name = sanitized_name(mat.name)
-                if has_shapekeys(bpy.data.objects[objname]):
-                    print("sanitizing shapekey names for gmod for object "+objname)
-                    for shapekey in bpy.data.objects[objname].data.shape_keys.key_blocks:
-                        shapekey.name = sanitized_name(shapekey.name)
+        
 
 
         print("zeroing transforms and then scaling to gmod scale, then applying transforms.")
@@ -1889,8 +1874,6 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("fixing bones to point correct direction in order to mitigate bad bone twists. (includes thighs and jiggle bones)")
 
 
-        #twisted_armature_bone_names may not be referenced because I thought it was causing issues - @989onan
-        #TODO: what the hell does above mean? - @989onan
         
         twisted_armature = bpy.data.objects[body_armature_name]
         twisted_armature_bone_names = list(set([j.name for j in children_bone_recursive(twisted_armature.pose.bones["ValveBiped.Bip01_Pelvis"])]) - set(barney_pose_bone_names))
@@ -2460,6 +2443,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         dummy_anim = Make_And_Key_Animation(context, "dummy", body_armature)
         
         print("adding animation data thats a dummy to every armature because otherwise it causes errors with the exporter...")
+        print("The animations that need to be exported should be assigned to armatures that have all the bones specified in the animation, then exported")
         for rig in bpy.data.objects:
             if rig.type == "ARMATURE":
                 rig.animation_data_create()
@@ -2472,12 +2456,8 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         Make_And_Key_Animation(context, "idle", body_armature)
 
 
-        print("making animation for reference body")
-
         refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
-
-
         body_armature.animation_data.action = None
         Set_Mode(context, "OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
@@ -2504,77 +2484,17 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         print("making copy of reference armature to export idle")
         parentobj, idle_armature = Get_Meshes_And_Armature(context, refcoll)
         idle_collection = Copy_to_existing_collection(context, "idle_ref", objects_alternative_list = [idle_armature])
-        bpy.context.selected_objects[0].animation_data.action = bpy.data.actions["idle"] #since above we are just copying the body_armature, it should still be selected in the new collection.
+        bpy.context.selected_objects[0].animation_data.action = bpy.data.actions["idle"] 
         bpy.ops.object.select_all(action='DESELECT')
 
         print("making copy of reference armature to export proportions reference animation")
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
         reference_collection = Copy_to_existing_collection(context, "reference_ref", objects_alternative_list = [body_armature])
         reference_armature = bpy.context.selected_objects[0]
-        reference_armature.animation_data.action = bpy.data.actions["reference"] #since above we are just copying the body_armature, it should still be selected in the new collection.
+        reference_armature.animation_data.action = bpy.data.actions["reference"] 
         bpy.ops.object.select_all(action='DESELECT')
 
-
-
-        # probably don't need this - @989onan
-        # print("moving copy of body armature to origin for arms and applying transforms")
-        # context.view_layer.objects.active = reference_armature
-        # bpy.ops.object.select_all(action='DESELECT')
-        # reference_armature.select_set(True)
-        # bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'})
-        # arms_reference_anim_armature = bpy.context.selected_objects[0]
-        # arms_ref_collection = bpy.data.collections.new("reference_arms")
-
-        # for collection in bpy.data.collections:
-            # try:
-                # collection.objects.unlink(arms_reference_anim_armature)
-            # except:
-                # pass
-        # try:
-            # context.view_layer.layer_collection.collection.children.unlink(arms_reference_anim_armature)
-        # except:
-            # pass
-        # arms_ref_collection.objects.link(arms_reference_anim_armature)
-        # context.view_layer.layer_collection.collection.children.link(arms_ref_collection)
-        # #move arms reference anim armature to origin
-
-
-
-        # print("deleting old reference_arms animations")
-        # context.view_layer.objects.active = arms_reference_anim_armature
-        # Set_Mode(context, "OBJECT")
-        # animationnames = [j.name for j in bpy.data.actions]
-        # for animationname in animationnames:
-            # if "." in animationname:
-                # if animationname.split(".")[0] == "reference_arms":
-                    # bpy.data.actions.remove(bpy.data.actions[animationname])
-            # if animationname == "reference_arms":
-                # bpy.data.actions.remove(bpy.data.actions[animationname])
-
-        # print("keying animation reference_arms.")
-
-        # arms_reference_anim_armature.animation_data.action = bpy.data.actions.new(name="reference_arms")
-        # for barney_bone_name in barney_pose_bone_names:
-            # bone = arms_reference_anim_armature.pose.bones.get(barney_bone_name)
-            # bone.rotation_mode = "XYZ"
-            # bone.keyframe_insert(data_path="rotation_euler", frame=1)
-            # bone.keyframe_insert(data_path="location", frame=1)
-
-        # arms_reference_anim_armature.location = [(-1*chestloc[0]),(-1*chestloc[1]),(-1*chestloc[2])]
-        # bpy.ops.object.select_all(action='DESELECT')
-        # arms_reference_anim_armature.select_set(True)
-        # context.view_layer.objects.active = arms_reference_anim_armature
-        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
         update_viewport()
-
-        print("adding animation data to every armature because otherwise it causes errors with the exporter...")
-        for rig in bpy.data.objects:
-            if rig.type == "ARMATURE":
-                rig.animation_data_create()
-                rig.vs.action_filter = "*"
-                rig.data.vs.action_selection = "FILTERED"
-                rig.data.vs.implicit_zero_bone = False
 
         print("setting export settings")
         bpy.context.scene.vs.subdir = "anims"
@@ -2591,28 +2511,6 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                 body_armature = obj
                 break
 
-        def dup_collection_only_mesh(body_armature,obj):
-            context.view_layer.objects.active = body_armature
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'})
-
-            bpy.ops.object.select_all(action='DESELECT')
-
-            body_group_coll = bpy.data.collections.new(obj.name+"_ref")
-
-            for collection in bpy.data.collections:
-                try:
-                    collection.objects.unlink(obj)
-                except:
-                    pass
-            try:
-                context.view_layer.layer_collection.collection.objects.unlink(obj)
-            except:
-                pass
-            body_group_coll.objects.link(obj)
-            context.view_layer.layer_collection.collection.children.link(body_group_coll)
-            return body_group_coll
 
         new_body_groups = ""
         body_group_coll = None
@@ -2620,8 +2518,8 @@ $collisionjoints \""""+physcoll.name+""".smd\"
             if obj.type == "MESH":
                 if has_shapekeys(obj):
                     print("mesh has shapekeys, giving model shapekey data for model option")
-                    shapekey_collection = dup_collection_only_mesh(body_armature,obj)
-
+                    shapekey_collection = Move_to_New_Or_Existing_Collection(context, obj.name+"_ref", objects_alternative_list = [obj])
+                    
 
                     flex_block_model = """\n$model \""""+shapekey_collection.name+"""\" \""""+shapekey_collection.name+""".smd" {
 
@@ -2646,7 +2544,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                         replace_percent_thingies_with += "%"+shapekey.name+" = "+shapekey.name+"\n\t"
                     new_body_groups += flex_block_model.replace("{put flexes here}",replace_flex_with).replace("{put flexcontrollers here}",replace_flexcontrollers_with).replace("{put percent thingies here}",replace_percent_thingies_with)
                 else:
-                    body_group_coll = dup_collection_only_mesh(body_armature,obj)
+                    body_group_coll = Move_to_New_Or_Existing_Collection(context, obj.name+"_ref", objects_alternative_list = [obj])
                     if not (obj.name in do_not_toggle_bodygroups):
                         if obj.name in hidden_by_default_bodygroups:
                             #ignore weird formatting below, indenting it will mess it up. - @989onan

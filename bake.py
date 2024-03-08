@@ -1595,8 +1595,6 @@ class BakeButton(bpy.types.Operator):
              # the MOST correct way to bake subsurface light only would be to set Base Color to black,
              # multiply Base Color and Subsurface Color and plug into Subsurface Color, then bake Diffuse color
              # then multiply by normalized thickness.
-             # TODO: FIXME: @989onan - Subsurface nuked it's color field. This is going to be a terrible implmentation but I will use base color and weight according to https://blenderartists.org/t/where-did-the-sss-color-go-and-why/1493306 
-             #It will be fine for now.
             (pass_diffuse and diffuse_indirect, True, "diffuse_indirect", "DIFFUSE", {"INDIRECT"}, [0., 0., 0., 1.], (1,1,1), None, False),
             # bake 'thickness' by baking subsurface as albedo, normalizing, and inverting
                  (pass_thickness, True, "thickness", "DIFFUSE", {"COLOR"}, [1., 1., 1., 1.], None, {"Subsurface Weight": "Alpha"}, False),
@@ -2557,7 +2555,7 @@ class BakeButton(bpy.types.Operator):
                                               export_animation_transformation_type=0, open_sim=False,
                                               limit_precision=False, keep_bind_info=False)
                 elif export_format == "GMOD":
-                    #print("TODO: The gmod exporter needs more testing - @989onan") <- probably fine. It works very well, we need live testing.
+                    
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
                     bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
                     print("Starting back up Tuxedo baking system")
