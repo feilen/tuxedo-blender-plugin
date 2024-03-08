@@ -3,6 +3,7 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, Co
 from bpy.utils import register_class
 
 from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
+from .ui import tab_enums
 
 def register_properties():
     # Bake
@@ -217,7 +218,7 @@ def register_properties():
             description=t('merges_smoothness_into_the_specular_map_for_engines_without_a_seperate_smoothness_map'),
             default=False
         )
-        gmod_model_name: StringProperty(name='Gmod Model Name', default="missing no")
+        gmod_model_name: StringProperty(name='Gmod Model Name', default="")
         prop_bone_handling: EnumProperty(
             name="Prop objects",
             description="What to do with objects marked as Props",
@@ -244,6 +245,12 @@ def register_properties():
         type=BakePlatformPropertyGroup
     )
     Scene.bake_platform_index = IntProperty(default=0)
+    
+    Scene.ui_index = EnumProperty(
+        name='UI Section',
+        description='the current section the user is looking at',
+        items=tab_enums
+    )
 
     Scene.bake_cleanup_shapekeys = BoolProperty(
         name=t("cleanup_shapekeys"),
