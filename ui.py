@@ -323,6 +323,14 @@ class BakePanel(Panel):
         row.operator(Bake.BakePresetGmodPhong.bl_idname, icon="EVENT_G")
         col.separator()
         row = col.row()
+        col.label(text="Material Groupings")
+        row = col.row()
+        row.template_list("Material_Grouping_UL_List", "The_Mat_List", context.scene,
+                          "bake_material_groups", context.scene, "bake_material_groups_index")
+        row = col.row(align=True)
+        row.operator(Material_Grouping_UL_List_Reload.bl_idname)
+        col.separator()
+        row = col.row()
         col.label(text="Platforms:")
         row = col.row()
         row.template_list("Bake_Platform_List", "The_List", context.scene,
