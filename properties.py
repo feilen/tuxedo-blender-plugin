@@ -5,6 +5,11 @@ from bpy.utils import register_class
 from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
 from .ui import tab_enums
 
+gmod_path = "C:\\Program Files (x86)\\Steam\\"
+
+def get_steam_library(self):
+    return gmod_path
+
 def register_properties():
     # Bake
     Scene.bake_use_draft_quality = BoolProperty(
@@ -468,7 +473,11 @@ def register_properties():
         precision=1
     )
 
-    Scene.bake_steam_library = StringProperty(name='Steam Library', default="C:\\Program Files (x86)\\Steam\\")
+    Scene.bake_steam_library = StringProperty(
+        name='Steam Library', 
+        default="C:\\Program Files (x86)\\Steam\\",
+        get=get_steam_library
+    )
 
     Scene.bake_diffuse_indirect = BoolProperty(
         name="Bake indirect light",

@@ -15,7 +15,6 @@ if is_reloading:
     importlib.reload(properties)
     importlib.reload(tools)
     importlib.reload(ui)
-    importlib.reload(ui_sections)
     #reload the imports of the ui elements
     import glob
     modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
@@ -23,7 +22,7 @@ if is_reloading:
         exec("importlib.reload("+ui_obj+")")
 else:
     from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
-    from .properties import register_properties
+    from .properties import register_properties, gmod_path
     from bpy.types import Scene
     #this is needed since it doesn't see them unless imported... - @989onan
     from . import bake, properties, tools, ui
@@ -50,6 +49,12 @@ bl_info = {
     'warning': '',
 }
 
+
+
+
+
+
+
 def register():
     print("========= STARTING TUXEDO REGISTRY =========")
     order_classes()
@@ -73,6 +78,36 @@ def register():
     # Properties
     register_properties()
     print("========= TUXEDO REGISTRY FINISHED =========")
+    print("========= READING STEAM REGISTRY KEYS FOR GMOD =========")
+    import subprocess
+    import sys
+    batch_path = dirname(__file__)+"/assets/tools/readregistrysteamkey.bat"
+    process = subprocess.Popen([batch_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    
+    if out:
+        print("found steam install, it is")
+        print(out)
+        libraryfolders = str(out.decode()).replace("b", "").strip().replace("\"","")[:-9]+"steamapps/libraryfolders.vdf"
+        
+        print("rooting around in your steam libraries for gmod...")
+        f = open(libraryfolders, "r")
+        library_path = ""
+        for line in f.readlines():
+            #print(line)
+            if line.strip().startswith("\"path\""):
+                print("found a library")
+                print("previous library didn't have garry's mod")
+                library_path = line.strip().replace("\\\\", "/").replace("\"path\"", "").strip().replace("\"","")
+                print(library_path)
+            else:
+                if line.strip().startswith("\"4000\""):
+                    print("above library has garrys mod, setting to that.")
+                    gmod_path = library_path
+    else:
+        print("could not find steam install! Please check your steam installation!")
+    
+    
 
 def unregister():
     print("========= DEREGISTERING TUXEDO =========")
