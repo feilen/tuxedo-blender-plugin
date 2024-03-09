@@ -1,4 +1,4 @@
-from bpy.types import Scene, PropertyGroup
+from bpy.types import Scene, PropertyGroup, Object
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
@@ -22,7 +22,7 @@ def register_properties():
     # Bake
     Scene.bake_use_draft_quality = BoolProperty(
         name='Draft Quality',
-        description='Reduce the number of samples and cap resolution at 1024, speeds up iteration',
+        description=t('Scene.draft_quality_desc'),
         default=False
     )
 
@@ -44,13 +44,13 @@ def register_properties():
     )
 
     Scene.bake_animation_weighting_include_shapekeys = BoolProperty(
-        name="Include Shapekeys",
-        description="Factor shapekeys into animation weighting. Disable if your model has large body shapekeys.",
+        name=t('Tools.anim_weight_incl_shapekeys.name'),
+        description=t('Tools.anim_weight_incl_shapekeys.desc'),
         default=False
     )
-
+    
     class BakePlatformPropertyGroup(PropertyGroup):
-        name: StringProperty(name='name', default=t("New Platform"))
+        name: StringProperty(name='name', default=t('BakePanel.new_plat'))
         use_decimation: BoolProperty(
             name=t('Scene.bake_use_decimation.label'),
             description=t('Scene.bake_use_decimation.desc'),
@@ -233,12 +233,12 @@ def register_properties():
         )
         gmod_model_name: StringProperty(name='Gmod Model Name', default="")
         prop_bone_handling: EnumProperty(
-            name="Prop objects",
-            description="What to do with objects marked as Props",
+            name=t('BakePanel.prop_handling.label'),
+            description=t('BakePanel.prop_handling.desc'),
             items=[
-                ("NONE", "None", "Treat as ordinary objects and bake in"),
-                ("GENERATE", "Generate Bones/Animations", "Generate prop bones and animations for toggling"),
-                ("REMOVE", "Remove", "Remove completely, for platforms with no animation support"),
+                ("NONE", t('BakePanel.prop_handling.none.label'), t('BakePanel.prop_handling.none.desc')),
+                ("GENERATE", t('BakePanel.prop_handling.generate.label'), t('BakePanel.prop_handling.generate.desc')),
+                ("REMOVE", t('BakePanel.prop_handling.remove.label'), t('BakePanel.prop_handling.remove.desc')),
             ],
             default="GENERATE"
         )
@@ -259,11 +259,6 @@ def register_properties():
     )
     Scene.bake_platform_index = IntProperty(default=0)
     
-    Scene.ui_index = EnumProperty(
-        name='UI Section',
-        description='the current section the user is looking at',
-        items=tab_enums
-    )
 
     Scene.bake_cleanup_shapekeys = BoolProperty(
         name=t("cleanup_shapekeys"),
@@ -272,23 +267,30 @@ def register_properties():
     )
     
     
+    Scene.section_enum = EnumProperty(
+        name="",
+        description="",
+        items=tab_enums
+    )
+    
+    
+    
+    #Gmod visiblity for compiling garry's mod model body groups
+    Object.gmod_shown_by_default = BoolProperty(name = t('GmodPanel.gmod_visibility.shown_by_default'), default=True)
+    Object.gmod_is_toggleable = BoolProperty(name = t('GmodPanel.gmod_visibility.is_toggleable'), default=False)
+    Scene.gmod_toggle_list_index = IntProperty(default=0, get=(lambda self : -1), set=(lambda self,context : None))
     
     class MaterialListGrouper(PropertyGroup):
-        name: StringProperty(name='name', default="Null Material")
+        name: StringProperty(name='', default="Null Material")
         group: IntProperty(
-            name=t('Scene.material_grouping.label'),
-            description=t('Scene.material_grouping.desc'),
+            name=t('BakePanel.material_grouping.label'),
+            description='',
             default=0,
             min=0,
             max=30
         )
-        include: BoolProperty(
-            name=t('Scene.include_material'),
-            description=t("include_material_in_bake"),
-            default=True
-        )
-    
     register_class(MaterialListGrouper)
+    
     
     
     
@@ -318,8 +320,8 @@ def register_properties():
             ("NONE", t("Scene.bake_uv_overlap_correction.none.label"), t("Scene.bake_uv_overlap_correction.none.desc")),
             ("UNMIRROR", t("Scene.bake_uv_overlap_correction.unmirror.label"), t("Scene.bake_uv_overlap_correction.unmirror.desc")),
             ("REPROJECT", t("Scene.bake_uv_overlap_correction.reproject.label"), t("Scene.bake_uv_overlap_correction.reproject.desc")),
-            ("MANUAL", "Manual", "Bake will take island information from any UVMap named 'Target' from your meshes, else it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!"),
-            ("MANUALNOPACK", "Manual Don't Pack", "Bake will take island information from any UVMap named 'Target' from your meshes. This will not move them so when all meshes are selected with the uv map active they cannot overlap. If there is no 'Target' map it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!")
+            ("MANUAL", t('BakePanel.manual.label'), t('BakePanel.manual.desc')),
+            ("MANUALNOPACK", t('BakePanel.manual_no_pack.label'), t('BakePanel.manual_no_pack.desc'))
         ],
         default="UNMIRROR"
     )
@@ -418,13 +420,13 @@ def register_properties():
     )
 
     Scene.bake_show_advanced_general_options = BoolProperty(
-        name=t("show_advanced_general_options"),
+        name=t("advanced_general_options"),
         description=t("will_show_extra_options_related_to_which_bake_passes_are_performed_and_how"),
         default=False
     )
 
     Scene.bake_show_advanced_platform_options = BoolProperty(
-        name=t("show_advanced_platform_options"),
+        name=t("advanced_platform_options"),
         description=t("will_show_extra_options_related_to_applicable_bones_and_texture_packing_setups"),
         default=False
     )

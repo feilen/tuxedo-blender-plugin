@@ -38,18 +38,18 @@ class ErrorNoSource_OT_Tuxedo(Operator):
         col = layout.column(align=True)
 
         row = col.row(align=True)
-        row.label(text="To use Tuxedo Source features, you must use the BlenderSourceTools addon.")
+        row.label(text=t('BakePanel.nosource_1'))
         row = col.row(align=True)
-        row.label(text="The currently running script may also have hit a critical error.")
+        row.label(text=t('BakePanel.nosource_2'))
         row = col.row(align=True)
-        row.label(text="Doing an undo is highly suggested.")
+        row.label(text=t('BakePanel.nosource_3'))
         
 
 @wrapper_registry
 class Bake_Platform_List(UIList):
     bl_label = ""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # We could write some code to decide which icon to use here...
+        # TODO:? We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
@@ -63,7 +63,6 @@ class Bake_Platform_List(UIList):
 class Material_Grouping_UL_List(UIList):
     bl_label = ""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # We could write some code to decide which icon to use here...
         custom_icon = 'MATERIAL'
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
@@ -71,7 +70,7 @@ class Material_Grouping_UL_List(UIList):
             col = row.column()
             col.label(text=item.name, icon = custom_icon)
             col = row.column()
-            col.prop(item, "group", text="group")
+            col.prop(item, "group", text=t('BakePanel.material_grouping.label'))
             #col = row.column()
             #col.prop(item, "include", text="include")
         elif self.layout_type in {'GRID'}:
@@ -81,7 +80,7 @@ class Material_Grouping_UL_List(UIList):
 @wrapper_registry
 class Material_Grouping_UL_List_Reload(Operator):
     bl_idname = "tuxedo_bake.materials_reload"
-    bl_label = "Reload Materials"
+    bl_label = t('reloadmats')
 
     def execute(self, context):
         materials_list_update(context)
@@ -91,7 +90,7 @@ class Material_Grouping_UL_List_Reload(Operator):
 @wrapper_registry
 class Bake_Platform_New(Operator):
     bl_idname = "tuxedo_bake.platform_add"
-    bl_label = "Add"
+    bl_label = t('add')
 
     def execute(self, context):
         context.scene.bake_platforms.add()
@@ -101,7 +100,7 @@ class Bake_Platform_New(Operator):
 @wrapper_registry
 class Bake_Platform_Delete(Operator):
     bl_idname = "tuxedo_bake.platform_remove"
-    bl_label = "Delete"
+    bl_label = t('delete')
 
     @classmethod
     def poll(cls, context):
@@ -120,7 +119,7 @@ class Bake_Platform_Delete(Operator):
 @wrapper_registry
 class Bake_Lod_New(Operator):
     bl_idname = "tuxedo_bake.lod_add"
-    bl_label = "Add"
+    bl_label = t('add')
 
     @classmethod
     def poll(cls, context):
@@ -138,7 +137,7 @@ class Bake_Lod_New(Operator):
 @wrapper_registry
 class Bake_Lod_Delete(Operator):
     bl_idname = "tuxedo_bake.lod_remove"
-    bl_label = "Delete"
+    bl_label = t('delete')
 
     @classmethod
     def poll(cls, context):
@@ -159,7 +158,7 @@ class Bake_Lod_Delete(Operator):
 @wrapper_registry
 class Open_GPU_Settings(Operator):
     bl_idname = "tuxedo_bake.open_gpu_settings"
-    bl_label = "Open GPU Settings (Top of the page)"
+    bl_label = t('BakePanel.open_gpu_settings')
 
     def execute(self, context):
         bpy.ops.screen.userpref_show()
@@ -232,18 +231,18 @@ class ToolPanel(Panel):
 
         row = col.row(align=True)
         row.scale_y = 1.05
-        row.label(text="Attach Clothes to Body")
+        row.label(text=t('Tools.attach_clothes'))
 
         if len(context.view_layer.objects.selected) <= 1 or not context.view_layer.objects.active or 'Armature' not in context.view_layer.objects.active.modifiers:
             row = col.row(align=True)
             row.scale_y = 1.05
-            col.label(text='An already rigged body and other meshes required!', icon='INFO')
+            col.label(text=t('Tools.attach_clothes_err1_1'), icon='INFO')
             row = col.row(align=True)
             row.scale_y = 0.75
-            row.label(text="Make sure the body is the one highlighted.", icon='BLANK1')
+            row.label(text=t('Tools.attach_clothes_err1_2'), icon='BLANK1')
             row = col.row(align=True)
             row.scale_y = 0.75
-            row.label(text="Works with any mesh that conforms closely to the body.", icon='BLANK1')
+            row.label(text=t('Tools.attach_clothes_err1_3'), icon='BLANK1')
             return
 
         row = col.row(align=True)
@@ -279,20 +278,11 @@ class BakePanel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     
-    non_bsdf_mat_names = set()
-    multi_bsdf_mat_names = set()
-    current_props = set()
-    current_copyonlys = set()
-    non_node_mat_names = set()
-    non_world_scale_names = set()
-    empty_material_slots = set()
-    too_many_uvmaps = set()
-    
     def draw(self, context):
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-
+    
         row = col.row(align=True)
         row.operator(Bake.BakeTutorialButton.bl_idname, icon='FORWARD')
         col.separator()
@@ -361,7 +351,7 @@ class BakePanel(Panel):
         row.operator(Bake.BakePresetGmodPhong.bl_idname, icon="EVENT_G")
         col.separator()
         row = col.row()
-        col.label(text="Material Groupings")
+        col.label(text=t('BakePanel.material_groupings.label'))
         row = col.row()
         row.template_list("Material_Grouping_UL_List", "The_Mat_List", context.scene,
                           "bake_material_groups", context.scene, "bake_material_groups_index")
@@ -369,7 +359,7 @@ class BakePanel(Panel):
         row.operator(Material_Grouping_UL_List_Reload.bl_idname)
         col.separator()
         row = col.row()
-        col.label(text="Platforms:")
+        col.label(text=t('BakePanel.platforms.label'))
         row = col.row()
         row.template_list("Bake_Platform_List", "The_List", context.scene,
                           "bake_platforms", context.scene, "bake_platform_index")
@@ -390,46 +380,62 @@ class BakePanel(Panel):
                 row = col.row(align=True)
                 row.separator()
                 row.prop(item, 'max_tris', expand=True)
-        row = col.row(align=True)
-        #display the different tabs
-        row.column(align=True).prop(context.scene, 'ui_index', icon_only=True, expand=True)
-        section = row.box()
-        #display the current UI tab
-        try:
-            if uitabs[context.scene.ui_index].poll(uitabs[context.scene.ui_index],context):
-                uitabs[context.scene.ui_index].draw_panel(self, context, section)
-            else:
-                section.label(text='This feature set is unavaliable with the current platform selection.', icon='INFO')
-        except Exception as e:
-            section.label(text='ERROR! Panel is unable to render!', icon='ERROR')
-            section = section.row(align=True)
-            section.label(text=str(e))
-            
-        #bake warnings
-        if context.preferences.addons['cycles'].preferences.compute_device_type == 'NONE' and context.scene.bake_device == 'GPU':
-            row = col.row(align=True)
-            row.label(text="No render device configured in Blender settings. Bake will use CPU", icon="INFO")
-            row = col.row(align=True)
-            row.operator(Open_GPU_Settings.bl_idname, icon="SETTINGS")
-        if not addon_utils.check("render_auto_tile_size")[1] and bpy.app.version <= (2, 93):
-            row = col.row(align=True)
-            row.label(text="Enabling \"Auto Tile Size\" plugin reccomended!", icon="INFO")
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_device', expand=True)
+
         
-        # Bake button
-        row = col.row(align=True)
-        row.operator(Bake.BakeButton.bl_idname, icon='RENDER_STILL')
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_use_draft_quality')
+        if context.scene.bake_platforms:
+            row = col.row(align=True)
+            #display the different tabs
+            row.column(align=True).prop(context.scene, "section_enum", icon_only=True, expand=True)
+            box = row.box()
+            #display the current UI tab
+            
+            try:
+                
+                current = uitabs[context.scene.section_enum]
+                section = box.column()
+                section.label(text=current.bl_label)
+                
+                if current.poll(current,context):
+                    current.draw_panel(self, context, section)
+                else:
+                    row = section.row(align=True)
+                    section.label(text=t('BakePanel.feature_set_unavailable'), icon='INFO')
+            except Exception as e:
+                section = box.column(heading ="ERROR")
+                section.label(text=t('BakePanel.panel_render_error'), icon='ERROR')
+                section = section.row(align=True)
+                section.label(text=str(e))
+                
+            #bake warnings
+            if context.preferences.addons['cycles'].preferences.compute_device_type == 'NONE' and context.scene.bake_device == 'GPU':
+                row = col.row(align=True)
+                row.label(text=t('BakePanel.warn_using_cpu'), icon="INFO")
+                row = col.row(align=True)
+                row.operator(Open_GPU_Settings.bl_idname, icon="SETTINGS")
+            if not addon_utils.check("render_auto_tile_size")[1] and bpy.app.version <= (2, 93):
+                row = col.row(align=True)
+                row.label(text=t('BakePanel.warn_auto_tile_size'), icon="INFO")
+            row = col.row(align=True)
+            row.prop(context.scene, 'bake_device', expand=True)
+            
+            # Bake button
+            row = col.row(align=True)
+            row.operator(Bake.BakeButton.bl_idname, icon='RENDER_STILL')
+            row = col.row(align=True)
+            row.prop(context.scene, 'bake_use_draft_quality')
+        else:
+            row = col.row(align=True)
+            row.label(text=t('BakePanel.start_1'), icon="INFO")
+            row = col.row(align=True)
+            row.label(text=t('BakePanel.start_2'), icon="BLANK1")
 # -------------------------------------------------------------------
 # User Interface
 # -------------------------------------------------------------------
 
 @wrapper_registry
 class FT_Shapes_UL(Panel):
-    bl_label = "Face Tracking Generation"
-    bl_idname = "FT Shapes"
+    bl_label = t('FT.shapes_panel_label')
+    bl_idname = "FT_Shapes"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Tuxedo"
@@ -453,7 +459,7 @@ class FT_Shapes_UL(Panel):
         col.separator()
         row = col.row(align=True)
         row.scale_y = 1.1
-        row.label(text="Create from Visemes:", icon='SHADERFX')
+        row.label(text=t('FT.create_from_visemes'), icon='SHADERFX')
         row = col.row(align=True)
         row.scale_y = 1.1
         row.prop(scene, 'ft_aa', icon='SHAPEKEY_DATA')
@@ -479,15 +485,15 @@ class FT_Shapes_UL(Panel):
 
             row = col.row(align=True)
             row.scale_y = 1.1
-            row.label(text='Select shape keys to create FT shape keys.', icon='INFO')
+            row.label(text=t('FT.select_shapes_1'), icon='INFO')
             col.separator()
             row = col.row(align=True)
             row.scale_y = 1.1
-            row.label(text='Specifying above will attempt to create them for you.', icon='INFO')
+            row.label(text=t('FT.select_shapes_2'), icon='INFO')
             col.separator()
             row = col.row(align=True)
             row.scale_y = 1.1
-            row.label(text='Currently requires rotation to be applied.', icon='INFO')
+            row.label(text=t('FT.select_shapes_3'), icon='INFO')
             col.separator()
 
             #Start Box
@@ -526,5 +532,5 @@ class FT_Shapes_UL(Panel):
         else:
             row = col.row(align=True)
             row.scale_y = 1.1
-            row.label(text='Select the mesh with face shape keys.', icon='INFO')
+            row.label(text=t('FT.mesh_missing'), icon='INFO')
             col.separator()

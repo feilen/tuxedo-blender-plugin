@@ -1,11 +1,22 @@
 BakePanel.label,Bake,焼く,베이크(Bake)
-BakePanel.versionTooOld,Only for Blender 2.80+,,Blender 2.80 버전 이상에서만 호환
+BakePanel.versionTooOld,Only for Blender 4.0.1+,,Blender 4.0.1 버전 이상에서만 호환
+BakePanel.start_1,"To get started, press 'Autodetect All' above.",,
+BakePanel.start_2,"Then if the settings look right, press 'Copy and Bake'".,,
+BakePanel.panel_render_error,"ERROR! Panel is unable to render!",,
+BakePanel.feature_set_unavailable,"This feature set is unavaliable with the current platform selection.",,
 BakePanel.autodetectlabel,Autodetect:,,자동감지:
-BakePanel.generaloptionslabel,General options:,,일반 옵션:
+BakePanel.generaloptions.label,General options:,,일반 옵션:
+BakePanel.gmod_options.label,"Gmod Options:",,
+BakePanel.platforms.label,"Platforms:",,
+BakePanel.warn_auto_tile_size,"Enabling ""Auto Tile Size"" option recommended!",,
 BakePanel.noheadfound,"No ""Head"" bone found!",,"""Head"" 본 발견되지 않음!"
-BakePanel.overlapfixlabel,Overlap fix:,,중복 수정:
-BakePanel.bakepasseslabel,Bake passes:,,베이크 패스:
-BakePanel.alphalabel,Alpha:,,
+BakePanel.overlapfix.label,Overlap fix:,,중복 수정:
+BakePanel.bakepasses.label,Bake passes:,,베이크 패스:
+BakePanel.bakepasses.desc,"The different PBR effects to generate from the source material.",,
+BakePanel.generaloptions.desc,"General options that apply to all platforms regardless of target.",,
+BakePanel.material_groupings.label,"Material Groupings",,
+BakePanel.material_grouping.label,"Image Group",,
+BakePanel.alpha.label,Alpha:,,
 BakePanel.transparencywarning,Transparency isn't currently selected!,,현재 투명도가 선택되지 않았습니다!
 BakePanel.smoothnesswarning,Smoothness isn't currently selected!,,현재 부드러움이 선택되지 않았습니다!
 BakePanel.doublepackwarning,Smoothness packed in two places!,,두군데에 부드러움이 설정되었습니다!
@@ -94,6 +105,12 @@ Scene.bake_metallic_alpha_pack.none.label,None,,
 Scene.bake_metallic_alpha_pack.none.desc,No alpha channel,,
 Scene.bake_metallic_alpha_pack.smoothness.label,Smoothness,,
 Scene.bake_metallic_alpha_pack.smoothness.desc,Pack Smoothness. Use this if your Diffuse alpha channel is already populated with Transparency,,
+Scene.draft_quality_desc,"Reduce the number of samples and cap resolution at 1024, speeds up iteration",,
+
+Tools.twist_tutorial.label,"Twistbones Tutorial",,
+Tools.twist_tutorial.desc,"This will open a basic tutorial on how to setup and use these constraints. You can skip to the Unity section.",,
+
+
 tuxedo_bake.warn_missing_nodes,"A material in use isn't using Nodes, fix this in the Shading tab.",,
 tuxedo_bake.preset_desktop.label,Desktop,,
 tuxedo_bake.preset_desktop.desc,"Preset for producing an Excellent-rated Desktop avatar, not accounting for bones.
@@ -173,8 +190,8 @@ select_this_to_only_merge_the_weights_of_the_visible_meshes,"Select this to only
 seperate_vertices_unaffected_by_shape_keys_into_their_own_mesh_this_adds_a_drawcall_but_comes_with_a_significant_gpu_cost_savings_especially_on_mobile,"Seperate vertices unaffected by shape keys into their own mesh. This adds a drawcall, but comes with a significant GPU cost savings, especially on mobile."
 sharpen_bakes,"Sharpen bakes"
 sharpen_resampled_images_after_baking_diffusesmoothnessmetallic_reccomended_as_any_sampling_will_cause_blur,"Sharpen resampled images after baking diffuse/smoothness/metallic. Reccomended as any sampling will cause blur."
-show_advanced_general_options,"Show Advanced General Options"
-show_advanced_platform_options,"Show Advanced Platform Options"
+BakePanel.advanced_general_options.label,"Advanced General Options:",,
+BakePanel.advanced_platform_options.label,"Advanced Platform Options:",,
 source_engine_uses_an_inverse_green_channel_this_fixes_that_on_export,"Source engine uses an inverse green channel, this fixes that on export"
 specular_alpha_channel,"Specular Alpha Channel"
 specular_setup,"Specular Setup"
@@ -191,6 +208,110 @@ mix," as having active shapekeys all the time is expensive. Keys ending in '_bak
 while_not_technically_accurate_this_avoids_the_shine_effect_on_obscured_portions_of_your_model,"While not technically accurate, this avoids the 'shine effect' on obscured portions of your model"
 will_show_extra_options_related_to_applicable_bones_and_texture_packing_setups,"Will show extra options related to applicable bones and texture packing setups."
 will_show_extra_options_related_to_which_bake_passes_are_performed_and_how,"Will show extra options related to which bake passes are performed and how."
+
+delete,Delete,,
+add,Add,,
+reloadmats,"Reload Materials",,
+BakePanel.nosource_1,"To use Tuxedo Source features, you must use the BlenderSourceTools addon.",,
+BakePanel.nosource_1,"The currently running script may also have hit a critical error.",,
+BakePanel.nosource_1,"Performing an undo is highly suggested.",,
+BakePanel.open_gpu_settings,"Open GPU Settings (Top of the page)",,
+BakePanel.warn_using_cpu,"No render device configured in Blender settings. Bake will use CPU",,
+BakePanel.new_plat,"New Platform",,
+BakePanel.prop_handling.desc,"What to do with objects marked as Props",,
+BakePanel.prop_handling.label,"Prop objects",,
+BakePanel.prop_handling.none.desc,"Treat as ordinary objects and bake in",,
+BakePanel.prop_handling.none.label,"None",,
+BakePanel.prop_handling.generate.label,"Generate Bones/Animations",,
+BakePanel.prop_handling.generate.desc,"Generate prop bones and animations for toggling",,
+BakePanel.prop_handling.remove.label,"Remove",,
+BakePanel.prop_handling.remove.desc,"Remove completely, for platforms with no animation support",,
+BakePanel.manual.desc,"Bake will take island information from any UVMap named 'Target' from your meshes, else it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!",,
+BakePanel.manual.label,"Manual",,
+BakePanel.manual_no_pack.desc,"Bake will take island information from any UVMap named 'Target' from your meshes. This will not move them so when all meshes are selected with the uv map active they cannot overlap. If there is no 'Target' map it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!",,
+BakePanel.manual_no_pack.label,"Manual Don't Pack",,
+
+
+Tools.attach_clothes,"Attach Clothes to Body",,
+Tools.attach_clothes_err1_1,"An already rigged body and other meshes required!",,
+Tools.attach_clothes_err1_2,"Make sure the body is the one highlighted.",,
+Tools.attach_clothes_err1_3,"Works with any mesh that conforms closely to the body.",,
+Tools.anim_weight_incl_shapekeys.name,"Include Shapekeys",,
+Tools.anim_weight_incl_shapekeys.desc,"Factor shapekeys into animation weighting. Disable if your model has large body shapekeys.",,
+
+BakePanel.WarningPanel.desc,"Different warnings/errors before bake.",,
+BakePanel.WarningPanel.label,"Warnings:",,
+GmodPanel.gmod_visibility.shown_by_default,"In Game Visibility",,
+GmodPanel.gmod_visibility.is_toggleable,"In Game Toggleable",,
+GmodPanel.gmod_visibility.list_label,"Gmod Game Visibility",,
+
+BakePanel.vrc_q_excellent,"VRChat Quest Excellent",,
+BakePanel.vrc_q_good,"VRChat Quest Good",,
+BakePanel.vrc_q_good,"VRChat Quest Medium",,
+BakePanel.vrc_d_excellent,"VRChat Desktop Excellent",,
+BakePanel.vrc_d_good,"VRChat Desktop Good",,
+BakePanel.second_life,"Second Life",,
+BakePanel.garrys_mod_metallic,"Garrys Mod (Metallic)",,
+BakePanel.garrys_mod_organic,"Garrys Mod (Organic)",,
+BakePanel.garrys_mod_detect.desc,"Preset for generating a garrys mod character, and even auto installing the addon.",,
+BakePanel.second_life_detect.desc,"Preset for producing a single-material Second Life Mesh avatar",,
+BakePanel.all_detect.desc,"Attempt to bake all possible output platforms. Not significantly slower than baking for any one platform",,
+BakePanel.all_detect.label,"Autodetect All",,
+BakePanel.add_copyonly.label,"Set CopyOnly",,
+BakePanel.add_copyonly.desc,"Only copy the selected meshes, make no attempt to bake them.",,
+BakePanel.remove_copyonly.label,"Unset CopyOnly",,
+BakePanel.remove_copyonly.desc,"Default behavior, bake in if visible",,
+
+BakePanel.add_prop.label,"Set Prop",,
+BakePanel.add_prop.desc,"Generate ~Prop bones and enable/disable animations for the selected meshes.",,
+BakePanel.remove_prop.label,"Unset Prop",,
+BakePanel.remove_prop.desc,"Disables prop bone generation for the selected meshes.",,
+
+Bake.debug_bad_object,"For Tuxedo bake: you should CTRL+Z",,
+Bake.error_save_file,"You need to save your .blend somewhere first!",,
+
+Tools.fit_clothes.label,"Attach to selected",,
+Tools.fit_clothes.desc,"Auto-rig all selected clothes to the active body. Should have next to no clipping, but its a good idea to delete internal geometry anyway",,
+
+Tools.fit_clothes.success,"Clothes rigged!",,
+Tools.repair_shapekeys.label,"Repair Broken Shapekeys",,
+Tools.repair_shapekeys.desc,"Attempt to repair messed up shapekeys caused by some Blender operations",,
+Tools.repair_shapekeys.success,"Repair complete.",,
+
+Tools.smart_decimate.label,"Smart Decimate",,
+Tools.smart_decimate.desc,"Decimate all meshes attached to the selected armature, preserving shapekeys.",,
+
+no_mesh_found,"No meshes found.",,
+no_armature_found,"No armature found.",,
+no_tris,"No tris found.",,
+
+SmartDecimation.no_decimation_needed,"No Decimation needed.",,
+SmartDecimation.error_too_many_polys,"Can't reach target decimation level.",,
+SmartDecimation.decimated_some_meshes,"Decimated some meshes that went over the individual mesh polygon limit of ",,
+
+Tools.gen_twist_bones.label,"Generate Twist Bones",,
+Tools.gen_twist_bones.desc,"Attempt to generate twistbones for the selected bones",,
+Tools.gen_twist_bones.success,"Successfully added twistbones",,
+
+Tools.convert_to_secondlife.label,"Convert Bones To Second Life",,
+Tools.convert_to_secondlife.desc,"Converts all main bone names to second life.\nMake sure your model has the standard bone names from after using Fix Model",,
+Tools.convert_bones.fail,"Failed to translate {translate_bone_fails} bones! They will be merged to their parent bones.",,
+Tools.convert_bones.success,"Connected all bones!",,
+
+Tools.convert_to_valve.label,"Convert Bones To Valve",,
+Tools.convert_to_valve.desc,"Converts all main bone names to default valve bone names. \nMake sure your model has the standard bone names from after using Fix Model",,
+Tools.export_gmod_addon.desc,"Compile and export as Gmod playermodel addon to your addons. May not always work.",,
+Tools.export_gmod_addon.label,"Export Gmod Addon",,
+
+FT.create_from_visemes,"Create from Visemes:",,
+FT.select_shapes_1,"Select shape keys to create FT shape keys.",,
+FT.select_shapes_2,"Specifying above will attempt to create them for you.",,
+FT.select_shapes_3,"Currently requires rotation to be applied.",,
+FT.mesh_missing,"Select the mesh with face shape keys.",,
+FT.shapes_panel_label,"Face Tracking Generation",,
+
+
+
 
 Scene.decimation_remove_doubles.label,Remove Doubles,ΘçìΦñçπéÆσëèΘÖñ,∞¥┤∞ñæ ∞á£Ω▒░
 Scene.decimation_remove_doubles.desc,Uncheck this if you get issues with this checked,Uncheck this if you got issues with with this checked,δ¼╕∞á£Ω░Ç δÉá ∞ï£ ∞▓┤φü¼δÑ╝ φò┤∞á£φòÿ∞ä╕∞Üö
@@ -211,4 +332,9 @@ Scene.tuxedo_max_tris.label,Tris,トリス,삼각폴리곤(Tris)
 Scene.tuxedo_max_tris.desc,The target amount of tris after decimation,,
 Scene.max_tris.label,Tris,トリス,삼각폴리곤(Tris)
 Scene.max_tris.desc,The target amount of tris after decimation,,
+
+GmodPanel.gmod_not_found,"Your gmod install was not found! Check Warnings!",,
+advanced_platform_options_desc,"Advanced platform options like export formats and data generators like for physics models.",,
+GmodPanel.panel_desc,"The different options to use when compiling a Garry's Mod model.",,
+
 

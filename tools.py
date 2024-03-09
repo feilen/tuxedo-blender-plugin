@@ -348,8 +348,8 @@ def remove_doubles(mesh, margin):
 @wrapper_registry
 class FitClothes(bpy.types.Operator):
     bl_idname = 'tuxedo.fit_clothes'
-    bl_label = 'Attach to selected'
-    bl_description = 'Auto-rig all selected clothes to the active body. Should have next to no clipping, but its a good idea to delete internal geometry anyway'
+    bl_label = t('Tools.fit_clothes.label')
+    bl_description = t('Tools.fit_clothes.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -391,7 +391,7 @@ class FitClothes(bpy.types.Operator):
             arm_modifier = obj.modifiers.new(type='ARMATURE', name='Armature')
             arm_modifier.object = armature
 
-        self.report({'INFO'}, 'Clothes rigged!')
+        self.report({'INFO'}, t('Tools.fit_clothes.success'))
         return {'FINISHED'}
 
 def get_children_recursive(parent):
@@ -453,8 +453,8 @@ def triangulate_mesh(mesh):
 @wrapper_registry
 class RepairShapekeys(bpy.types.Operator):
     bl_idname = 'tuxedo.repair_shapekeys'
-    bl_label = 'Repair Broken Shapekeys'
-    bl_description = "Attempt to repair messed up shapekeys caused by some Blender operations"
+    bl_label = t('Tools.repair_shapekeys.label')
+    bl_description = t('Tools.repair_shapekeys.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -512,14 +512,14 @@ class RepairShapekeys(bpy.types.Operator):
             obj.shape_key_remove(key=obj.data.shape_keys.key_blocks["TUXEDO Antibasis"])
             obj.active_shape_key_index = 0
 
-        self.report({'INFO'}, "Repair complete.")
+        self.report({'INFO'}, t('Tools.repair_shapekeys.success'))
         return {'FINISHED'}
 
 @wrapper_registry
 class SmartDecimation(bpy.types.Operator):
     bl_idname = 'tuxedo.smart_decimation'
-    bl_label = 'Smart Decimate'
-    bl_description = 'Decimate all meshes attached to the selected armature, preserving shapekeys.'
+    bl_label = t('Tools.smart_decimate.label')
+    bl_description = t('Tools.smart_decimate.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     armature_name: bpy.props.StringProperty(
         default=''
@@ -547,10 +547,10 @@ class SmartDecimation(bpy.types.Operator):
         meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
 
         if len(meshes_obj) == 0:
-            self.report({'INFO'}, "No meshes found.")
+            self.report({'INFO'}, t('no_meshes_found'))
             return {'FINISHED'}
         if not armature:
-            self.report({'INFO'}, "No armature found.")
+            self.report({'INFO'}, t('no_armature_found'))
             return {'FINISHED'}
         tris_count = 0
 
@@ -576,17 +576,17 @@ class SmartDecimation(bpy.types.Operator):
                     decimated_a_mesh = True
 
             if not decimated_a_mesh:
-                self.report({'INFO'}, "No Decimation needed.")
+                self.report({'INFO'}, t('SmartDecimation.no_decimation_needed'))
                 return {'FINISHED'}
             else:
-                self.report({'INFO'}, "Decimated some meshes that went over the individual mesh polygon limit of " + str(self.max_single_mesh_tris))
+                self.report({'INFO'}, t('SmartDecimation.decimated_some_meshes') + str(self.max_single_mesh_tris))
         else:
 
             if tris_count == 0:
-                self.report({'INFO'}, "No tris found.")
+                self.report({'INFO'}, t('no_tris'))
                 return {'FINISHED'}
             elif decimation <= 0:
-                self.report({'INFO'}, "Can't reach target decimation level.")
+                self.report({'INFO'}, t('SmartDecimation.error_too_many_polys'))
                 return {'FINISHED'}
             for mesh in meshes_obj:
                 tris = get_tricount(mesh)
@@ -761,8 +761,8 @@ class SmartDecimation(bpy.types.Operator):
 @wrapper_registry
 class GenerateTwistBones(bpy.types.Operator):
     bl_idname = 'tuxedo.generate_twist_bones'
-    bl_label = "Generate Twist Bones"
-    bl_description = "Attempt to generate twistbones for the selected bones"
+    bl_label = t('Tools.gen_twist_bones.label')
+    bl_description = t('Tools.gen_twist_bones.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -828,14 +828,14 @@ class GenerateTwistBones(bpy.types.Operator):
                         mesh.vertex_groups[twist_bone_name].add([vertex.index], twist_weight, "REPLACE")
                         mesh.vertex_groups[bone_name].add([vertex.index], untwist_weight, "REPLACE")
 
-        self.report({'INFO'}, t('RemoveConstraints.success'))
+        self.report({'INFO'}, t('Tools.gen_twist_bones.success'))
         return {'FINISHED'}
 
 @wrapper_registry
 class TwistTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo.twist_tutorial'
-    bl_label = "Twistbones Tutorial"
-    bl_description = "This will open a basic tutorial on how to setup and use these constraints. You can skip to the Unity section."
+    bl_label = t('Tools.twist_tutorial.label')
+    bl_description = t('Tools.twist_tutorial.desc')
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
@@ -853,9 +853,8 @@ def get_tricount(obj):
 @wrapper_registry
 class ConvertToSecondlifeButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_secondlife'
-    bl_label = 'Convert Bones To Second Life'
-    bl_description = 'Converts all main bone names to second life.' \
-                     '\nMake sure your model has the standard bone names from after using Fix Model'
+    bl_label = t('Tools.convert_to_secondlife.label')
+    bl_description = t('Tools.convert_to_secondlife.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     armature_name: bpy.props.StringProperty(
         default=''
@@ -968,9 +967,9 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
 
         if translate_bone_fails > 0:
-            self.report({'INFO'}, f"Failed to translate {translate_bone_fails} bones! They will be merged to their parent bones.")
+            self.report({'INFO'}, t('Tools.convert_bones.fail').format(translate_bone_fails=translate_bone_fails))
         else:
-            self.report({'INFO'}, 'Translated all bones!')
+            self.report({'INFO'}, t('Tools.convert_bones.success'))
 
         return {'FINISHED'}
 
@@ -1428,9 +1427,8 @@ def update_viewport(): #this isn't needed nessarily, it's a hack for asthetic pu
 @wrapper_registry
 class ConvertToValveButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_valve'
-    bl_label = 'Convert Bones To Valve'
-    bl_description = 'Converts all main bone names to default valve bone names.' \
-                     '\nMake sure your model has the standard bone names from after using Fix Model'
+    bl_label = t('Tools.convert_to_valve.label')
+    bl_description = t('Tools.convert_to_valve.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     armature_name: bpy.props.StringProperty(
@@ -1547,17 +1545,17 @@ class ConvertToValveButton(bpy.types.Operator):
 
 
         if translate_bone_fails > 0:
-            self.report({'INFO'}, f"Error! Failed to translate {translate_bone_fails} bones! Make sure your model has standard bone names!")
+            self.report({'INFO'}, t('Tools.convert_bones.fail').format(translate_bone_fails=translate_bone_fails))
 
-        self.report({'INFO'}, 'Connected all bones!')
+        self.report({'INFO'}, t('Tools.convert_bones.success'))
         return {'FINISHED'}
 
 
 @wrapper_registry
 class ExportGmodPlayermodel(bpy.types.Operator):
     bl_idname = "tuxedo.export_gmod_addon"
-    bl_label = "Export Gmod Addon"
-    bl_description = "Export as Gmod Playermodel Addon to your addons and make GMA beside Blender file. May not always work."
+    bl_label = t('Tools.export_gmod_addon.label')
+    bl_description = t('Tools.export_gmod_addon.desc')
     bl_options = {'INTERNAL'}
 
     steam_library_path: bpy.props.StringProperty(subtype='FILE_PATH', options={'HIDDEN', 'SKIP_SAVE'})
@@ -1655,15 +1653,13 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         context.view_layer.objects.active = armature
         for mesh in refcoll.objects:
             if mesh.type == "MESH":
-                if mesh.hide_viewport and mesh.hide_get():
+                if (not mesh.shown_by_default) and (not mesh.is_toggleable):
                     always_hidden_garbage.append(mesh.name)
                     continue
-                if mesh.hide_viewport:
+                if not mesh.is_toggleable:
                     do_not_toggle_bodygroups.append(mesh.name)
-                    print("mesh \""+mesh.name+"\" hidden with monitor icon, it will always be on and untoggleable!")
-                if mesh.hide_get():
+                if not mesh.shown_by_default:
                     hidden_by_default_bodygroups.append(mesh.name)
-                    print("mesh \""+mesh.name+"\" hidden with eyeball icon, it will be toggled off in gmod by default!")
 
         print("deleting always hidden meshes")
         for obj in always_hidden_garbage:

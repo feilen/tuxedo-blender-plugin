@@ -11,11 +11,14 @@ from ..tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft
 
 from ..ui import register_ui_tab
 
+#Making a class that looks like a blender panel just to use it to cut the code up for tabs
+#This is kinda a bad look but at least it makes the UI nice! - @989onan
+
 @register_ui_tab
 class Bake_PT_warnings:
     bl_enum = "WARNINGS"
-    bl_label = "Warnings"
-    bl_description = "Different warnings before bake."
+    bl_label = t('BakePanel.WarningPanel.label')
+    bl_description = t('BakePanel.WarningPanel.desc') 
     icon = "ERROR"
     
     def poll(cls, context):

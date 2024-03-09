@@ -14,17 +14,24 @@ from ..ui import register_ui_tab
 
 @register_ui_tab
 class Bake_PT_general_options:
-    bl_label = "General Options"
+    bl_label = t('BakePanel.generaloptions.label')
     bl_enum = "GENERAL"
-    bl_description = ""
+    bl_description = t('BakePanel.generaloptions.desc')
     icon = "INFO"
     
     def poll(cls, context):
         return context.scene.bake_platforms
     
     def draw_panel(main_panel, context, col):
+        row = col.row(align=True)
+        row.prop(context.scene, 'bake_sharpen', expand=True)
+        row = col.row(align=True)
+        row.prop(context.scene, 'bake_denoise', expand=True)
+        row = col.row(align=True)
+        row.prop(context.scene, 'bake_cleanup_shapekeys', expand=True)
+        row = col.row(align=True)
+        row.prop(context.scene, 'bake_apply_keys', expand=True)
         if context.scene.bake_platforms:
-            col.label(text=t('BakePanel.generaloptionslabel'))
             row = col.row(align=True)
             row.prop(context.scene, 'bake_resolution', expand=True)
             row = col.row(align=True)
@@ -47,7 +54,7 @@ class Bake_PT_general_options:
                     row.prop(context.scene, 'bake_optimize_solid_materials', expand=True)
                     row = col.row(align=True)
                 row.separator()
-                row.label(text=t('BakePanel.overlapfixlabel'))
+                row.label(text=t('BakePanel.overlapfix.label'))
                 row.prop(context.scene, 'bake_uv_overlap_correction', expand=True)
                 if context.scene.bake_uv_overlap_correction == "REPROJECT":
                     row = col.row(align=True)
@@ -59,8 +66,3 @@ class Bake_PT_general_options:
                     row.prop(context.scene, 'uvp_lock_islands', expand=True)
             row = col.row(align=True)
             row.scale_y = 0.85
-        else: # if not bake_platforms:
-            row = col.row(align=True)
-            row.label(text="To get started, press 'Autodetect All' above.", icon="INFO")
-            row = col.row(align=True)
-            row.label(text="Then if the settings look right, press 'Copy and Bake'.", icon="BLANK1")

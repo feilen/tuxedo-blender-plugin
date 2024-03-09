@@ -64,10 +64,6 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
                         output_mat_nodes.append(node)
                     if node.type == "BSDF_PRINCIPLED":
                         bsdf_nodes.append(node)
-                        print("A bunch of node inputs")
-                        for k,input in enumerate(node.inputs):
-                            print(input.name+ " number: "+str(k))
-
     # Decimate if we're over the limit
     total_tricount = sum(get_tricount(obj) for obj in objects)
     item.use_decimation = total_tricount > tricount
@@ -231,10 +227,10 @@ class BakePresetDesktop(bpy.types.Operator):
 
     def execute(self, context):
         item = context.scene.bake_platforms.add()
-        item.name = "VRChat Desktop Excellent"
+        item.name = t('BakePanel.vrc_d_excellent')
         autodetect_passes(self, context, item, 32000, "DESKTOP")
         itemgood = context.scene.bake_platforms.add()
-        itemgood.name = "VRChat Desktop Good"
+        itemgood.name = t('BakePanel.vrc_d_good')
         autodetect_passes(self, context, itemgood, 70000, "DESKTOP")
         return {'FINISHED'}
 
@@ -247,13 +243,13 @@ class BakePresetQuest(bpy.types.Operator):
 
     def execute(self, context):
         item = context.scene.bake_platforms.add()
-        item.name = "VRChat Quest Excellent"
+        item.name = t('BakePanel.vrc_q_excellent')
         autodetect_passes(self, context, item, 7500, "QUEST")
         itemgood = context.scene.bake_platforms.add()
-        itemgood.name = "VRChat Quest Good"
+        itemgood.name = t('BakePanel.vrc_q_good')
         autodetect_passes(self, context, itemgood, 10000, "QUEST")
         itemmedium = context.scene.bake_platforms.add()
-        itemmedium.name = "VRChat Quest Medium"
+        itemmedium.name = t('BakePanel.vrc_q_good')
         autodetect_passes(self, context, itemmedium, 15000, "QUEST")
         context.scene.bake_animation_weighting = True
         return {'FINISHED'}
@@ -261,47 +257,47 @@ class BakePresetQuest(bpy.types.Operator):
 @wrapper_registry
 class BakePresetSecondlife(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_secondlife'
-    bl_label = 'Second Life'
-    bl_description = "Preset for producing a single-material Second Life Mesh avatar"
+    bl_label = t('BakePanel.second_life') 
+    bl_description = t('BakePanel.second_life_detect.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
         item = context.scene.bake_platforms.add()
-        item.name = "Second Life"
+        item.name = t('BakePanel.second_life') 
         autodetect_passes(self, context, item, 21844, "SECONDLIFE")
         return {'FINISHED'}
 
 @wrapper_registry
 class BakePresetGmod(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod'
-    bl_label = "GMod Metallic (Experimental)"
-    bl_description = "Preset for producing a compatible Garry's Mod character model"
+    bl_label = t('BakePanel.garrys_mod_metallic')
+    bl_description = t('BakePanel.garrys_mod_detect.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
         item = context.scene.bake_platforms.add()
-        item.name = "Garrys Mod (Metallic)"
+        item.name = t('BakePanel.garrys_mod_metallic')
         autodetect_passes(self, context, item, 65500, "GMOD")
         return {'FINISHED'}
 
 @wrapper_registry
 class BakePresetGmodPhong(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_gmod_phong'
-    bl_label = "GMod Organic (Experimental)"
-    bl_description = "Preset for producing a compatible Garry's Mod character model"
+    bl_label = t('BakePanel.garrys_mod_organic')
+    bl_description = t('BakePanel.garrys_mod_detect.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
         item = context.scene.bake_platforms.add()
-        item.name = "Garrys Mod (Organic)"
+        item.name = t('BakePanel.garrys_mod_organic')
         autodetect_passes(self, context, item, 65500, "GMOD", use_phong=True)
         return {'FINISHED'}
 
 @wrapper_registry
 class BakePresetAll(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_all'
-    bl_label = "Autodetect All"
-    bl_description = "Attempt to bake all possible output platforms. Not significantly slower than baking for any one platform"
+    bl_label = t('BakePanel.all_detect.label')
+    bl_description = t('BakePanel.all_detect.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
@@ -313,8 +309,8 @@ class BakePresetAll(bpy.types.Operator):
 @wrapper_registry
 class BakeAddCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_copyonly'
-    bl_label = "Set CopyOnly"
-    bl_description = "Only copy the selected meshes, make no attempt to bake them."
+    bl_label = t('BakePanel.add_copyonly.label')
+    bl_description = t('BakePanel.add_copyonly.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -329,8 +325,8 @@ class BakeAddCopyOnly(bpy.types.Operator):
 @wrapper_registry
 class BakeRemoveCopyOnly(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_copyonly'
-    bl_label = "Unset CopyOnly"
-    bl_description = "Default behavior, bake in if visible"
+    bl_label = t('BakePanel.remove_copyonly.label')
+    bl_description = t('BakePanel.remove_copyonly.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -345,8 +341,8 @@ class BakeRemoveCopyOnly(bpy.types.Operator):
 @wrapper_registry
 class BakeAddProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.add_prop'
-    bl_label = "Set Prop"
-    bl_description = "Generate ~Prop bones and enable/disable animations for the selected meshes."
+    bl_label = t('BakePanel.add_prop.label')
+    bl_description = t('BakePanel.add_prop.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -361,8 +357,8 @@ class BakeAddProp(bpy.types.Operator):
 @wrapper_registry
 class BakeRemoveProp(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.remove_prop'
-    bl_label = "Unset Prop"
-    bl_description = "Disables prop bone generation for the selected meshes."
+    bl_label = t('BakePanel.remove_prop.label')
+    bl_description = t('BakePanel.remove_prop.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -413,7 +409,7 @@ class BakeButton(bpy.types.Operator):
                     if node.type == "DISPLACEMENT":
                         bake_node = tree.nodes.new("ShaderNodeCombineXYZ")
                         bake_node.name = node.name + ".BAKE"
-                        bake_node.label = "For Tuxedo bake: you should CTRL+Z"
+                        bake_node.label = t('Bake.debug_bad_object')
                         bake_node.inputs["Y"].default_value = 1. if not inverted else -1.
                         tree.links.new(node.inputs["Normal"], bake_node.outputs["Vector"])
                 else:
@@ -462,7 +458,7 @@ class BakeButton(bpy.types.Operator):
                 if node.type == "BSDF_PRINCIPLED":
                     bake_node = tree.nodes.new("ShaderNodeBsdfPrincipled")
                     bake_node.name = node.name + ".BAKE"
-                    bake_node.label = "For Tuxedo bake: you should CTRL+Z"
+                    bake_node.label = t('Bake.debug_bad_object')
                     for desired_input, connect_to in desired_inputs.items():
                         if node.inputs[desired_input].is_linked:
                             tree.links.new(bake_node.inputs[connect_to],
@@ -633,7 +629,7 @@ class BakeButton(bpy.types.Operator):
                         else:
                             node = tree.nodes.new("ShaderNodeTexImage")
                         node.name = "bake"
-                        node.label = "Tuxedo bake - do not use"
+                        node.label = t('Bake.debug_bad_object')
                         node.select = True
                         node.image = bpy.data.images["SCRIPT_" + bake_name + str(reverse_material_name_dict[slot.material.name]) + ".png"]
                         tree.nodes.active = node
@@ -820,7 +816,7 @@ class BakeButton(bpy.types.Operator):
             self.report({'ERROR'}, t('tuxedo_bake.error.render_disabled'))
             return {'FINISHED'}
         if not bpy.data.is_saved:
-            self.report({'ERROR'}, "You need to save your .blend somewhere first!")
+            self.report({'ERROR'}, t('Bake.error_save_file'))
             return {'FINISHED'}
 
         # Change render engine to cycles and save the current one

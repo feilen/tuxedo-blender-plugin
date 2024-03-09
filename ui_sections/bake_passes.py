@@ -15,26 +15,15 @@ from ..ui import *
 #This is kinda a bad look but at least it makes the UI nice! - @989onan
 @register_ui_tab
 class Bake_PT_bake_passes:
-    bl_label = "Bake Passes"
+    bl_label = t('BakePanel.bakepasses.label')
     bl_enum = "PASSES"
-    bl_description = "The different bake passes you want to do on your model."
+    bl_description = t('BakePanel.bakepasses.desc')
     icon = "TEXTURE"
     
     def poll(cls, context):
         return True
     
     def draw_panel(main_panel, context, col):
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_sharpen', expand=True)
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_denoise', expand=True)
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_cleanup_shapekeys', expand=True)
-        row = col.row(align=True)
-        row.prop(context.scene, 'bake_apply_keys', expand=True)
-        col.separator()
-        row = col.row(align=True)
-        col.label(text=t('BakePanel.bakepasseslabel'))
         row = col.row(align=True)
         row.prop(context.scene, 'bake_pass_diffuse', expand=True)
         if context.scene.bake_pass_diffuse:

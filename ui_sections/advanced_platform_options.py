@@ -15,9 +15,9 @@ from ..ui import *
 #This is kinda a bad look but at least it makes the UI nice! - @989onan
 @register_ui_tab
 class Bake_PT_advanced_platform_options:
-    bl_label = "Advanced Platform Options"
+    bl_label = t('BakePanel.advanced_platform_options.label')
     bl_enum = "ADVPLAT"
-    bl_description = ""
+    bl_description = t('BakePanel.advanced_platform_options.desc')
     icon = "INFO"
     
     def poll(cls, context):
@@ -27,11 +27,7 @@ class Bake_PT_advanced_platform_options:
             return False
     
     def draw_panel(main_panel, context, col):
-    
-        
         item = context.scene.bake_platforms[context.scene.bake_platform_index]
-        row = col.row(align=True)
-        row.scale_y = 0.85
         if item.use_decimation:
             row = col.row(align=True)
             row.separator()
@@ -73,7 +69,7 @@ class Bake_PT_advanced_platform_options:
             row = col.row(align=True)
             row.separator()
             row.label(text="Current props:")
-            for name in current_props:
+            for name in main_panel.current_props:
                 row = col.row(align=True)
                 row.separator()
                 row.label(text=name, icon="OBJECT_DATA")
@@ -86,7 +82,7 @@ class Bake_PT_advanced_platform_options:
             row = col.row(align=True)
             row.separator()
             row.label(text="Current 'Copy Only's:")
-            for name in current_copyonlys:
+            for name in main_panel.current_copyonlys:
                 row = col.row(align=True)
                 row.separator()
                 row.label(text=name, icon="OBJECT_DATA")
