@@ -1,28 +1,14 @@
-from bpy.types import Scene, PropertyGroup, Object
+from bpy.types import Scene, PropertyGroup
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
-from .ui import tab_enums
-
-#this is basically a constant, set at launch. There is no reason to need to set this otherwise unless explictly giving only the user the option to do so.
-#this is set via the __init__ file and reads the steam libraries via registry keys at launch, so it will always
-#be able to find garry's mod. If it can't, then the game is pirated, so screw them anyway.
-gmod_path = {"path":""}
-
-def get_steam_library(self):
-    return gmod_path["path"]
-
-#used by __init__ only. Don't touch for any other purpose.
-def set_steam_library(arg):
-    gmod_path["path"] = arg
-
+from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels
 
 def register_properties():
     # Bake
     Scene.bake_use_draft_quality = BoolProperty(
         name='Draft Quality',
-        description=t('Scene.draft_quality_desc'),
+        description='Reduce the number of samples and cap resolution at 1024, speeds up iteration',
         default=False
     )
 
@@ -44,13 +30,13 @@ def register_properties():
     )
 
     Scene.bake_animation_weighting_include_shapekeys = BoolProperty(
-        name=t('Tools.anim_weight_incl_shapekeys.name'),
-        description=t('Tools.anim_weight_incl_shapekeys.desc'),
+        name="Include Shapekeys",
+        description="Factor shapekeys into animation weighting. Disable if your model has large body shapekeys.",
         default=False
     )
-    
+
     class BakePlatformPropertyGroup(PropertyGroup):
-        name: StringProperty(name='name', default=t('BakePanel.new_plat'))
+        name: StringProperty(name='name', default=t("New Platform"))
         use_decimation: BoolProperty(
             name=t('Scene.bake_use_decimation.label'),
             description=t('Scene.bake_use_decimation.desc'),
@@ -231,14 +217,14 @@ def register_properties():
             description=t('merges_smoothness_into_the_specular_map_for_engines_without_a_seperate_smoothness_map'),
             default=False
         )
-        gmod_model_name: StringProperty(name='Gmod Model Name', default="")
+        gmod_model_name: StringProperty(name='Gmod Model Name', default="missing no")
         prop_bone_handling: EnumProperty(
-            name=t('BakePanel.prop_handling.label'),
-            description=t('BakePanel.prop_handling.desc'),
+            name="Prop objects",
+            description="What to do with objects marked as Props",
             items=[
-                ("NONE", t('BakePanel.prop_handling.none.label'), t('BakePanel.prop_handling.none.desc')),
-                ("GENERATE", t('BakePanel.prop_handling.generate.label'), t('BakePanel.prop_handling.generate.desc')),
-                ("REMOVE", t('BakePanel.prop_handling.remove.label'), t('BakePanel.prop_handling.remove.desc')),
+                ("NONE", "None", "Treat as ordinary objects and bake in"),
+                ("GENERATE", "Generate Bones/Animations", "Generate prop bones and animations for toggling"),
+                ("REMOVE", "Remove", "Remove completely, for platforms with no animation support"),
             ],
             default="GENERATE"
         )
@@ -258,47 +244,13 @@ def register_properties():
         type=BakePlatformPropertyGroup
     )
     Scene.bake_platform_index = IntProperty(default=0)
-    
 
     Scene.bake_cleanup_shapekeys = BoolProperty(
         name=t("cleanup_shapekeys"),
         description=t("remove_backup_shapekeys_in_the_final_result_eg_key__reverted_or_blinkold"),
         default=True
     )
-    
-    
-    Scene.section_enum = EnumProperty(
-        name="",
-        description="",
-        items=tab_enums
-    )
-    
-    
-    
-    #Gmod visiblity for compiling garry's mod model body groups
-    Object.gmod_shown_by_default = BoolProperty(name = t('GmodPanel.gmod_visibility.shown_by_default'), default=True)
-    Object.gmod_is_toggleable = BoolProperty(name = t('GmodPanel.gmod_visibility.is_toggleable'), default=False)
-    Scene.gmod_toggle_list_index = IntProperty(default=0, get=(lambda self : -1), set=(lambda self,context : None))
-    
-    class MaterialListGrouper(PropertyGroup):
-        name: StringProperty(name='', default="Null Material")
-        group: IntProperty(
-            name=t('BakePanel.material_grouping.label'),
-            description='',
-            default=0,
-            min=0,
-            max=30
-        )
-    register_class(MaterialListGrouper)
-    
-    
-    
-    
-    Scene.bake_material_groups = CollectionProperty(
-        type=MaterialListGrouper
-    )
-    Scene.bake_material_groups_index = IntProperty(default=0)
-        
+
     Scene.bake_resolution = IntProperty(
         name=t('Scene.bake_resolution.label'),
         description=t('Scene.bake_resolution.desc'),
@@ -320,8 +272,8 @@ def register_properties():
             ("NONE", t("Scene.bake_uv_overlap_correction.none.label"), t("Scene.bake_uv_overlap_correction.none.desc")),
             ("UNMIRROR", t("Scene.bake_uv_overlap_correction.unmirror.label"), t("Scene.bake_uv_overlap_correction.unmirror.desc")),
             ("REPROJECT", t("Scene.bake_uv_overlap_correction.reproject.label"), t("Scene.bake_uv_overlap_correction.reproject.desc")),
-            ("MANUAL", t('BakePanel.manual.label'), t('BakePanel.manual.desc')),
-            ("MANUALNOPACK", t('BakePanel.manual_no_pack.label'), t('BakePanel.manual_no_pack.desc'))
+            ("MANUAL", "Manual", "Bake will take island information from any UVMap named 'Target' from your meshes, else it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!"),
+            ("MANUALNOPACK", "Manual Don't Pack", "Bake will take island information from any UVMap named 'Target' from your meshes. This will not move them so when all meshes are selected with the uv map active they cannot overlap. If there is no 'Target' map it will default to the render-active one. Decimation works better when there's only one giant island per loose mesh!")
         ],
         default="UNMIRROR"
     )
@@ -420,13 +372,13 @@ def register_properties():
     )
 
     Scene.bake_show_advanced_general_options = BoolProperty(
-        name=t("advanced_general_options"),
+        name=t("show_advanced_general_options"),
         description=t("will_show_extra_options_related_to_which_bake_passes_are_performed_and_how"),
         default=False
     )
 
     Scene.bake_show_advanced_platform_options = BoolProperty(
-        name=t("advanced_platform_options"),
+        name=t("show_advanced_platform_options"),
         description=t("will_show_extra_options_related_to_applicable_bones_and_texture_packing_setups"),
         default=False
     )
@@ -483,11 +435,7 @@ def register_properties():
         precision=1
     )
 
-    Scene.bake_steam_library = StringProperty(
-        name='Steam Library', 
-        default="C:\\Program Files (x86)\\Steam\\",
-        get=get_steam_library
-    )
+    Scene.bake_steam_library = StringProperty(name='Steam Library', default="C:\\Program Files (x86)\\Steam\\")
 
     Scene.bake_diffuse_indirect = BoolProperty(
         name="Bake indirect light",
@@ -552,6 +500,7 @@ def register_properties():
         description=t('Scene.decimation_remove_doubles.desc'),
         default=True
     )
+
     # Mesh Select
     Scene.ft_mesh = EnumProperty(name='Mesh', description='Mesh to apply FT shape keys', items=get_meshes)
 
