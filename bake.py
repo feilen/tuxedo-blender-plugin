@@ -2367,7 +2367,7 @@ class BakeButton(bpy.types.Operator):
                     emittexnode.image = bpy.data.images[platform_img("emission"+str(group_num))]
                     emittexnode.location.x -= 800
                     emittexnode.location.y -= 150
-                    tree.links.new(bsdfnode.inputs["Emission Color"], emittexnode.outputs["Color"])
+                    tree.links.new(bsdfnode.inputs[EMISSION_INPUT], emittexnode.outputs["Color"])
 
                 
                 if pass_diffuse and diffuse_vertex_colors:
