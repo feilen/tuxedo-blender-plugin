@@ -748,7 +748,7 @@ class BakeButton(bpy.types.Operator):
             if clear:
                 BakeButton.clear_image_if_exists(bake_name + str(group_num))
                 image = BakeButton.create_new_image(bake_name + str(group_num), bake_size, background_color)
-                BakeButton.set_image_colorspace(image, bake_type, bake_name + str(group_num))
+                BakeButton.set_image_colorspace(image, bake_type, bake_name)
                 BakeButton.set_image_pixels(image, background_color, bake_size)
             image = bpy.data.images["SCRIPT_" + bake_name + str(group_num) + ".png"]
             images.append(image)
@@ -2236,12 +2236,10 @@ class BakeButton(bpy.types.Operator):
                 
                 if pass_normal:
                     # Bake tangent normals
-                    #self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
-                    #               (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors)
+                    self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
+                                   (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors)
                     image = bpy.data.images[platform_img("normal"+str(group_num))]
                     image.colorspace_settings.name = 'Non-Color'
-                    #I have lost paticence, it keeps throwing an error about these images not being here. why are they not being generated then!? - @989onan
-                    #context: I talked about this in the dev channel on the discord where I was loosing my mind, but when I chose normals it kept throwing angy errors
                     normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"] 
                     image.pixels.foreach_set(normal_image.pixels[:])
                     if export_format == "GMOD":
