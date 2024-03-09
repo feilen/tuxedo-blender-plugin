@@ -12,8 +12,6 @@ import shutil
 from mathutils import Matrix
 import itertools
 
-from .class_register import wrapper_registry
-
 from bpy.types import Operator
 
 from io_scene_fbx import fbx_utils
@@ -31,76 +29,75 @@ with open(os.path.dirname(os.path.abspath(__file__)) + "/translations.csv", 'r')
 # Note from @989onan: Please make sure to make your names are lowercase in this array. I banged my head metaphorically till I figured that out...
 bone_names = {
     "right_shoulder": ["rightshoulder", "shoulderr", "rshoulder"],
-    "right_arm": ["rightarm", "armr", "rarm", "upperarmr", "rupperarm", "rightupperarm", "uparmr", "ruparm"],
-    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr","rlowerarm", "lowarmr", "rlowarm"],
+    "right_arm": ["rightarm", "armr", "rarm", "upperarmr", "rightupperarm", "uparmr", "ruparm"],
+    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr", "lowarmr", "rlowarm"],
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
-    "pinkie_0_r": ["littlefinger0r","pinkie0r","rpinkie0","pinkiemetacarpalr"],
-    "pinkie_1_r": ["littlefinger1r","pinkie1r","rpinkie1","pinkieproximalr"],
-    "pinkie_2_r": ["littlefinger2r","pinkie2r","rpinkie2","pinkieintermediater"],
-    "pinkie_3_r": ["littlefinger3r","pinkie3r","rpinkie3","pinkiedistalr"],
+    "pinkie_0_r": ["littlefinger0r", "pinkie0r", "pinkiemetacarpalr"],
+    "pinkie_1_r": ["littlefinger1r", "pinkie1r", "pinkieproximalr"],
+    "pinkie_2_r": ["littlefinger2r", "pinkie2r", "pinkieintermediater"],
+    "pinkie_3_r": ["littlefinger3r", "pinkie3r", "pinkiedistalr"],
 
-    "ring_0_r": ["ringfinger0r","ring0r","rring0","ringmetacarpalr"],
-    "ring_1_r": ["ringfinger1r","ring1r","rring1","ringproximalr"],
-    "ring_2_r": ["ringfinger2r","ring2r","rring2","ringintermediater"],
-    "ring_3_r": ["ringfinger3r","ring3r","rring3","ringdistalr"],
+    "ring_0_r": ["ringfinger0r", "ring0r", "ringmetacarpalr"],
+    "ring_1_r": ["ringfinger1r", "ring1r", "ringproximalr"],
+    "ring_2_r": ["ringfinger2r", "ring2r", "ringintermediater"],
+    "ring_3_r": ["ringfinger3r", "ring3r", "ringdistalr"],
 
-    "middle_0_r": ["middlefinger0r","middle0r","rmiddle0","middlemetacarpalr"],
-    "middle_1_r": ["middlefinger1r","middle1r","rmiddle1","middleproximalr"],
-    "middle_2_r": ["middlefinger2r","middle2r","rmiddle2","middleintermediater"],
-    "middle_3_r": ["middlefinger3r","middle3r","rmiddle3","middledistalr"],
+    "middle_0_r": ["middlefinger0r", "middle0r", "middlemetacarpalr"],
+    "middle_1_r": ["middlefinger1r", "middle1r", "middleproximalr"],
+    "middle_2_r": ["middlefinger2r", "middle2r", "middleintermediater"],
+    "middle_3_r": ["middlefinger3r", "middle3r", "middledistalr"],
 
-    "index_0_r": ["indexfinger0r","index0r","rindex0","indexmetacarpalr"],
-    "index_1_r": ["indexfinger1r","index1r","rindex1","indexproximalr"],
-    "index_2_r": ["indexfinger2r","index2r","rindex2","indexintermediater"],
-    "index_3_r": ["indexfinger3r","index3r","rindex3","indexdistalr"],
+    "index_0_r": ["indexfinger0r", "index0r", "indexmetacarpalr"],
+    "index_1_r": ["indexfinger1r", "index1r", "indexproximalr"],
+    "index_2_r": ["indexfinger2r", "index2r", "indexintermediater"],
+    "index_3_r": ["indexfinger3r", "index3r", "indexdistalr"],
 
-    "thumb_0_r": ["thumb0r","rthumb0","thumbmetacarpalr"],
-    "thumb_1_r": ['thumb0r',"rthumb0","thumbproximalr"],
-    "thumb_2_r": ['thumb1r',"rthumb1","thumbintermediater"],
-    "thumb_3_r": ['thumb2r',"rthumb2","thumbdistalr"],
+    "thumb_0_r": ["thumb0r", "thumbmetacarpalr"],
+    "thumb_1_r": ["thumb0r", "thumbproximalr"],
+    "thumb_2_r": ["thumb1r", "thumbintermediater"],
+    "thumb_3_r": ["thumb2r", "thumbdistalr"],
 
-    "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "rupperleg", "thighr", "rightupperleg", "uplegr", "rupleg"],
-    "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rlowerleg", "rcalf", "rightlowerleg", "lowlegr", "rlowleg"],
-    "right_ankle": ["rightankle", "ankler", "rankle", "rightfoot", "footr", "rfoot", "rightfoot", "rightfeet", "feetright", "rfeet", "feetr"],
+    "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "thighr", "rightupperleg", "uplegr", "rupleg"],
+    "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rightlowerleg", "lowlegr", "rlowleg"],
+    "right_ankle": ["rightankle", "ankler", "rankle", "rightfoot", "footr", "rightfoot", "rightfeet", "feetright", "rfeet", "feetr"],
     "right_toe": ["righttoe", "toeright", "toer", "rtoe", "toesr", "rtoes"],
 
-    "left_shoulder": ["leftshoulder", "shoulderl", "lshoulder"],
-    "left_arm": ["leftarm", "arml", "rarm", "upperarml", "lupperarm", "leftupperarm", "uparml", "luparm"],
-    "left_elbow": ["leftelbow", "elbowl", "lelbow", "lowerarml", "leftlowerarm", "lowerarml", "llowerarm", "lowarml", "llowarm"],
-    "left_wrist": ["leftwrist", "wristl", "lwrist", "handl", "lefthand", "lhand"],
+    "left_shoulder": ["leftshoulder", "shoulderl", "rshoulder"],
+    "left_arm": ["leftarm", "arml", "rarm", "upperarml", "leftupperarm", "uparml", "luparm"],
+    "left_elbow": ["leftelbow", "elbowl", "relbow", "lowerarml", "leftlowerarm", "lowerarml", "lowarml", "llowarm"],
+    "left_wrist": ["leftwrist", "wristl", "rwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers
+    "pinkie_0_l": ["pinkiefinger0l", "pinkie0l", "pinkiemetacarpall"],
+    "pinkie_1_l": ["littlefinger1l", "pinkie1l", "pinkieproximall"],
+    "pinkie_2_l": ["littlefinger2l", "pinkie2l", "pinkieintermediatel"],
+    "pinkie_3_l": ["littlefinger3l", "pinkie3l", "pinkiedistall"],
 
-    "pinkie_0_l": ["pinkiefinger0l","pinkie0l","lpinkie0","pinkiemetacarpall"],
-    "pinkie_1_l": ["littlefinger1l","pinkie1l","lpinkie1","pinkieproximall"],
-    "pinkie_2_l": ["littlefinger2l","pinkie2l","lpinkie2","pinkieintermediatel"],
-    "pinkie_3_l": ["littlefinger3l","pinkie3l","lpinkie3","pinkiedistall"],
+    "ring_0_l": ["ringfinger0l", "ring0l", "ringmetacarpall"],
+    "ring_1_l": ["ringfinger1l", "ring1l", "ringproximall"],
+    "ring_2_l": ["ringfinger2l", "ring2l", "ringintermediatel"],
+    "ring_3_l": ["ringfinger3l", "ring3l", "ringdistall"],
 
-    "ring_0_l": ["ringfinger0l","ring0l","lring0","ringmetacarpall"],
-    "ring_1_l": ["ringfinger1l","ring1l","lring1","ringproximall"],
-    "ring_2_l": ["ringfinger2l","ring2l","lring2","ringintermediatel"],
-    "ring_3_l": ["ringfinger3l","ring3l","lring3","ringdistall"],
+    "middle_0_l": ["middlefinger0l", "middle0l", "middlemetacarpall"],
+    "middle_1_l": ["middlefinger1l", "middle_1l", "middleproximall"],
+    "middle_2_l": ["middlefinger2l", "middle_2l", "middleintermediatel"],
+    "middle_3_l": ["middlefinger3l", "middle_3l", "middledistall"],
 
-    "middle_0_l": ["middlefinger0l","middle_0l","lmiddle0","middlemetacarpall"],
-    "middle_1_l": ["middlefinger1l","middle_1l","lmiddle1","middleproximall"],
-    "middle_2_l": ["middlefinger2l","middle_2l","lmiddle2","middleintermediatel"],
-    "middle_3_l": ["middlefinger3l","middle_3l","lmiddle3","middledistall"],
+    "index_0_l": ["indexfinger0l", "index0l", "indexmetacarpall"],
+    "index_1_l": ["indexfinger1l", "index1l", "indexproximall"],
+    "index_2_l": ["indexfinger2l", "index2l", "indexintermediatel"],
+    "index_3_l": ["indexfinger3l", "index3l", "indexdistall"],
 
-    "index_0_l": ["indexfinger0l","index0l","lindex0","indexmetacarpall"],
-    "index_1_l": ["indexfinger1l","index1l","lindex1","indexproximall"],
-    "index_2_l": ["indexfinger2l","index2l","lindex2","indexintermediatel"],
-    "index_3_l": ["indexfinger3l","index3l","lindex3","indexdistall"],
+    "thumb_0_l": ["thumb0l", "thumbmetacarpall"],
+    "thumb_1_l": ["thumb0l", "thumbproximall"],
+    "thumb_2_l": ["thumb1l", "thumbintermediatel"],
+    "thumb_3_l": ["thumb2l", "thumbdistall"],
 
-    "thumb_0_l": ["thumb0l","lthumb0","thumbmetacarpall"],
-    "thumb_1_l": ['thumb0l',"lthumb0","thumbproximall"],
-    "thumb_2_l": ['thumb1l',"lthumb1","thumbintermediatel"],
-    "thumb_3_l": ['thumb2l',"lthumb2","thumbdistall"],
-
-    "left_leg": ["leftleg", "legl", "lleg", "upperlegl", "lupperleg", "thighl", "leftupperleg", "uplegl", "lupleg"],
-    "left_knee": ["leftknee", "kneel", "lknee", "lowerlegl", "llowerleg", "calfl", "lcalf", "leftlowerleg", 'lowlegl', 'llowleg'],
-    "left_ankle": ["leftankle", "anklel", "rankle", "leftfoot", "footl", "lfoot", "leftfoot", "leftfeet", "feetleft", "lfeet", "feetl"],
+    "left_leg": ["leftleg", "legl", "rleg", "upperlegl", "thighl", "leftupperleg", "uplegl", "lupleg"],
+    "left_knee": ["leftknee", "kneel", "rknee", "lowerlegl", "calfl", "leftlowerleg", "lowlegl", "llowleg"],
+    "left_ankle": ["leftankle", "anklel", "rankle", "leftfoot", "footl", "leftfoot", "leftfeet", "feetleft", "lfeet", "feetl"],
     "left_toe": ["lefttoe", "toeleft", "toel", "ltoe", "toesl", "ltoes"],
 
     "hips": ["pelvis", "hips"],
@@ -208,7 +205,9 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
                         if bone.parent and bone.parent.name in obj.vertex_groups:
                             obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
                 except Exception as e:
-                    pass # this is because of null vertex group reading, and we kinda don't care all that much about it - @989onan
+                    print("\nerror below is because it attempted to read a null vertex's vertex groups.\n")
+                    print(e)
+                    print("\n===== END ERROR =====\n")
 
         for bone_name in bone_names:
             # remove old bones vertex groups
@@ -284,30 +283,6 @@ def get_armature(context, armature_name=None):
 def simplify_bonename(n):
     return n.lower().translate(dict.fromkeys(map(ord, u" _.")))
 
-def materials_list_update(context):
-    choices = []
-    try:
-        for mesh in get_meshes_objects(context, armature_name=get_armature(context).name):
-            for mat in mesh.data.materials:
-                if mat.name not in choices:
-                    choices.append(mat.name)
-    except Exception as e:
-        print(e)
-    
-    material_list_bake = [i.name for i in context.scene.bake_material_groups]
-    
-    for i in choices:
-        if i not in material_list_bake:
-            added_item = context.scene.bake_material_groups.add()
-            added_item.name = i
-    material_list_bake = [i.name for i in context.scene.bake_material_groups]
-    for k,i in enumerate(material_list_bake):
-        if i not in choices:
-            context.scene.bake_material_groups.remove(k)
-    
-    return choices
-
-
 def apply_modifier(mod):
     if mod.type == 'ARMATURE':
         # Armature modifiers are a special case: they don't have a show_render
@@ -345,11 +320,10 @@ def remove_doubles(mesh, margin):
     bm.free()
     mesh.data.update()
 
-@wrapper_registry
 class FitClothes(bpy.types.Operator):
     bl_idname = 'tuxedo.fit_clothes'
-    bl_label = t('Tools.fit_clothes.label')
-    bl_description = t('Tools.fit_clothes.desc')
+    bl_label = 'Attach to selected'
+    bl_description = 'Auto-rig all selected clothes to the active body. Should have next to no clipping, but its a good idea to delete internal geometry anyway'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -391,7 +365,7 @@ class FitClothes(bpy.types.Operator):
             arm_modifier = obj.modifiers.new(type='ARMATURE', name='Armature')
             arm_modifier.object = armature
 
-        self.report({'INFO'}, t('Tools.fit_clothes.success'))
+        self.report({'INFO'}, 'Clothes rigged!')
         return {'FINISHED'}
 
 def get_children_recursive(parent):
@@ -409,7 +383,6 @@ def get_children_recursive(parent):
     else:
         return parent.children_recursive
 
-@wrapper_registry
 class AutoDecimatePresetGood(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_good'
     bl_label = t('DecimationPanel.preset.good.label')
@@ -420,7 +393,6 @@ class AutoDecimatePresetGood(bpy.types.Operator):
         bpy.context.scene.tuxedo_max_tris = 70000
         return {'FINISHED'}
 
-@wrapper_registry
 class AutoDecimatePresetExcellent(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_excellent'
     bl_label = t('DecimationPanel.preset.excellent.label')
@@ -431,7 +403,6 @@ class AutoDecimatePresetExcellent(bpy.types.Operator):
         bpy.context.scene.tuxedo_max_tris = 32000
         return {'FINISHED'}
 
-@wrapper_registry
 class AutoDecimatePresetQuest(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_quest'
     bl_label = t('DecimationPanel.preset.quest.label')
@@ -450,11 +421,10 @@ def triangulate_mesh(mesh):
     bm.free()
     mesh.data.update()
 
-@wrapper_registry
 class RepairShapekeys(bpy.types.Operator):
     bl_idname = 'tuxedo.repair_shapekeys'
-    bl_label = t('Tools.repair_shapekeys.label')
-    bl_description = t('Tools.repair_shapekeys.desc')
+    bl_label = 'Repair Broken Shapekeys'
+    bl_description = "Attempt to repair messed up shapekeys caused by some Blender operations"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -512,14 +482,13 @@ class RepairShapekeys(bpy.types.Operator):
             obj.shape_key_remove(key=obj.data.shape_keys.key_blocks["TUXEDO Antibasis"])
             obj.active_shape_key_index = 0
 
-        self.report({'INFO'}, t('Tools.repair_shapekeys.success'))
+        self.report({'INFO'}, "Repair complete.")
         return {'FINISHED'}
 
-@wrapper_registry
 class SmartDecimation(bpy.types.Operator):
     bl_idname = 'tuxedo.smart_decimation'
-    bl_label = t('Tools.smart_decimate.label')
-    bl_description = t('Tools.smart_decimate.desc')
+    bl_label = 'Smart Decimate'
+    bl_description = 'Decimate all meshes attached to the selected armature, preserving shapekeys.'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     armature_name: bpy.props.StringProperty(
         default=''
@@ -547,10 +516,10 @@ class SmartDecimation(bpy.types.Operator):
         meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
 
         if len(meshes_obj) == 0:
-            self.report({'INFO'}, t('no_meshes_found'))
+            self.report({'INFO'}, "No meshes found.")
             return {'FINISHED'}
         if not armature:
-            self.report({'INFO'}, t('no_armature_found'))
+            self.report({'INFO'}, "No armature found.")
             return {'FINISHED'}
         tris_count = 0
 
@@ -576,17 +545,17 @@ class SmartDecimation(bpy.types.Operator):
                     decimated_a_mesh = True
 
             if not decimated_a_mesh:
-                self.report({'INFO'}, t('SmartDecimation.no_decimation_needed'))
+                self.report({'INFO'}, "No Decimation needed.")
                 return {'FINISHED'}
             else:
-                self.report({'INFO'}, t('SmartDecimation.decimated_some_meshes') + str(self.max_single_mesh_tris))
+                self.report({'INFO'}, "Decimated some meshes that went over the individual mesh polygon limit of " + str(self.max_single_mesh_tris))
         else:
 
             if tris_count == 0:
-                self.report({'INFO'}, t('no_tris'))
+                self.report({'INFO'}, "No tris found.")
                 return {'FINISHED'}
             elif decimation <= 0:
-                self.report({'INFO'}, t('SmartDecimation.error_too_many_polys'))
+                self.report({'INFO'}, "Can't reach target decimation level.")
                 return {'FINISHED'}
             for mesh in meshes_obj:
                 tris = get_tricount(mesh)
@@ -758,11 +727,10 @@ class SmartDecimation(bpy.types.Operator):
 
         return newweights
 
-@wrapper_registry
 class GenerateTwistBones(bpy.types.Operator):
     bl_idname = 'tuxedo.generate_twist_bones'
-    bl_label = t('Tools.gen_twist_bones.label')
-    bl_description = t('Tools.gen_twist_bones.desc')
+    bl_label = "Generate Twist Bones"
+    bl_description = "Attempt to generate twistbones for the selected bones"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -828,14 +796,13 @@ class GenerateTwistBones(bpy.types.Operator):
                         mesh.vertex_groups[twist_bone_name].add([vertex.index], twist_weight, "REPLACE")
                         mesh.vertex_groups[bone_name].add([vertex.index], untwist_weight, "REPLACE")
 
-        self.report({'INFO'}, t('Tools.gen_twist_bones.success'))
+        self.report({'INFO'}, t('RemoveConstraints.success'))
         return {'FINISHED'}
 
-@wrapper_registry
 class TwistTutorialButton(bpy.types.Operator):
     bl_idname = 'tuxedo.twist_tutorial'
-    bl_label = t('Tools.twist_tutorial.label')
-    bl_description = t('Tools.twist_tutorial.desc')
+    bl_label = "Twistbones Tutorial"
+    bl_description = "This will open a basic tutorial on how to setup and use these constraints. You can skip to the Unity section."
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
@@ -850,11 +817,12 @@ def get_tricount(obj):
     bmesh.ops.triangulate(bmesh_mesh, faces=bmesh_mesh.faces[:])
     return len(bmesh_mesh.faces)
 
-@wrapper_registry
+
 class ConvertToSecondlifeButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_secondlife'
-    bl_label = t('Tools.convert_to_secondlife.label')
-    bl_description = t('Tools.convert_to_secondlife.desc')
+    bl_label = 'Convert Bones To Second Life'
+    bl_description = 'Converts all main bone names to second life.' \
+                     '\nMake sure your model has the standard bone names from after using Fix Model'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     armature_name: bpy.props.StringProperty(
         default=''
@@ -961,15 +929,15 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
         for bone in context.visible_bones:
             bone.tail[:] = bone.head[:]
             bone.tail[0] = bone.head[0] + 0.1
-            bone.roll = 0
+            # TODO: clear rolls
 
         context.object.data.use_mirror_x = old_mirror_setting
         bpy.ops.object.mode_set(mode='OBJECT')
 
         if translate_bone_fails > 0:
-            self.report({'INFO'}, t('Tools.convert_bones.fail').format(translate_bone_fails=translate_bone_fails))
+            self.report({'INFO'}, f"Failed to translate {translate_bone_fails} bones! They will be merged to their parent bones.")
         else:
-            self.report({'INFO'}, t('Tools.convert_bones.success'))
+            self.report({'INFO'}, 'Translated all bones!')
 
         return {'FINISHED'}
 
@@ -985,7 +953,6 @@ def delete(obj):
     objs = bpy.data.objects
     objs.remove(objs[obj.name], do_unlink=True)
 
-@wrapper_registry
 class PoseToRest(bpy.types.Operator):
     bl_idname = 'tuxedo.pose_to_rest'
     bl_label = "apply pose as rest pose"
@@ -1037,7 +1004,7 @@ class PoseToRest(bpy.types.Operator):
         # active object e.g., the user has multiple armatures opened in pose mode, but a different armature is currently
         # active. We can use an operator override to tell the operator to treat armature_obj as if it's the active
         # object even if it's not, skipping the need to actually set armature_obj as the active object.
-        with bpy.context.temp_override(active_object = armature_obj): bpy.ops.pose.armature_apply()
+        bpy.ops.pose.armature_apply({'active_object': armature_obj})
 
         # Stop pose mode after operation
         armature = get_armature(context,self.armature_name)
@@ -1081,22 +1048,20 @@ class PoseToRest(bpy.types.Operator):
         # modifier will have ended up with a different name
         mod_name = armature_mod.name
         # Context override to let us run the modifier operators on mesh_obj, even if it's not the active object
+        context_override = {'object': mesh_obj}
         # Moving the modifier to the first index will prevent an Info message about the applied modifier not being
         # first and potentially having unexpected results.
-        with bpy.context.temp_override(object= mesh_obj):
-            if bpy.app.version >= (2, 90, 0):
-                # modifier_move_to_index was added in Blender 2.90
-                bpy.ops.object.modifier_move_to_index(modifier=mod_name, index=0)
-            else:
-                # The newly created modifier will be at the bottom of the list
-                armature_mod_index = len(mesh_obj.modifiers) - 1
-                # Move the modifier up until it's at the top of the list
-                for _ in range(armature_mod_index):
-                    bpy.ops.object.modifier_move_up( modifier=mod_name)
-            bpy.ops.object.modifier_apply( modifier=mod_name)
-        
-        
-    
+        if bpy.app.version >= (2, 90, 0):
+            # modifier_move_to_index was added in Blender 2.90
+            bpy.ops.object.modifier_move_to_index(context_override, modifier=mod_name, index=0)
+        else:
+            # The newly created modifier will be at the bottom of the list
+            armature_mod_index = len(mesh_obj.modifiers) - 1
+            # Move the modifier up until it's at the top of the list
+            for _ in range(armature_mod_index):
+                bpy.ops.object.modifier_move_up(context_override, modifier=mod_name)
+        bpy.ops.object.modifier_apply(context_override, modifier=mod_name)
+
     @staticmethod
     def apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, scene):
         # The active shape key will be changed, so save the current active index, so it can be restored afterwards
@@ -1424,11 +1389,12 @@ def update_viewport(): #this isn't needed nessarily, it's a hack for asthetic pu
 
 # @989onan - I'm sorry for the mess below, but at least I refactored it since this is new place for this code. The most permanent solution is a temporary one.
 
-@wrapper_registry
+
 class ConvertToValveButton(bpy.types.Operator):
     bl_idname = 'tuxedo.convert_to_valve'
-    bl_label = t('Tools.convert_to_valve.label')
-    bl_description = t('Tools.convert_to_valve.desc')
+    bl_label = 'Convert Bones To Valve'
+    bl_description = 'Converts all main bone names to default valve bone names.' \
+                     '\nMake sure your model has the standard bone names from after using Fix Model'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     armature_name: bpy.props.StringProperty(
@@ -1545,17 +1511,17 @@ class ConvertToValveButton(bpy.types.Operator):
 
 
         if translate_bone_fails > 0:
-            self.report({'INFO'}, t('Tools.convert_bones.fail').format(translate_bone_fails=translate_bone_fails))
+            self.report({'INFO'}, f"Error! Failed to translate {translate_bone_fails} bones! Make sure your model has standard bone names!")
 
-        self.report({'INFO'}, t('Tools.convert_bones.success'))
+        self.report({'INFO'}, 'Connected all bones!')
         return {'FINISHED'}
 
 
-@wrapper_registry
+
 class ExportGmodPlayermodel(bpy.types.Operator):
     bl_idname = "tuxedo.export_gmod_addon"
-    bl_label = t('Tools.export_gmod_addon.label')
-    bl_description = t('Tools.export_gmod_addon.desc')
+    bl_label = "Export Gmod Addon"
+    bl_description = "Export as Gmod Playermodel Addon to your addons and make GMA beside Blender file. May not always work."
     bl_options = {'INTERNAL'}
 
     steam_library_path: bpy.props.StringProperty(subtype='FILE_PATH', options={'HIDDEN', 'SKIP_SAVE'})
@@ -1565,29 +1531,30 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
     def execute(self, context):
         print("===============START GMOD EXPORT PROCESS===============")
-        
+
         model_name = self.gmod_model_name
         platform_name = self.platform_name
         sanitized_model_name = ""
         offical_model_name = ""
-        
+
         try:
             Set_Mode(context, "OBJECT")
         except:
             pass
         # this is feilen's code
         def sanitized_name(orig_name):
-            #sanitizing name since everything needs to be simple characters and "_"'s
-            sanitized = ""
-            for i in orig_name.lower():
-                if i.isalnum() or i == "_":
-                    sanitized += i
-                else:
-                    sanitized += "_"
-            return sanitized
+                #sanitizing name since everything needs to be simple characters and "_"'s
+                sanitized = ""
+                for i in orig_name.lower():
+                    if i.isalnum() or i == "_":
+                        sanitized += i
+                    else:
+                        sanitized += "_"
+                return sanitized
         sanitized_model_name = sanitized_name(model_name)
         sanitized_platform_name = sanitized_name(platform_name)
         #feilen's code ends here
+
 
         #for name that appears in playermodel selection screen.
         for i in model_name:
@@ -1595,7 +1562,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
                 offical_model_name += i
             else:
                 offical_model_name += "_"
-        
+
         print("sanitized model name:"+sanitized_model_name)
         print("Playermodel Selection Menu Name"+offical_model_name)
         print("armature name:"+self.armature_name)
@@ -1619,6 +1586,23 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
 
 
+        #TODO: Ask the user to add an upper chest bone instead - @989onan
+        #print("checking if model has an upper chest or not.")
+        #context.view_layer.objects.active = armature
+        #Set_Mode(context, "OBJECT")
+        #bpy.ops.object.select_all(action='DESELECT')
+        #Set_Mode(context, "EDIT")
+        #if not ("ValveBiped.Bip01_Spine4" in armature.data.edit_bones):
+        #    print("Model does not have upper chest, auto generating...")
+        #    chest_bone = armature.data.edit_bones["ValveBiped.Bip01_Spine1"]
+        #    bpy.ops.armature.select_all(action='DESELECT')
+        #    chest_bone.select_head = True
+        #    chest_bone.select_tail = True
+        #    chest_bone.select = True
+        #    # There needs to be a parenting thing here, since subdivided bones keep the parents to the original bone
+        #    chest_bone.children[0].name = "ValveBiped.Bip01_Spine4"
+        #    bpy.ops.armature.subdivide()
+        #    bpy.ops.armature.select_all(action='DESELECT')
         armature = get_armature(context,self.armature_name)
         context.view_layer.objects.active = armature
 
@@ -1626,25 +1610,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         #putting objects and armature under a better collection.
         refcoll_list = [obj for obj in armature.children]
         refcoll_list.append(armature)
-        
-        #once we get our objects, before anything we wanna sanitize it.
-        #santitize object, material, and shapekey names
-        for obj in refcoll_list:
-            obj.name = sanitized_name(obj.name) #this is needed since objects (not just meshes) will throw errors if named weirdly
-            if obj.type == "MESH":
-                print("sanitizing material names for gmod for object "+obj.name)
-                for material in obj.material_slots:
-                    mat = material.material
-                    mat.name = sanitized_name(mat.name)
-                if has_shapekeys(obj):
-                    print("sanitizing shapekey names for gmod for object "+obj.name)
-                    for shapekey in obj.data.shape_keys.key_blocks:
-                        shapekey.name = sanitized_name(shapekey.name)
-        
-        self.armature_name = armature.name
-        
         refcoll = Move_to_New_Or_Existing_Collection(context, sanitized_model_name+"_ref", objects_alternative_list = refcoll_list) #put armature and children into alt object list
-        
+
 
         print("marking which models toggled off by default, and deleting always inactive objects for body groups.")
         hidden_by_default_bodygroups = []
@@ -1653,13 +1620,15 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         context.view_layer.objects.active = armature
         for mesh in refcoll.objects:
             if mesh.type == "MESH":
-                if (not mesh.gmod_shown_by_default) and (not mesh.gmod_is_toggleable):
+                if mesh.hide_viewport and mesh.hide_get():
                     always_hidden_garbage.append(mesh.name)
                     continue
-                if not mesh.gmod_is_toggleable:
+                if mesh.hide_viewport:
                     do_not_toggle_bodygroups.append(mesh.name)
-                if not mesh.gmod_shown_by_default:
+                    print("mesh \""+mesh.name+"\" hidden with monitor icon, it will always be on and untoggleable!")
+                if mesh.hide_get():
                     hidden_by_default_bodygroups.append(mesh.name)
+                    print("mesh \""+mesh.name+"\" hidden with eyeball icon, it will be toggled off in gmod by default!")
 
         print("deleting always hidden meshes")
         for obj in always_hidden_garbage:
@@ -1681,8 +1650,9 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         try:
             bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
         except AttributeError:
-            bpy.ops.tuxedo_bake.nosource('INVOKE_DEFAULT')
-            return {'FINISHED'}
+            #TODO: Replace with tuxedo dialouge, since this is a pretty serious error. HIGH PRIORITY!
+            #bpy.ops.cats_importer.install_source('INVOKE_DEFAULT')
+            return
 
         #clean imported stuff
         print("cleaning imported armature")
@@ -1695,7 +1665,18 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         barneycollection = Move_to_New_Or_Existing_Collection(context, "barney_collection", objects_alternative_list = [bpy.data.objects.get("barney_reference_skeleton")])
 
 
-        
+        #santitize material names
+        for obj in refcoll.objects:
+            objname = obj.name
+            if bpy.data.objects[objname].type == "MESH":
+                print("sanitizing material names for gmod for object "+objname)
+                for material in bpy.data.objects[objname].material_slots:
+                    mat = material.material
+                    mat.name = sanitized_name(mat.name)
+                if has_shapekeys(bpy.data.objects[objname]):
+                    print("sanitizing shapekey names for gmod for object "+objname)
+                    for shapekey in bpy.data.objects[objname].data.shape_keys.key_blocks:
+                        shapekey.name = sanitized_name(shapekey.name)
 
 
         print("zeroing transforms and then scaling to gmod scale, then applying transforms.")
@@ -1715,9 +1696,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         for obj in refcoll.objects:
             obj.select_set(True)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        
-        update_viewport()
-        
+
         print("getting meshes in ref collection")
 
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
@@ -1737,46 +1716,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.armature.select_all(action='SELECT')
         bpy.ops.armature.roll_clear()
         Set_Mode(context, "OBJECT")
-        
-        
-        print("straightening arm bones")
-        bpy.ops.object.select_all(action='DESELECT')
-        context.view_layer.objects.active = body_armature
-        Set_Mode(context, "EDIT")
 
-        #bpy.ops.pose.select_all(action='SELECT')
-        #Set arms straight in edit mode. if the arm bones are messed up by this, user was told to make it t-pose that is user error not our issue. - @989onan
-        #This code makes it perfect, since gmod likes to make this stuff twist really badly if it isn't perfectly straight - @989onan
-        #This needing to be done is weird because every other game requires the exact opposite - @989onan
-        
-        positiony = body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1]
-        positionz = body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2]
-        
-        
-        #we do head here to get the shoulder joint
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[1] = positiony
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].head[2] = positionz
-        
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[1] = positiony
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].head[2] = positionz
-        
-        #we do tail here to get the elbow joint
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[1] = positiony 
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_UpperArm"].tail[2] = positionz
-        
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[1] = positiony
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_UpperArm"].tail[2] = positionz
-        
-        #we do tail here again to get the wrist joint
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_Forearm"].tail[1] = positiony
-        body_armature.data.edit_bones["ValveBiped.Bip01_L_Forearm"].tail[2] = positionz
-        
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_Forearm"].tail[1] = positiony
-        body_armature.data.edit_bones["ValveBiped.Bip01_R_Forearm"].tail[2] = positionz
-        
-        
-        Set_Mode(context, "OBJECT")
-        print("a-posing armature, if this failed, you do not have standard bone names!")
+        print("a-posing armature")
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = body_armature
         Set_Mode(context, "POSE")
@@ -1791,7 +1732,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("doing an apply rest pose")
         bpy.ops.tuxedo.pose_to_rest()
         Set_Mode(context, "OBJECT")
-        
+
         update_viewport()
 
         print("grabbing barney armature")
@@ -1808,8 +1749,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = barney_armature
         barney_armature.select_set(True)
-        with bpy.context.temp_override(object = barney_armature, selected_objects = [barney_armature]): bpy.ops.object.duplicate( linked=False)
-        
+        bpy.ops.object.duplicate({"object" : barney_armature, "selected_objects" : [barney_armature]}, linked=False)
         barney_armature = context.object
 
 
@@ -1860,8 +1800,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("doing an apply rest pose")
         bpy.ops.tuxedo.pose_to_rest()
         Set_Mode(context, "OBJECT")
-        
-        update_viewport()
+
 
         print("putting barney armature bones on your model")
         merge_armature_stage_one(context, body_armature_name, barney_armature_name)
@@ -1870,7 +1809,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         print("fixing bones to point correct direction in order to mitigate bad bone twists. (includes thighs and jiggle bones)")
 
 
-        
+        #twisted_armature_bone_names may not be referenced because I thought it was causing issues - @989onan
+        #TODO: Verify this. I probably put it back idk. This is a note for future me.
         twisted_armature = bpy.data.objects[body_armature_name]
         twisted_armature_bone_names = list(set([j.name for j in children_bone_recursive(twisted_armature.pose.bones["ValveBiped.Bip01_Pelvis"])]) - set(barney_pose_bone_names))
 
@@ -2436,24 +2376,17 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         for animationname in animationnames:
             bpy.data.actions.remove(bpy.data.actions[animationname])
 
-        dummy_anim = Make_And_Key_Animation(context, "dummy", body_armature)
-        
-        print("adding animation data thats a dummy to every armature because otherwise it causes errors with the exporter...")
-        print("The animations that need to be exported should be assigned to armatures that have all the bones specified in the animation, then exported")
-        for rig in bpy.data.objects:
-            if rig.type == "ARMATURE":
-                rig.animation_data_create()
-                rig.data.vs.action_selection = "CURRENT"
-                rig.data.vs.implicit_zero_bone = False
-                rig.animation_data.action = dummy_anim
-
 
         print("making animation for idle body")
         Make_And_Key_Animation(context, "idle", body_armature)
 
 
+        print("making animation for reference body")
+
         refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
+
+
         body_armature.animation_data.action = None
         Set_Mode(context, "OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
@@ -2474,30 +2407,90 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         print("making animation for idle arms")
         armscoll = bpy.data.collections[sanitized_model_name+"_arms"]
         parentobj, arms_armature = Get_Meshes_And_Armature(context, armscoll)
-        idle_arms_anim = Make_And_Key_Animation(context, "idle_arms", arms_armature)
-        arms_armature.animation_data.action = idle_arms_anim
+        Make_And_Key_Animation(context, "idle_arms", arms_armature)
+        arms_armature.animation_data.action = None
 
         print("making copy of reference armature to export idle")
         parentobj, idle_armature = Get_Meshes_And_Armature(context, refcoll)
         idle_collection = Copy_to_existing_collection(context, "idle_ref", objects_alternative_list = [idle_armature])
-        bpy.context.selected_objects[0].animation_data.action = bpy.data.actions["idle"] 
+        bpy.context.selected_objects[0].animation_data.action = bpy.data.actions["idle"] #since above we are just copying the body_armature, it should still be selected in the new collection.
         bpy.ops.object.select_all(action='DESELECT')
 
         print("making copy of reference armature to export proportions reference animation")
         parentobj, body_armature = Get_Meshes_And_Armature(context, refcoll)
         reference_collection = Copy_to_existing_collection(context, "reference_ref", objects_alternative_list = [body_armature])
         reference_armature = bpy.context.selected_objects[0]
-        reference_armature.animation_data.action = bpy.data.actions["reference"] 
+        reference_armature.animation_data.action = bpy.data.actions["reference"] #since above we are just copying the body_armature, it should still be selected in the new collection.
         bpy.ops.object.select_all(action='DESELECT')
 
+
+
+        # probably don't need this - @989onan
+        # print("moving copy of body armature to origin for arms and applying transforms")
+        # context.view_layer.objects.active = reference_armature
+        # bpy.ops.object.select_all(action='DESELECT')
+        # reference_armature.select_set(True)
+        # bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'})
+        # arms_reference_anim_armature = bpy.context.selected_objects[0]
+        # arms_ref_collection = bpy.data.collections.new("reference_arms")
+
+        # for collection in bpy.data.collections:
+            # try:
+                # collection.objects.unlink(arms_reference_anim_armature)
+            # except:
+                # pass
+        # try:
+            # context.view_layer.layer_collection.collection.children.unlink(arms_reference_anim_armature)
+        # except:
+            # pass
+        # arms_ref_collection.objects.link(arms_reference_anim_armature)
+        # context.view_layer.layer_collection.collection.children.link(arms_ref_collection)
+        # #move arms reference anim armature to origin
+
+
+
+        # print("deleting old reference_arms animations")
+        # context.view_layer.objects.active = arms_reference_anim_armature
+        # Set_Mode(context, "OBJECT")
+        # animationnames = [j.name for j in bpy.data.actions]
+        # for animationname in animationnames:
+            # if "." in animationname:
+                # if animationname.split(".")[0] == "reference_arms":
+                    # bpy.data.actions.remove(bpy.data.actions[animationname])
+            # if animationname == "reference_arms":
+                # bpy.data.actions.remove(bpy.data.actions[animationname])
+
+        # print("keying animation reference_arms.")
+
+        # arms_reference_anim_armature.animation_data.action = bpy.data.actions.new(name="reference_arms")
+        # for barney_bone_name in barney_pose_bone_names:
+            # bone = arms_reference_anim_armature.pose.bones.get(barney_bone_name)
+            # bone.rotation_mode = "XYZ"
+            # bone.keyframe_insert(data_path="rotation_euler", frame=1)
+            # bone.keyframe_insert(data_path="location", frame=1)
+
+        # arms_reference_anim_armature.location = [(-1*chestloc[0]),(-1*chestloc[1]),(-1*chestloc[2])]
+        # bpy.ops.object.select_all(action='DESELECT')
+        # arms_reference_anim_armature.select_set(True)
+        # context.view_layer.objects.active = arms_reference_anim_armature
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
         update_viewport()
+
+        print("adding animation data to every armature because otherwise it causes errors with the exporter...")
+        for rig in bpy.data.objects:
+            if rig.type == "ARMATURE":
+                rig.animation_data_create()
+                rig.vs.action_filter = "*"
+                rig.data.vs.action_selection = "FILTERED"
+                rig.data.vs.implicit_zero_bone = False
 
         print("setting export settings")
         bpy.context.scene.vs.subdir = "anims"
         Set_Mode(context, "OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
         time.sleep(1)
-        bpy.context.scene.vs.action_selection = "CURRENT"
+        bpy.context.scene.vs.action_selection = "FILTERED"
 
         print("making body groups, you're almost to exporting!")
         refcoll = bpy.data.collections[sanitized_model_name+"_ref"]
@@ -2507,6 +2500,28 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                 body_armature = obj
                 break
 
+        def dup_collection_only_mesh(body_armature,obj):
+            context.view_layer.objects.active = body_armature
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'})
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            body_group_coll = bpy.data.collections.new(obj.name+"_ref")
+
+            for collection in bpy.data.collections:
+                try:
+                    collection.objects.unlink(obj)
+                except:
+                    pass
+            try:
+                context.view_layer.layer_collection.collection.objects.unlink(obj)
+            except:
+                pass
+            body_group_coll.objects.link(obj)
+            context.view_layer.layer_collection.collection.children.link(body_group_coll)
+            return body_group_coll
 
         new_body_groups = ""
         body_group_coll = None
@@ -2514,8 +2529,8 @@ $collisionjoints \""""+physcoll.name+""".smd\"
             if obj.type == "MESH":
                 if has_shapekeys(obj):
                     print("mesh has shapekeys, giving model shapekey data for model option")
-                    shapekey_collection = Move_to_New_Or_Existing_Collection(context, obj.name+"_ref", objects_alternative_list = [obj])
-                    
+                    shapekey_collection = dup_collection_only_mesh(body_armature,obj)
+
 
                     flex_block_model = """\n$model \""""+shapekey_collection.name+"""\" \""""+shapekey_collection.name+""".smd" {
 
@@ -2540,7 +2555,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
                         replace_percent_thingies_with += "%"+shapekey.name+" = "+shapekey.name+"\n\t"
                     new_body_groups += flex_block_model.replace("{put flexes here}",replace_flex_with).replace("{put flexcontrollers here}",replace_flexcontrollers_with).replace("{put percent thingies here}",replace_percent_thingies_with)
                 else:
-                    body_group_coll = Move_to_New_Or_Existing_Collection(context, obj.name+"_ref", objects_alternative_list = [obj])
+                    body_group_coll = dup_collection_only_mesh(body_armature,obj)
                     if not (obj.name in do_not_toggle_bodygroups):
                         if obj.name in hidden_by_default_bodygroups:
                             #ignore weird formatting below, indenting it will mess it up. - @989onan
@@ -2959,7 +2974,6 @@ def crossfade(val, min_x, max_x, middle_percent):
 # Shape Key Operators
 # -------------------------------------------------------------------
 
-@wrapper_registry
 class FT_OT_CreateShapeKeys(Operator):
     """Creates SRanipal Facetracking Shape Keys"""
     bl_label = "Create SRanipal Face Tracking Shape Keys"
