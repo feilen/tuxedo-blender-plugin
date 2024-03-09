@@ -249,7 +249,7 @@ class BakePresetQuest(bpy.types.Operator):
         itemgood.name = t('BakePanel.vrc_q_good')
         autodetect_passes(self, context, itemgood, 10000, "QUEST")
         itemmedium = context.scene.bake_platforms.add()
-        itemmedium.name = t('BakePanel.vrc_q_good')
+        itemmedium.name = t('BakePanel.vrc_q_medium')
         autodetect_passes(self, context, itemmedium, 15000, "QUEST")
         context.scene.bake_animation_weighting = True
         return {'FINISHED'}

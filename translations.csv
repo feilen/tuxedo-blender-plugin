@@ -247,7 +247,7 @@ GmodPanel.gmod_visibility.list_label,"Gmod Game Visibility",,
 
 BakePanel.vrc_q_excellent,"VRChat Quest Excellent",,
 BakePanel.vrc_q_good,"VRChat Quest Good",,
-BakePanel.vrc_q_good,"VRChat Quest Medium",,
+BakePanel.vrc_q_medium,"VRChat Quest Medium",,
 BakePanel.vrc_d_excellent,"VRChat Desktop Excellent",,
 BakePanel.vrc_d_good,"VRChat Desktop Good",,
 BakePanel.second_life,"Second Life",,
