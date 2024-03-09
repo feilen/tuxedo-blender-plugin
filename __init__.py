@@ -80,34 +80,39 @@ def register():
     print("========= TUXEDO REGISTRY FINISHED =========")
     #needs to be after registering properties, because it accesses a property - @989onan
     print("========= READING STEAM REGISTRY KEYS FOR GMOD =========")
-    import subprocess
-    import sys
-    batch_path = dirname(__file__)+"/assets/tools/readregistrysteamkey.bat"
-    process = subprocess.Popen([batch_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = process.communicate()
     
-    if out:
-        print("found steam install, it is")
-        print(out)
-        libraryfolders = str(out.decode()).replace("b", "").strip().replace("\"","")[:-9]+"steamapps/libraryfolders.vdf"
+    try:
+        import subprocess
+        import sys
+        batch_path = dirname(__file__)+"/assets/tools/readregistrysteamkey.bat"
+        process = subprocess.Popen([batch_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = process.communicate()
         
-        print("rooting around in your steam libraries for gmod...")
-        f = open(libraryfolders, "r")
-        library_path = ""
-        for line in f.readlines():
-            #print(line)
-            if line.strip().startswith("\"path\""):
-                print("found a library")
-                print("previous library didn't have garry's mod")
-                library_path = line.strip().replace("\\\\", "/").replace("\"path\"", "").strip().replace("\"","")+"/"
-                print(library_path)
-            else:
-                if line.strip().startswith("\"4000\""):
-                    print("above library has garrys mod, setting to that.")
-                    set_steam_library(library_path)
-                    break
-    else:
-        print("could not find steam install! Please check your steam installation!")
+        if out:
+            print("found steam install, it is")
+            print(out)
+            libraryfolders = str(out.decode()).replace("b", "").strip().replace("\"","")[:-9]+"steamapps/libraryfolders.vdf"
+            
+            print("rooting around in your steam libraries for gmod...")
+            f = open(libraryfolders, "r")
+            library_path = ""
+            for line in f.readlines():
+                #print(line)
+                if line.strip().startswith("\"path\""):
+                    print("found a library")
+                    print("previous library didn't have garry's mod")
+                    library_path = line.strip().replace("\\\\", "/").replace("\"path\"", "").strip().replace("\"","")+"/"
+                    print(library_path)
+                else:
+                    if line.strip().startswith("\"4000\""):
+                        print("above library has garrys mod, setting to that.")
+                        set_steam_library(library_path)
+                        break
+        else:
+            print("could not find steam install! Please check your steam installation!")
+    except Exception as e:
+        print("Could not read steam libraries! Error below.")
+        print(e)
     print("========= FINISHED READING STEAM REGISTRY KEYS FOR GMOD =========")
     
 
