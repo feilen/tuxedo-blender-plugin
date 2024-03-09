@@ -7,7 +7,7 @@ import bpy
 # Lookup table of expected samples. Bear in mind that these are linear colorspace!
 sampling_lookup = {
     'bake.AOtest.blend': {
-        'SCRIPT_ao.png': {
+        'SCRIPT_ao0.png': {
             # Blender 3.4 changed the packing ever so slightly in a way that affects AOtest
             # apparently fixed in 3.5?
             (15,145) if (3, 5, 0) > bpy.app.version >= (3, 4, 0) else (145,15): (0,0,0,255),
@@ -28,7 +28,7 @@ sampling_lookup = {
         }
     },
     'bake.eyetest.blend': {
-        'SCRIPT_diffuse.png': {
+        'SCRIPT_diffuse0.png': {
             # For some reason Blender 2.93 ends up with values off-by-one (but not alpha)
             #(64,64): (0,255,255,255),
             # (178,55): (255,0,255,255),
@@ -37,7 +37,7 @@ sampling_lookup = {
         }
     },
     'bake.bakematerialtest.blend': {
-        'SCRIPT_diffuse.png': {
+        'SCRIPT_diffuse0.png': {
             (0,0): (128,128,128,255),
             (215,40): (255,0,0,255),
             (215,7): (0,0,255,255),
@@ -50,26 +50,26 @@ sampling_lookup = {
             (96,160): (188,188,188,255),
             (96,220): (188,188,188,255),
         },
-        'SCRIPT_emission.png': {
+        'SCRIPT_emission0.png': {
             (0,0): (0,0,0,255),
             (215,48): (252,252,252,255),
             (215,63): (55,55,55,255),
         },
-        'SCRIPT_metallic.png': {
+        'SCRIPT_metallic0.png': {
             (0,0): (0,0,0,255),
             (215,32): (215,215,215,255)
         },
-        'SCRIPT_smoothness.png': {
+        'SCRIPT_smoothness0.png': {
             (0,0): (0,0,0,255),
             (96,165): (128,128,128,255),
             (215,24): (122,122,122,255),
             (215,17): (234,234,234,255)
         },
-        'SCRIPT_alpha.png': {
+        'SCRIPT_alpha0.png': {
             (0,0): (255,255,255,255),
             (216,0): (36,36,36,255)
         },
-        'VRChat Desktop Excellent metallic.png': {
+        'VRChat Desktop Excellent metallic0.png': {
             (215,17): (0,0,0,234),
             (96,220): (0,0,0,127),
             (216,0): (0,0,0,127),
@@ -87,7 +87,7 @@ sampling_lookup = {
             (215,63): (0,0,0,127),
             (215,40): (64,0,0,127),
         },
-        'VRChat Desktop Excellent diffuse.png': {
+        'VRChat Desktop Excellent diffuse0.png': {
             (215,17): (0,255,0,255),
             (96,220): (188,188,188,255),
             (216,0): (0,0,255,36),
@@ -105,7 +105,7 @@ sampling_lookup = {
             (215,63): (0,0,0,255),
             (215,40): (255,0,0,255),
         },
-        'VRChat Desktop Excellent normal.png': {
+        'VRChat Desktop Excellent normal0.png': {
             (215,17): (128,128,255,255),
             (96,220): (127,127,255,255),
             (98,32): (127,127,255,255),
@@ -121,7 +121,7 @@ sampling_lookup = {
             (215,63): (128,127,255,255),
             (215,40): (128,127,255,255),
         },
-        'VRChat Quest Excellent metallic.png': {
+        'VRChat Quest Excellent metallic0.png': {
             (215,17): (0,0,0,234),
             (96,220): (0,0,0,127),
             (216,0): (0,0,0,127),
@@ -139,7 +139,7 @@ sampling_lookup = {
             (215,63): (0,0,0,127),
             (215,40): (64,0,0,127),
         },
-        'VRChat Quest Excellent alpha.png': {
+        'VRChat Quest Excellent alpha0.png': {
             (215,17): (255,255,255,255),
             (96,220): (255,255,255,255),
             (216,0): (36,36,36,255),
@@ -157,7 +157,7 @@ sampling_lookup = {
             (215,63): (255,255,255,255),
             (215,40): (255,255,255,255),
         },
-        'VRChat Quest Excellent smoothness.png': {
+        'VRChat Quest Excellent smoothness0.png': {
             (215,17): (234,234,234,255),
             (96,220): (127,127,127,255),
             (216,0): (127,127,127,255),
@@ -175,7 +175,7 @@ sampling_lookup = {
             (215,63): (127,127,127,255),
             (215,40): (127,127,127,255),
         },
-        'VRChat Quest Excellent diffuse.png': {
+        'VRChat Quest Excellent diffuse0.png': {
             (215,17): (0,255,0,255),
             (96,220): (188,188,188,255),
             (216,0): (0,0,255,255),
@@ -193,7 +193,7 @@ sampling_lookup = {
             (215,63): (0,0,0,255),
             (215,40): (255,0,0,255),
         },
-        'VRChat Quest Excellent normal.png': {
+        'VRChat Quest Excellent normal0.png': {
             (215,17): (128,128,255,255),
             (96,220): (127,127,255,255),
             (96,32): (128,128,255,255),
@@ -209,7 +209,7 @@ sampling_lookup = {
             (215,63): (128,127,255,255),
             (215,40): (128,127,255,255),
         },
-        'VRChat Quest Good metallic.png': {
+        'VRChat Quest Good metallic0.png': {
             (215,17): (0,0,0,234),
             (96,220): (0,0,0,127),
             (216,0): (0,0,0,127),
@@ -227,7 +227,7 @@ sampling_lookup = {
             (215,63): (0,0,0,127),
             (215,40): (64,0,0,127),
         },
-        'VRChat Quest Good alpha.png': {
+        'VRChat Quest Good alpha0.png': {
             (215,17): (255,255,255,255),
             (96,220): (255,255,255,255),
             (216,0): (36,36,36,255),
@@ -245,7 +245,7 @@ sampling_lookup = {
             (215,63): (255,255,255,255),
             (215,40): (255,255,255,255),
         },
-        'VRChat Quest Good smoothness.png': {
+        'VRChat Quest Good smoothness0.png': {
             (215,17): (234,234,234,255),
             (96,220): (127,127,127,255),
             (216,0): (127,127,127,255),
@@ -263,7 +263,7 @@ sampling_lookup = {
             (215,63): (127,127,127,255),
             (215,40): (127,127,127,255),
         },
-        'VRChat Quest Good diffuse.png': {
+        'VRChat Quest Good diffuse0.png': {
             (215,17): (0,255,0,255),
             (96,220): (188,188,188,255),
             (216,0): (0,0,255,255),
@@ -281,7 +281,7 @@ sampling_lookup = {
             (215,63): (0,0,0,255),
             (215,40): (255,0,0,255),
         },
-        'VRChat Quest Good normal.png': {
+        'VRChat Quest Good normal0.png': {
             (215,17): (128,128,255,255),
             (96,220): (127,127,255,255),
             (96,32): (128,128,255,255),
@@ -297,7 +297,7 @@ sampling_lookup = {
             (215,63): (128,127,255,255),
             (215,40): (128,127,255,255),
         },
-        'Second Life metallic.png': {
+        'Second Life metallic0.png': {
             (215,17): (0,0,0,255),
             (96,220): (0,0,0,255),
             (216,0): (0,0,0,255),
@@ -315,7 +315,7 @@ sampling_lookup = {
             (215,63): (0,0,0,255),
             (215,40): (64,0,0,255),
         },
-        'Second Life alpha.png': {
+        'Second Life alpha0.png': {
             (215,17): (255,255,255,255),
             (96,220): (255,255,255,255),
             (216,0): (36,36,36,255),
@@ -333,7 +333,7 @@ sampling_lookup = {
             (215,63): (255,255,255,255),
             (215,40): (255,255,255,255),
         },
-        'Second Life smoothness.png': {
+        'Second Life smoothness0.png': {
             (215,17): (234,234,234,255),
             (96,220): (127,127,127,255),
             (216,0): (127,127,127,255),
@@ -351,7 +351,7 @@ sampling_lookup = {
             (215,63): (127,127,127,255),
             (215,40): (127,127,127,255),
         },
-        'Second Life diffuse.png': {
+        'Second Life diffuse0.png': {
             (215,17): (0,255,0,0),
             (96,220): (188,188,188,0),
             (216,0): (0,0,255,0),
@@ -368,7 +368,7 @@ sampling_lookup = {
             (215,63): (55,55,55,55),
             (215,40): (191,0,0,0),
         },
-        'Second Life normal.png': {
+        'Second Life normal0.png': {
             (215,17): (128,128,255,255),
             (96,220): (127,127,255,255),
             (96,32): (128,128,255,255),
