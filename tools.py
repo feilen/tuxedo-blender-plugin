@@ -1653,12 +1653,12 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         context.view_layer.objects.active = armature
         for mesh in refcoll.objects:
             if mesh.type == "MESH":
-                if (not mesh.shown_by_default) and (not mesh.is_toggleable):
+                if (not mesh.gmod_shown_by_default) and (not mesh.gmod_is_toggleable):
                     always_hidden_garbage.append(mesh.name)
                     continue
-                if not mesh.is_toggleable:
+                if not mesh.gmod_is_toggleable:
                     do_not_toggle_bodygroups.append(mesh.name)
-                if not mesh.shown_by_default:
+                if not mesh.gmod_shown_by_default:
                     hidden_by_default_bodygroups.append(mesh.name)
 
         print("deleting always hidden meshes")

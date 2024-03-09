@@ -2019,9 +2019,9 @@ class BakeButton(bpy.types.Operator):
             
             
             
-            
-            # Remove all other materials if we've done at least one bake pass
-            
+           
+            if pass_normal:
+                self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name), (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors, material_name_groups=material_name_groups)
             
             for group_num, group in material_name_groups.items():
                 bpy.ops.object.mode_set(mode='OBJECT')
@@ -2236,8 +2236,6 @@ class BakeButton(bpy.types.Operator):
                 
                 if pass_normal:
                     # Bake tangent normals
-                    self.bake_pass(context, "normal", "NORMAL", set(), get_objects(plat_collection.all_objects, {"MESH"}, filter_func=lambda obj: not "LOD" in obj.name),
-                                   (resolution, resolution), 1 if draft_render else 128, 0, [0.5, 0.5, 1., 1.], True, pixelmargin, solidmaterialcolors=solidmaterialcolors)
                     image = bpy.data.images[platform_img("normal"+str(group_num))]
                     image.colorspace_settings.name = 'Non-Color'
                     normal_image = bpy.data.images["SCRIPT_normal"+str(group_num)+".png"] 
