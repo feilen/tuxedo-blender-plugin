@@ -11,7 +11,7 @@ if is_reloading:
     import importlib
     #reload our imports so they reload when we hit F8.
     importlib.reload(bake)
-    importlib.reload(gmodui)
+    #supressWarnings
     importlib.reload(properties)
     importlib.reload(tools)
     importlib.reload(ui)
@@ -20,12 +20,18 @@ if is_reloading:
     modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
     for ui_obj in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
         exec("importlib.reload("+ui_obj+")")
+    #reload the imports of the tools files
+    modules = glob.glob(join(dirname(__file__), "tools/*.py"))
+    for ui_obj in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
+        exec("importlib.reload("+ui_obj+")")
 else:
-    from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
     from .properties import register_properties, gmod_path, set_steam_library
+    from .tools.tools import SRanipal_Labels
     from bpy.types import Scene
     #this is needed since it doesn't see them unless imported... - @989onan
-    from . import bake, properties, tools, ui
+    from . import bake, properties, ui
+    from . import tools
+    
     from os.path import dirname, basename, isfile, join
     
     #this... is awful I'm sorry but this is the only way of dynamically load all the files under the directory
@@ -33,7 +39,10 @@ else:
     modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
     for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
         exec("from .ui_sections import "+module_name)
-
+    #tools importing same bad way
+    modules = glob.glob(join(dirname(__file__), "tools/*.py"))
+    for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
+        exec("from .tools import "+module_name)
 
 
 bl_info = {

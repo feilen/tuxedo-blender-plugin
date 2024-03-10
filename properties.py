@@ -2,7 +2,10 @@ from bpy.types import Scene, PropertyGroup, Object
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels, materials_list_update
+from .tools.core import get_meshes, get_shapekeys_ft
+from .tools.tools import SRanipal_Labels
+
+from .tools.translate import t
 from .ui import tab_enums
 
 #this is basically a constant, set at launch. There is no reason to need to set this otherwise unless explictly giving only the user the option to do so.

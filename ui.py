@@ -2,10 +2,10 @@ import bpy
 import addon_utils
 
 from . import bake as Bake
-from .tools import t, get_meshes_objects, get_armature
-from .tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
-from .tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-from .tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft, materials_list_update
+from .tools.translate import t
+from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
+from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
+from .tools.core import has_shapekeys, get_shapekeys_ft, materials_list_update, get_meshes_objects
 
 #to make sure all of our ui section tabs get registered, otherwise the @ marker doesn't work on them - @989onan
 from .ui_sections import *

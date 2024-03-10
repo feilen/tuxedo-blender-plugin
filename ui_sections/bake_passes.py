@@ -1,14 +1,9 @@
 import bpy
 
-from .. import bake as Bake
-from ..tools import t, get_meshes_objects, get_armature
-from ..tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
-from ..tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-from ..tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft, materials_list_update
+from ..tools.translate import t
 
-from ..class_register import wrapper_registry
+
 from ..ui import register_ui_tab #need this for registering our class to the ui
-from ..ui import *
 
 
 #Making a class that looks like a blender panel just to use it to cut the code up for tabs

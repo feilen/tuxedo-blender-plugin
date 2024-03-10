@@ -1,12 +1,8 @@
 import bpy
 import addon_utils
 
-from .. import bake as Bake
 from ..properties import get_steam_library
-from ..tools import t, get_meshes_objects, get_armature
-from ..tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys
-from ..tools import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-from ..tools import FitClothes, SRanipal_Labels, has_shapekeys, get_shapekeys_ft, materials_list_update
+from ..tools.translate import t
 
 from bpy.types import UIList, Operator, Panel
 from bpy_extras.io_utils import ImportHelper

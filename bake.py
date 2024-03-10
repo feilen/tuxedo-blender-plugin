@@ -3,17 +3,14 @@
 import os
 import bpy
 import math
-import webbrowser
 import numpy as np
 import subprocess
 import shutil
-import threading
 from subprocess import DEVNULL
 
 from .class_register import wrapper_registry
-
-from .tools import t, patch_fbx_exporter, ExportGmodPlayermodel, materials_list_update
-from .tools import get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
+from .tools.translate import t
+from .tools.core import mix_weights, patch_fbx_exporter, materials_list_update, get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
 
 if bpy.app.version >= (4, 0, 0):
     EMISSION_INPUT = "Emission Color"
