@@ -1,7 +1,6 @@
 import os
 import typing
 import bpy
-import pathlib
 version = (0, 4, 2)
 blender = (4, 0)
 
@@ -32,6 +31,8 @@ import_types = {
     "mtl": (lambda directory, files, filepath : bpy.ops.import_scene.obj(files=files, directory=directory, filepath=filepath)),
     "x3d": (lambda directory, files, filepath : bpy.ops.import_scene.x3d(files=files, directory=directory, filepath=filepath)),
     "wrl": (lambda directory, files, filepath : bpy.ops.import_scene.x3d(files=files, directory=directory, filepath=filepath)),
+    "vmd": (lambda directory, files, filepath : bpy.ops.tuxedo.import_mmd_animation(files=files, directory=directory, filepath=filepath)),
+    "pmx": (lambda directory, files, filepath : bpy.ops.mmd_tools.import_model(files=files, directory=directory, filepath=filepath)),
 }
 
 def concat_imports_filter(imports):

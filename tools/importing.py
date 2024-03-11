@@ -4,7 +4,7 @@ from bpy_types import Operator
 from bpy_extras.io_utils import ImportHelper
 import os
 import pathlib
-from .core import open_web_after_delay_multi_threaded
+import core
 
 from .translate import t
 
@@ -79,9 +79,9 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
             except AttributeError as e:
                 print("Warning, you may not have the required importer!")
                 
-                open_web_after_delay_multi_threaded(delay=12, url="https://search.brave.com/search?q=blender+"+file_group_name+"+importer+addon&source=web")
+                core.open_web_after_delay_multi_threaded(delay=12, url=t('Importing.importer_search_term').format("extension",file_group_name))
 
-                self.report({'ERROR'},"You do not have the required importer for the \"."+file_group_name+"\" type! Opening web browser for importer search term...")
+                self.report({'ERROR'},t('Importing.need_importer').format("extension", file_group_name))
 
                 print("importer error was:")
                 print(e)
@@ -91,3 +91,122 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
 
         return {'FINISHED'}
 
+
+
+#stolen from cats. Oh wait I made this code riiiiiiight - @989onan
+class ImportMMDAnimation(bpy.types.Operator,ImportHelper):
+    bl_idname = 'tuxedo.import_mmd_animation'
+    bl_label = t('Importer.mmd_anim_importer.label')
+    bl_description = t('Importer.mmd_anim_importer.desc')
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    filter_glob: bpy.props.StringProperty(
+        default="*.vmd",
+        options={'HIDDEN'}
+    )
+
+    @classmethod
+    def poll(cls, context):
+        if core.get_armature() is None:
+            return False
+        return True
+
+    def execute(self, context):
+
+        # Make sure that the first layer is visible
+        if hasattr(context.scene, 'layers'):
+            context.scene.layers[0] = True
+
+        filename, extension = os.path.splitext(self.filepath)
+
+        if(extension == ".vmd"):
+
+            #A dictionary to change the current model to MMD importer compatable temporarily
+            bonedict = {
+                "Chest":"UpperBody",
+                "Neck":"Neck",
+                "Head":"Head",
+                "Hips":"Center",
+                "Spine":"LowerBody",
+
+                "Right wrist":"Wrist_R",
+                "Right elbow":"Elbow_R",
+                "Right arm":"Arm_R",
+                "Right shoulder":"Shoulder_R",
+                "Right leg":"Leg_R",
+                "Right knee":"Knee_R",
+                "Right ankle":"Ankle_R",
+                "Right toe":"Toe_R",
+
+
+                "Left wrist":"Wrist_L",
+                "Left elbow":"Elbow_L",
+                "Left arm":"Arm_L",
+                "Left shoulder":"Shoulder_L",
+                "Left leg":"Leg_L",
+                "Left knee":"Knee_L",
+                "Left ankle":"Ankle_L",
+                "Left toe":"Toe_L"
+
+            }
+
+            armature = core.get_armature()
+            new_armature = armature.copy()
+            bpy.context.collection.objects.link(new_armature)
+            new_armature.data = armature.data.copy()
+            new_armature.name = "Cats MMD Rig Proxy"
+            new_armature.animation_data_clear()
+
+            core.unselect_all()
+            core.Set_Mode('OBJECT')
+            core.unselect_all()
+            core.set_active(new_armature)
+            
+            for bone in new_armature.data.bones:
+                if bone.name in bonedict:
+                    bone.name = bonedict[bone.name]
+            try:
+                bpy.ops.mmd_tools.import_vmd(filepath=self.filepath,bone_mapper='RENAMED_BONES',use_underscore=True, dictionary='INTERNAL')
+            except AttributeError as e:
+                core.open_web_after_delay_multi_threaded(delay=12, url=t('Importing.importer_search_term').format("extension",file_group_name))
+                self.report({'ERROR'},t('Importing.need_importer').format("extension", "MMD"))
+                print("importer error was:")
+                print(e)
+                return {'CANCELLED'}
+                
+
+            #create animation for original if there isn't one.
+            if armature.animation_data == None :
+                armature.animation_data_create()
+            if armature.animation_data.action == None:
+                armature.animation_data.action = bpy.data.actions.new("MMD Animation")
+
+
+            #create animation for new if there isn't one.
+            if new_armature.animation_data == None :
+                new_armature.animation_data_create()
+            if new_armature.animation_data.action == None:
+                new_armature.animation_data.action = bpy.data.actions.new("EMPTY_SOURCE")
+
+            active_obj = new_armature
+            ad = armature.animation_data
+
+            #iterate through bones and translate them back, therefore blender API will change the animation to be correct.
+            reverse_bonedict = {v: k for k, v in bonedict.items()}
+            for bone in new_armature.data.bones:
+                if bone.name in reverse_bonedict:
+                    bone.name = reverse_bonedict[bone.name] #reverse name of bone from value in dictionary back to a key to change the animation.
+
+            #assign animation back to original rig.
+            armature.animation_data.action = new_armature.animation_data.action
+
+            #make sure our new armature is selected
+            core.unselect_all()
+            core.Set_Mode('OBJECT')
+            core.unselect_all()
+            core.set_active(new_armature)
+
+            #delete active object which is armature.
+            bpy.ops.object.delete(use_global=True, confirm=False)
+        
+        return {'FINISHED'}
