@@ -1,8 +1,6 @@
 # GPL Licence
-from uu import Error
 import bpy
 from bpy_types import Operator
-import webbrowser
 from bpy_extras.io_utils import ImportHelper
 import os
 import pathlib
@@ -22,7 +20,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
     bl_label = t('Tools.import_any_model.label')
     bl_description = t('Tools.import_any_model.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    files = bpy.props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN', 'SKIP_SAVE'})
+    files: bpy.props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN', 'SKIP_SAVE'})
     
     
     filter_glob: bpy.props.StringProperty(default = imports, options={'HIDDEN','SKIP_SAVE'})
@@ -41,14 +39,15 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
             for file in self.files:
                 pass
             is_multi = True
-        except:
+        except Exception as e:
             is_multi = False
+            print(e)
 
         #put the files together into lists of same importers
             
         if(is_multi):
             for file in self.files:
-                fullpath = os.path.join(os.path.dirname(file.name),os.path.basename(file.name))
+                fullpath = os.path.join(self.directory,os.path.basename(file.name))
                 name = pathlib.Path(fullpath).suffix.replace(".","")
                 #this makes sure our imports that should be grouped stay together.
                 #basically the method checks for if the first value has a lambda with the same bytecode as another lambda, then it will use that value's key (ex:"obj"<->"mtl" or "fbx"), keeping same importers together
@@ -80,9 +79,12 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
             except AttributeError as e:
                 print("Warning, you may not have the required importer!")
                 
-                open_web_after_delay_multi_threaded(delay=12, url="https://search.brave.com/search?q=blender+"+file_group_name+"+importer+addon&source=web")
+                #open_web_after_delay_multi_threaded(delay=12, url="https://search.brave.com/search?q=blender+"+file_group_name+"+importer+addon&source=web")
 
                 self.report({'ERROR'},"You do not have the required importer for the \"."+file_group_name+"\" type! Opening web browser for importer search term...")
+
+                print("importer error was:")
+                print(e)
                 
         
 
