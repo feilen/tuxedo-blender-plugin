@@ -79,7 +79,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
             except AttributeError as e:
                 print("Warning, you may not have the required importer!")
                 
-                #open_web_after_delay_multi_threaded(delay=12, url="https://search.brave.com/search?q=blender+"+file_group_name+"+importer+addon&source=web")
+                open_web_after_delay_multi_threaded(delay=12, url="https://search.brave.com/search?q=blender+"+file_group_name+"+importer+addon&source=web")
 
                 self.report({'ERROR'},"You do not have the required importer for the \"."+file_group_name+"\" type! Opening web browser for importer search term...")
 
