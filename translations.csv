@@ -337,4 +337,18 @@ GmodPanel.gmod_not_found,"Your gmod install was not found! Check Warnings!",,
 advanced_platform_options_desc,"Advanced platform options like export formats and data generators like for physics models.",,
 GmodPanel.panel_desc,"The different options to use when compiling a Garry's Mod model.",,
 
+ToolPanel.tools.label,"Tools",,
 
+
+Importing.import_any_model.label,"Import Any Model",,
+Importing.import_any_model.desc,"Import almost any model. This combines multiple blender importers into one import window.",,
+
+Tuxedo.unsupported_version.1,"Potentially unsupported version detected!",,
+Tuxedo.unsupported_version.2,"Some features may not work",,
+Tuxedo.unsupported_version.3,"Current version supported is {ver}",,
+
+Tools.import_any_model.label,"Import Any Model",,
+Tools.import_any_model.desc,"Import almost any model into Blender. Contact us if you want one added.",,
+
+Importing.import_any_model.label,"Import Model",,
+Importing.import_any_model.desc,"Panel for importing any model into Blender 3D",,

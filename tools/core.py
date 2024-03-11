@@ -6,6 +6,8 @@ import bmesh
 import math
 from io_scene_fbx import fbx_utils
 
+from ..globals import blenderversion
+
 # Core is the file where simple and complex methods but not classes used by many things go
 # this stores how we do simple functions that happen multiple times, and may need version checking
 # because of this, DONT PUT CLASSES HERE.
@@ -321,6 +323,20 @@ def duplicate_shapekey(string):
 
 def version_2_79_or_older():
     return bpy.app.version < (2, 80)
+
+#this is done because the version our addon is made for may not be minor or patch specific. In this case, just check what we specify for our version
+#This allows us to specify "(4, 0)" and ignore any 4.0.x version patches. - @989onan
+def version_too_new():
+    is_too_new = False
+
+    for i in range(0,3):
+        try:
+            if (bpy.app.version[i] > blenderversion[i]):
+                is_too_new = True
+        except Exception:
+            pass
+    
+    return is_too_new
 
 def unselect_all():
     for obj in get_objects():

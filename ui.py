@@ -168,11 +168,12 @@ class Open_GPU_Settings(Operator):
 
 @wrapper_registry
 class ToolPanel(Panel):
-    bl_label = "Tools"
+    bl_label = t('ToolPanel.tools.label')
     bl_idname = 'VIEW3D_PT_tuxtools'
     bl_category = 'Tuxedo'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_order = 1
 
     def draw(self, context):
         layout = self.layout
@@ -272,6 +273,7 @@ def tab_enums(self, context):
 
 @wrapper_registry
 class BakePanel(Panel):
+    bl_order = 2
     bl_label = "Tuxedo Bake"
     bl_idname = 'VIEW3D_PT_tuxbake'
     bl_category = 'Tuxedo'
@@ -434,6 +436,7 @@ class BakePanel(Panel):
 
 @wrapper_registry
 class FT_Shapes_UL(Panel):
+    bl_order = 3
     bl_label = t('FT.shapes_panel_label')
     bl_idname = "FT_Shapes"
     bl_space_type = 'VIEW_3D'

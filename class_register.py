@@ -12,22 +12,15 @@ def wrapper_registry(class_obj):
     
 
 def order_classes():
-    global ordered_classes
     deps_dict = {}
     classes_to_register = set(iter_classes_to_register())
     for class_obj in classes_to_register:
         deps_dict[class_obj] = set(iter_own_register_deps(class_obj, classes_to_register))
 
-    # Put all the UI into the list first
-    ordered_classes = []
-    for class_obj in classes:
-        if class_obj.__module__.startswith('ui.'):
-            ordered_classes.append(class_obj)
-
+    ordered_classes.clear()
     # Then put everything else sorted into the list
     for class_obj in toposort(deps_dict):
-        if not class_obj.__module__.startswith('ui.'):
-            ordered_classes.append(class_obj)
+        ordered_classes.append(class_obj)
 
 
 def iter_classes_to_register():
@@ -68,4 +61,15 @@ def toposort(deps_dict):
             else:
                 unsorted.append(value)
         deps_dict = {value : deps_dict[value] - sorted_values for value in unsorted}
+    
+    sort_order(sorted_list) #to sort by 'bl_order' so we can choose how things may appear in the ui
     return sorted_list
+
+def sort_order(sorted_list):
+    ordered_list = []
+    for classes in sorted_list:
+        if hasattr(classes, 'bl_order'):
+            ordered_list.append(classes)
+            sorted_list.remove(classes)
+    ordered_list.sort(key=lambda x: x.bl_order, reverse=False)
+    sorted_list.extend(ordered_list)
