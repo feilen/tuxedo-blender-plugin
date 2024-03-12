@@ -9,7 +9,7 @@ def import_multi_files(method = None, directory: typing.Optional[str] = None, fi
         method(directory, filepath)
     else:
         for file in files:
-            fullpath = os.path.join(directory,os.path.basename(file.name))
+            fullpath = os.path.join(directory,os.path.basename(file["name"]))
             print("run method!")
             method(directory, fullpath)
 
@@ -31,8 +31,9 @@ import_types = {
     "mtl": (lambda directory, files, filepath : bpy.ops.import_scene.obj(files=files, directory=directory, filepath=filepath)),
     "x3d": (lambda directory, files, filepath : bpy.ops.import_scene.x3d(files=files, directory=directory, filepath=filepath)),
     "wrl": (lambda directory, files, filepath : bpy.ops.import_scene.x3d(files=files, directory=directory, filepath=filepath)),
-    "vmd": (lambda directory, files, filepath : bpy.ops.tuxedo.import_mmd_animation(files=files, directory=directory, filepath=filepath)),
+    "vmd": (lambda directory, files, filepath : import_multi_files(directory=directory, files=files, filepath=filepath, method = (lambda directory, filepath: bpy.ops.tuxedo.import_mmd_animation(directory=directory, filepath=filepath)))),
     "pmx": (lambda directory, files, filepath : bpy.ops.mmd_tools.import_model(files=files, directory=directory, filepath=filepath)),
+    "pmd": (lambda directory, files, filepath : bpy.ops.mmd_tools.import_model(files=files, directory=directory, filepath=filepath)),
 }
 
 def concat_imports_filter(imports):

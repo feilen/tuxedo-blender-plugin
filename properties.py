@@ -1,9 +1,10 @@
-from bpy.types import Scene, PropertyGroup, Object
+from bpy.types import Scene, PropertyGroup, Object, OperatorFileListElement
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
 from .tools.core import get_meshes, get_shapekeys_ft
 from .tools.tools import SRanipal_Labels
+from .globals import import_types
 
 from .tools.translate import t
 from .ui import tab_enums

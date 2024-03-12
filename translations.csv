@@ -352,7 +352,7 @@ Tools.import_any_model.desc,"Import almost any model into Blender. Contact us if
 
 Importing.import_any_model.label,"Import Model",,
 Importing.import_any_model.desc,"Panel for importing any model into Blender 3D",,
-Importing.need_importer, "You do not have the required importer for the ""{extension}"" type! Opening web browser for importer search term...",,
+Importing.need_importer, "You do not have the required importer for the {extension} type! Opening web browser for importer search term...",,
 Importer.mmd_anim_importer.label,"MMD Animation",,
 Importer.mmd_anim_importer.desc,"Import a MMD Animation (.vmd)",,
 Importing.importer_search_term,"https://search.brave.com/search?q=blender+{extension}+importer+addon&source=web",,
