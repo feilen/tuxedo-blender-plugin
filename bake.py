@@ -6,11 +6,10 @@ import math
 import numpy as np
 import subprocess
 import shutil
-from subprocess import DEVNULL
 
 from .class_register import wrapper_registry
 from .tools.translate import t
-from .tools.core import mix_weights, patch_fbx_exporter, materials_list_update, get_tricount, get_meshes_objects, shape_key_to_basis, merge_bone_weights_to_respective_parents, get_armature, has_shapekeys, join_meshes, get_children_recursive, add_shapekey
+from .tools import core
 
 if bpy.app.version >= (4, 0, 0):
     EMISSION_INPUT = "Emission Color"
@@ -47,7 +46,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
     # Autodetect passes based on BSDF node inputs
     bsdf_nodes = []
     output_mat_nodes = []
-    objects = get_objects(get_meshes_objects(context), filter_func=lambda obj:
+    objects = get_objects(core.get_meshes_objects(context), filter_func=lambda obj:
                           not obj.hide_get() or not context.scene.bake_ignore_hidden)
     for obj in objects:
         for slot in obj.material_slots:
@@ -62,7 +61,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
                     if node.type == "BSDF_PRINCIPLED":
                         bsdf_nodes.append(node)
     # Decimate if we're over the limit
-    total_tricount = sum(get_tricount(obj) for obj in objects)
+    total_tricount = sum(core.get_tricount(obj) for obj in objects)
     item.use_decimation = total_tricount > tricount
     
     # Diffuse: on if >1 unique color input or if any has non-default base color input on bsdf
@@ -94,7 +93,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
 
     context.scene.bake_pass_detail = False
 
-    if any("Target" in obj.data.uv_layers for obj in get_meshes_objects(context)):
+    if any("Target" in obj.data.uv_layers for obj in core.get_meshes_objects(context)):
         context.scene.bake_uv_overlap_correction = 'MANUAL'
     elif any(plat.use_decimation for plat in context.scene.bake_platforms) and context.scene.bake_pass_normal:
         context.scene.bake_uv_overlap_correction = 'UNMIRROR'
@@ -199,7 +198,7 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
         else:
             item.diffuse_alpha_pack = "NONE"
 
-        item.use_decimation = max(get_tricount(obj) for obj in objects) > 9950
+        item.use_decimation = max(core.get_tricount(obj) for obj in objects) > 9950
 
 
 
@@ -376,7 +375,7 @@ class BakeButton(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        for obj in get_meshes_objects(context):
+        for obj in core.get_meshes_objects(context):
             if obj.name not in context.view_layer.objects:
                 continue
             if obj.hide_get():
@@ -754,7 +753,7 @@ class BakeButton(bpy.types.Operator):
             BakeButton.select_and_set_active_object(context, obj)
         BakeButton.change_value_node_for_materials(objects, bake_name, reverse_material_name_dict)
         BakeButton.assign_bake_node_for_materials(objects, bake_name, reverse_material_name_dict)
-        materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
+        core.materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
         BakeButton.run_bake(context, bake_type, bake_pass_filter, bake_samples, clear, bake_active, bake_margin, bake_multires, normal_space, bake_ray_distance)
         BakeButton.reset_value_node_for_materials(objects, bake_name)
         for group_num,group in material_name_groups.items():
@@ -803,12 +802,12 @@ class BakeButton(bpy.types.Operator):
         return recurse(ob, ob.parent, 0, ignore_hidden, view_layer=view_layer)
 
     def execute(self, context):
-        if not get_objects(get_meshes_objects(context), filter_func=lambda obj:
+        if not get_objects(core.get_meshes_objects(context), filter_func=lambda obj:
                            not obj.hide_get() or not context.scene.bake_ignore_hidden):
             self.report({'ERROR'}, t('tuxedo_bake.error.no_meshes'))
             return {'FINISHED'}
         if any(obj.hide_render and not obj.hide_get()
-               for obj in get_armature(context).children
+               for obj in core.get_armature(context).children
                if obj.name in context.view_layer.objects):
             self.report({'ERROR'}, t('tuxedo_bake.error.render_disabled'))
             return {'FINISHED'}
@@ -835,7 +834,7 @@ class BakeButton(bpy.types.Operator):
         context.scene.decimation_animation_weighting_factor = context.scene.bake_animation_weighting_factor
         context.scene.decimation_animation_weighting_include_shapekeys = context.scene.bake_animation_weighting_include_shapekeys
         
-        materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
+        core.materials_list_update(context) #Make sure materials list is up to date. Yes the unaccounted for materials will be added to group "0". This is fine.
         
         self.perform_bake(context)
 
@@ -935,7 +934,7 @@ class BakeButton(bpy.types.Operator):
         optimize_solid_materials = optimize_solid_materials and (not any(plat.use_decimation for plat in context.scene.bake_platforms)) and (not pass_ao) and (not pass_normal)
 
         # Save reference to original armature
-        armature = get_armature(context)
+        armature = core.get_armature(context)
         orig_armature_name = armature.name
 
         # Create an output collection
@@ -1270,7 +1269,7 @@ class BakeButton(bpy.types.Operator):
                             for material_name in group:
                                 print("selecting material "+material_name+" in group "+str(group_num))
                                 
-                                for mesh in get_meshes_objects(context, armature_name=get_armature(context).name):
+                                for mesh in core.get_meshes_objects(context, armature_name=core.get_armature(context).name):
                                     context.view_layer.objects.active = mesh
                                     mesh.select_set(True)
                                     bpy.ops.object.mode_set(mode='EDIT')
@@ -1319,7 +1318,7 @@ class BakeButton(bpy.types.Operator):
                                 for material_name in group:
                                     print("selecting material "+material_name+" in group "+str(group_num))
                                     
-                                    for mesh in get_meshes_objects(context, armature_name=get_armature(context).name):
+                                    for mesh in core.get_meshes_objects(context, armature_name=core.get_armature(context).name):
                                         context.view_layer.objects.active = mesh
                                         mesh.select_set(True)
                                         bpy.ops.object.mode_set(mode='EDIT')
@@ -1358,7 +1357,7 @@ class BakeButton(bpy.types.Operator):
                                 for material_name in group:
                                     print("selecting material "+material_name+" in group "+str(group_num))
                                     
-                                    for mesh in get_meshes_objects(context, armature_name=get_armature(context).name):
+                                    for mesh in core.get_meshes_objects(context, armature_name=core.get_armature(context).name):
                                         context.view_layer.objects.active = mesh
                                         mesh.select_set(True)
                                         bpy.ops.object.mode_set(mode='EDIT')
@@ -1528,7 +1527,7 @@ class BakeButton(bpy.types.Operator):
         shapekey_values = dict()
         if not apply_keys:
             for obj in get_objects(collection.all_objects):
-                if has_shapekeys(obj):
+                if core.has_shapekeys(obj):
                     # This doesn't work for keys which have different starting
                     # values... but generally that's not what you should do anyway
                     for key in obj.data.shape_keys.key_blocks:
@@ -1544,9 +1543,9 @@ class BakeButton(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
         if apply_keys:
-            for obj in get_objects(collection.all_objects, filter_func=lambda obj: has_shapekeys(obj)):
-                add_shapekey(obj, "Tuxedo applykey", True)
-                shape_key_to_basis(context, obj, "Tuxedo applykey")
+            for obj in get_objects(collection.all_objects, filter_func=lambda obj: core.has_shapekeys(obj)):
+                core.add_shapekey(obj, "Tuxedo applykey", True)
+                core.shape_key_to_basis(context, obj, "Tuxedo applykey")
                 obj.active_shape_key_index = 0
                 # Ensure all keys are now set to 0.0
                 for key in obj.data.shape_keys.key_blocks:
@@ -1598,7 +1597,7 @@ class BakeButton(bpy.types.Operator):
                 if world_color:
                      tuxedo_world.color = world_color
                 # Enable all AO keys
-                for obj in get_objects(collection.all_objects, filter_func=lambda obj: has_shapekeys(obj)):
+                for obj in get_objects(collection.all_objects, filter_func=lambda obj: core.has_shapekeys(obj)):
                     for key in obj.data.shape_keys.key_blocks:
                         if ('ambient' in key.name.lower() and 'occlusion' in key.name.lower()) or key.name[-3:] == '_ao':
                             key.value = 1.0
@@ -1639,7 +1638,7 @@ class BakeButton(bpy.types.Operator):
                                           )
                 # Disable all AO keys
                 for obj in get_objects(collection.all_objects):
-                    if has_shapekeys(obj):
+                    if core.has_shapekeys(obj):
                         for key in obj.data.shape_keys.key_blocks:
                             if ('ambient' in key.name.lower() and 'occlusion' in key.name.lower()) or key.name[-3:] == '_ao':
                                 key.value = 0.0
@@ -1831,7 +1830,7 @@ class BakeButton(bpy.types.Operator):
                                    if not 'twist' in otherbone.lower()):
                                 editbone.select = False
                 if context.selected_editable_bones:
-                    merge_bone_weights_to_respective_parents(context, plat_arm_copy, [bone.name for bone in context.selected_editable_bones])
+                    core.merge_bone_weights_to_respective_parents(context, plat_arm_copy, [bone.name for bone in context.selected_editable_bones])
                 bpy.ops.object.mode_set(mode="OBJECT")
 
             if prop_bone_handling == "GENERATE":
@@ -1893,7 +1892,7 @@ class BakeButton(bpy.types.Operator):
                         elif not only_deformed_mesh_for_bone:
                             # if newbonename already exists as a name, merge new vgroup with existing
                             # this means "Obj" and "Obj.001" will get the same bone
-                            mix_weights(obj, obj.vertex_groups[vgroup_name], obj.vertex_groups[newbonename])
+                            core.mix_weights(obj, obj.vertex_groups[vgroup_name], obj.vertex_groups[newbonename])
                             obj.vertex_groups.remove(vgroup_name)
 
                         context.view_layer.objects.active = plat_arm_copy
@@ -2010,7 +2009,7 @@ class BakeButton(bpy.types.Operator):
             else:
                 # join meshes here if we didn't decimate
                 if export_format != "GMOD":
-                    join_meshes(context, armature_name=plat_arm_copy.name)
+                    core.join_meshes(context, armature_name=plat_arm_copy.name)
             
             
             
@@ -2263,7 +2262,7 @@ class BakeButton(bpy.types.Operator):
                 # Reapply keys
                 if not apply_keys:
                     for obj in get_objects(plat_collection.all_objects):
-                        if has_shapekeys(obj):
+                        if core.has_shapekeys(obj):
                             for key in obj.data.shape_keys.key_blocks:
                                 if key.name in shapekey_values:
                                     key.value = shapekey_values[key.name]
@@ -2498,18 +2497,18 @@ class BakeButton(bpy.types.Operator):
                             modifier.render_levels = modifier.total_levels
 
                 bpy.ops.object.select_all(action='DESELECT')
-                for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"}):
+                for obj in get_objects(core.get_children_recursive(plat_arm_copy), {"MESH"}):
                     obj.select_set(True)
 
                 # Join to save on skinned mesh renderers
                 # 989onan - We don't want this for Gmod since Gmod allows for multiple object groups.
                 if export_format != "GMOD":
-                    join_meshes(context, armature_name=plat_arm_copy.name)
-                    for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"}):
+                    core.join_meshes(context, armature_name=plat_arm_copy.name)
+                    for obj in get_objects(core.get_children_recursive(plat_arm_copy), {"MESH"}):
                         obj['tuxedoForcedExportName'] = orig_largest_obj_name
 
             # Prep export group 1
-            export_groups[0][1].extend(obj.name for obj in get_children_recursive(plat_arm_copy))
+            export_groups[0][1].extend(obj.name for obj in core.get_children_recursive(plat_arm_copy))
 
             for export_group in export_groups:
                 assert(all(obj_name in plat_collection.all_objects for obj_name in export_group[1]), export_group)
@@ -2519,7 +2518,7 @@ class BakeButton(bpy.types.Operator):
                         obj.select_set(True)
                 if export_format == "FBX":
                     # Monkeypatch the FBX exporter to use 'tuxedoForcedExportName' instead of obj.name
-                    patch_fbx_exporter()
+                    core.patch_fbx_exporter()
                     bpy.ops.export_scene.fbx(filepath=bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + export_group[0] + ".fbx"), check_existing=False, filter_glob='*.fbx',
                                              use_selection=True,
                                              use_active_collection=False, global_scale=1., apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',

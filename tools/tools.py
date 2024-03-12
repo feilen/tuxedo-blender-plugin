@@ -6,23 +6,141 @@ import operator
 import numpy as np
 
 from .dictionaries import bone_names
-from .core import apply_modifier, get_meshes_objects, get_armature, triangulate_mesh, join_meshes, remove_doubles, add_shapekey, has_shapekeys
-from .core import simplify_bonename, merge_bone_weights_to_respective_parents, get_objects, set_active, duplicate_shapekey, get_shapekeys_ft, get_shapekey_delta, crossfade
+from . import core
 from .translate import t
 
 from ..class_register import wrapper_registry
 
 from bpy.types import Operator
 
-from io_scene_fbx import fbx_utils
 from mathutils.geometry import intersect_point_line
+
+@wrapper_registry
+class Tuxedo_OT_StartPoseMode(bpy.types.Operator):
+    bl_idname = 'tuxedo.start_pose_mode'
+    bl_label = t('Tools.start_pose_mode.label')
+    bl_description = t('Tools.start_pose_mode.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return core.get_armature(context)
+
+    def execute(self, context):
+        armature = core.get_armature(context)
+
+        core.Set_Mode(context,'OBJECT')
+        core.unselect_all()
+        core.select(armature)
+        core.set_active(armature)
+        core.Set_Mode(context,'POSE')
+        #the next 3 lines allow us to clear the pose without ruining the user's selection.
+        bpy.ops.pose.transforms_clear()
+        core.select_set_all_curmode(context, 'INVERT')
+        bpy.ops.pose.transforms_clear()
+        return {'FINISHED'}
+
+@wrapper_registry
+class Tuxedo_OT_EndPoseMode(bpy.types.Operator):
+    bl_idname = 'tuxedo.end_pose_mode'
+    bl_label = t('Tools.end_pose_mode.label')
+    bl_description = t('Tools.end_pose_mode.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return core.get_armature(context)
+
+    def execute(self, context):
+        bpy.ops.tuxedo.start_pose_mode() #take advantage of start pose method
+        core.Set_Mode(context,'OBJECT')
+        return {'FINISHED'}
+
+
+@wrapper_registry
+class Tuxedo_OT_ApplyAsRest(bpy.types.Operator):
+    bl_idname = 'tuxedo.armature_apply_as_rest'
+    bl_label = t('Tools.armature_apply_as_rest.label')
+    bl_description = t('Tools.armature_apply_as_rest.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return core.get_armature(context)
+
+    def execute(self, context):
+        meshes_and_armature = core.get_meshes_objects(context,core.get_armature(context).name )
+        armature = core.get_armature(context)
+        
+
+        for obj in meshes_and_armature:
+            if obj.type == 'MESH':
+                modifier = None
+                for mod in obj.modifiers:
+                    if mod.type == "ARMATURE" and mod.object == armature:
+                        modifier = mod
+                        break
+                
+                if modifier == None: continue
+                if core.has_shapekeys(obj):
+                    core.apply_modifier_for_obj_with_shapekeys(modifier)
+                else:
+                    core.apply_modifier(modifier)
+        
+        core.Set_Mode(context,'OBJECT')
+        core.unselect_all()
+        core.select(armature)
+        core.set_active(armature)
+        core.Set_Mode(context,'POSE')
+
+        bpy.ops.pose.armature_apply()
+        core.Set_Mode(context,'OBJECT')
+        return {'FINISHED'}
+
+@wrapper_registry
+class Tuxedo_OT_SavePoseAsShapekey(bpy.types.Operator):
+    bl_idname = 'tuxedo.save_pose_as_shapekey'
+    bl_label = t('Tools.save_pose_as_shapekey.label')
+    bl_description = t('Tools.save_pose_as_shapekey.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return core.get_armature(context)
+
+    def execute(self, context):
+        meshes_and_armature = core.get_meshes_objects(context,core.get_armature(context).name )
+        armature = core.get_armature(context)
+        
+        core.Set_Mode(context,'OBJECT')
+        for obj in meshes_and_armature:
+            if obj.type == 'MESH':
+                
+                core.unselect_all()
+                core.select(obj)
+                core.set_active(obj)
+                modifier = None
+                for mod in obj.modifiers:
+                    if mod.type == "ARMATURE" and mod.object == armature:
+                        modifier = mod
+                        break
+                
+                if modifier == None: continue
+                bpy.ops.object.modifier_apply_as_shapekey(keep_modifier=True, modifier=modifier.name)
+
+        
+        core.unselect_all()
+        core.select(armature)
+        core.set_active(armature)
+        core.Set_Mode(context,'POSE')
+        return {'FINISHED'}
 
 @wrapper_registry
 class FitClothes(bpy.types.Operator):
     bl_idname = 'tuxedo.fit_clothes'
     bl_label = t('Tools.fit_clothes.label')
     bl_description = t('Tools.fit_clothes.desc')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -54,7 +172,7 @@ class FitClothes(bpy.types.Operator):
             trans_modifier.data_types_verts = {'VGROUP_WEIGHTS'}
             trans_modifier.vert_mapping = 'POLYINTERP_NEAREST'
             context.view_layer.objects.active = obj
-            apply_modifier(trans_modifier)
+            core.apply_modifier(trans_modifier)
 
             # Setup armature
             for mod_name in [mod.name for mod in obj.modifiers]:
@@ -82,14 +200,14 @@ class RepairShapekeys(bpy.types.Operator):
         if obj and obj.type == 'MESH':
             return True
 
-        meshes = get_meshes_objects(context)
+        meshes = core.get_meshes_objects(context)
         return meshes
 
     def execute(self, context):
         objs = [context.active_object]
         if not objs[0] or (objs[0] and (objs[0].type != 'MESH' or objs[0].data.shape_keys is None)):
             bpy.ops.object.select_all(action='DESELECT')
-            meshes = get_meshes_objects(context)
+            meshes = core.get_meshes_objects(context)
             objs = meshes
 
         for obj in objs:
@@ -160,10 +278,10 @@ class SmartDecimation(bpy.types.Operator):
         animation_weighting = context.scene.decimation_animation_weighting
         animation_weighting_factor = context.scene.decimation_animation_weighting_factor
         tuxedo_max_tris = context.scene.tuxedo_max_tris
-        armature = get_armature(context, armature_name=self.armature_name)
+        armature = core.get_armature(context, armature_name=self.armature_name)
         if not self.preserve_objects:
-            join_meshes(context, armature.name)
-        meshes_obj = get_meshes_objects(context, armature_name=self.armature_name)
+            core.join_meshes(context, armature.name)
+        meshes_obj = core.get_meshes_objects(context, armature_name=self.armature_name)
 
         if len(meshes_obj) == 0:
             self.report({'INFO'}, t('no_meshes_found'))
@@ -174,11 +292,11 @@ class SmartDecimation(bpy.types.Operator):
         tris_count = 0
 
         for mesh in meshes_obj:
-            triangulate_mesh(mesh)
+            core.triangulate_mesh(mesh)
             if context.scene.decimation_remove_doubles:
-                remove_doubles(mesh, 0.00001)
+                core.remove_doubles(mesh, 0.00001)
             tris_count += get_tricount(mesh.data.polygons)
-            add_shapekey(mesh, 'Tuxedo Basis', False)
+            core.add_shapekey(mesh, 'Tuxedo Basis', False)
 
         decimation = 1. + ((tuxedo_max_tris - tris_count) / tris_count)
 
@@ -272,7 +390,7 @@ class SmartDecimation(bpy.types.Operator):
                               symmetry_axis='X')
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        if has_shapekeys(mesh):
+        if core.has_shapekeys(mesh):
             for idx in range(1, len(mesh.data.shape_keys.key_blocks) - 1):
                 mesh.active_shape_key_index = idx
                 bpy.ops.object.mode_set(mode='EDIT')
@@ -386,7 +504,7 @@ class GenerateTwistBones(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not get_armature(context):
+        if not core.get_armature(context):
             return False
         return context.selected_editable_bones
 
@@ -422,7 +540,7 @@ class GenerateTwistBones(bpy.types.Operator):
             twist_bone_head_tail = twist_locations[twist_bone_name]
             print(twist_bone_head_tail[0])
             print(twist_bone_head_tail[1])
-            for mesh in get_meshes_objects(context, armature_name=armature.name):
+            for mesh in core.get_meshes_objects(context, armature_name=armature.name):
                 if bone_name not in mesh.vertex_groups:
                     continue
 
@@ -481,12 +599,12 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not get_armature(context):
+        if not core.get_armature(context):
             return False
         return True
 
     def execute(self, context):
-        armature = get_armature(context, self.armature_name)
+        armature = core.get_armature(context, self.armature_name)
 
         translate_bone_fails = 0
         untranslated_bones = set()
@@ -534,8 +652,8 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 
         bpy.ops.object.mode_set(mode='OBJECT')
         for bone in armature.data.bones:
-            if simplify_bonename(bone.name) in reverse_bone_lookup and reverse_bone_lookup[simplify_bonename(bone.name)] in sl_translations:
-                bone.name = sl_translations[reverse_bone_lookup[simplify_bonename(bone.name)]]
+            if core.simplify_bonename(bone.name) in reverse_bone_lookup and reverse_bone_lookup[core.simplify_bonename(bone.name)] in sl_translations:
+                bone.name = sl_translations[reverse_bone_lookup[core.simplify_bonename(bone.name)]]
             else:
                 untranslated_bones.add(bone.name)
                 translate_bone_fails += 1
@@ -572,7 +690,7 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         print(untranslated_bones)
         if context.selected_editable_bones: 
-            merge_bone_weights_to_respective_parents(context, armature, [bone.name for bone in context.selected_editable_bones])
+            core.merge_bone_weights_to_respective_parents(context, armature, [bone.name for bone in context.selected_editable_bones])
 
         for bone in context.visible_bones:
             bone.use_connect = False
@@ -609,13 +727,13 @@ class PoseToRest(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        armature = get_armature(context)
+        armature = core.get_armature(context)
         return armature and armature.mode == 'POSE'
 
     def execute(self, context):
 
-        armature_obj = get_armature(context,self.armature_name)
-        mesh_objs = get_meshes_objects(context,armature_name=armature_obj.name)
+        armature_obj = core.get_armature(context,self.armature_name)
+        mesh_objs = core.get_meshes_objects(context,armature_name=armature_obj.name)
         for mesh_obj in mesh_objs:
             me = mesh_obj.data
             if me:
@@ -651,7 +769,7 @@ class PoseToRest(bpy.types.Operator):
         with bpy.context.temp_override(active_object = armature_obj): bpy.ops.pose.armature_apply()
 
         # Stop pose mode after operation
-        armature = get_armature(context,self.armature_name)
+        armature = core.get_armature(context,self.armature_name)
         context.view_layer.objects.active = armature
 
         # Make all objects visible
@@ -670,11 +788,11 @@ class PoseToRest(bpy.types.Operator):
         for pb in armature.data.bones:
             pb.select = False
 
-        armature = get_armature(context,self.armature_name)
+        armature = core.get_armature(context,self.armature_name)
         # armature.data.pose_position = 'REST'
 
-        for mesh in get_meshes_objects(context,armature_name=self.armature_name):
-            if has_shapekeys(mesh):
+        for mesh in core.get_meshes_objects(context,armature_name=self.armature_name):
+            if core.has_shapekeys(mesh):
                 for shape_key in mesh.data.shape_keys.key_blocks:
                     shape_key.value = 0
 
@@ -890,27 +1008,27 @@ class FT_OT_CreateShapeKeys(Operator):
         ops = bpy.ops
 
         #Set the selected mesh to active object 
-        mesh = get_objects()[ft_mesh]
+        mesh = core.get_objects()[ft_mesh]
         self.report({'INFO'}, "Selected mesh is: " + str(ft_mesh))
-        set_active(mesh)
+        core.set_active(mesh)
 
         #Check if there is shape keys on the mesh
         if object.data.shape_keys:
 
             #Create beginning seperation marker for VRCFT Shape Keys
-            if duplicate_shapekey("~~ SRanipal Face Tracking ~~") == False :
+            if core.duplicate_shapekey("~~ SRanipal Face Tracking ~~") == False :
                 object.shape_key_add(name="~~ SRanipal Face Tracking ~~", from_mix=False)
 
             #Clear all existing values for shape keys
             ops.object.shape_key_clear()
 
-            basis_key = get_shapekeys_ft(self, context)[0][0]
+            basis_key = core.core.get_shapekeys_ft(self, context)[0][0]
             basis_key_ref = object.data.shape_keys.key_blocks[basis_key]
             basis_key_data = np.empty((len(basis_key_ref.data), 3), dtype=np.float32)
             basis_key_ref.data.foreach_get("co", np.ravel(basis_key_data))
             if context.scene.ft_ch != basis_key:
-                ch_deltas, bounding_box = get_shapekey_delta(object, context.scene.ft_ch)
-                crossfade_l = lambda f: crossfade(f, bounding_box[0], bounding_box[1], 0.2)
+                ch_deltas, bounding_box = core.get_shapekey_delta(object, context.scene.ft_ch)
+                crossfade_l = lambda f: core.crossfade(f, bounding_box[0], bounding_box[1], 0.2)
                 crossfade_factors = np.vectorize(crossfade_l)(basis_key_data[:, 0])
             for x in range(len(SRanipal_Labels)):
                 curr_key = eval("scene.ft_shapekey_" + str(x))
@@ -932,17 +1050,17 @@ class FT_OT_CreateShapeKeys(Operator):
                 #Check if blend with 'Basis' shape key
                 if curr_key == "Basis" and not (generate_eyes or generate_jaw or generate_frown or generate_mouth or generate_smile):
                     #Check for duplicates
-                    if not duplicate_shapekey(SRanipal_Labels[x]):
+                    if not core.duplicate_shapekey(SRanipal_Labels[x]):
                         object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
                     #Do not overwrite if the shape key exists and is on 'Basis'
 
                 else:
                     #Check for duplicates
-                    if not duplicate_shapekey(SRanipal_Labels[x]):
+                    if not core.duplicate_shapekey(SRanipal_Labels[x]):
                         # Special handling for visemes
                         if generate_eyes:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
-                            deltas, _ = get_shapekey_delta(object, context.scene.ft_blink)
+                            deltas, _ = core.get_shapekey_delta(object, context.scene.ft_blink)
                             factor = 1
                             if 'squeeze' in label:
                                 factor = 1.1
@@ -956,7 +1074,7 @@ class FT_OT_CreateShapeKeys(Operator):
                             object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(basis_key_data + (deltas * factor)))
                         elif generate_mouth:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
-                            oh_deltas, _ = get_shapekey_delta(object, context.scene.ft_oh)
+                            oh_deltas, _ = core.get_shapekey_delta(object, context.scene.ft_oh)
 
                             # consider vertices where delta(v_ch) > delta(v_oh) upper lip, and vice versa
                             ch_should_be_greater = 'Upper' in label
@@ -990,17 +1108,17 @@ class FT_OT_CreateShapeKeys(Operator):
                                 object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel(new_key))
                         elif generate_smile:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
-                            smile_deltas, _ = get_shapekey_delta(object, context.scene.ft_smile)
+                            smile_deltas, _ = core.get_shapekey_delta(object, context.scene.ft_smile)
 
                             object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((smile_deltas * crossfade_arr[:, None] + basis_key_data)))
                         elif generate_frown:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
-                            frown_deltas, _ = get_shapekey_delta(object, context.scene.ft_frown)
+                            frown_deltas, _ = core.get_shapekey_delta(object, context.scene.ft_frown)
 
                             object.data.shape_keys.key_blocks[label].data.foreach_set("co", np.ravel((frown_deltas * crossfade_arr[:, None] + basis_key_data)))
                         elif generate_jaw:
                             object.shape_key_add(name=SRanipal_Labels[x], from_mix=False)
-                            aa_deltas, _ = get_shapekey_delta(object, context.scene.ft_aa)
+                            aa_deltas, _ = core.get_shapekey_delta(object, context.scene.ft_aa)
                             jaw_magnitude = np.linalg.norm(aa_deltas, axis=1)
 
                             new_key = basis_key_data.copy()

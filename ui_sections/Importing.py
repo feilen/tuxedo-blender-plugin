@@ -7,6 +7,8 @@ from ..tools.core import version_too_new
 
 from ..tools.importing import Tuxedo_OT_ImportAnyModel
 
+from ..tools.tools import Tuxedo_OT_ApplyAsRest, Tuxedo_OT_SavePoseAsShapekey, Tuxedo_OT_StartPoseMode, Tuxedo_OT_EndPoseMode
+
 from ..tools.translate import t
 
 from ..class_register import wrapper_registry
@@ -47,8 +49,21 @@ class Tuxedo_PT_ImportingPanel(Panel):
         row.label(text=t('Tools.import_any_model.desc'))
         
         row = col.row(align=True)
+        row.scale_y = 2
         row.operator(Tuxedo_OT_ImportAnyModel.bl_idname,icon="ARMATURE_DATA")
-
+        row = col.row(align=True)
+        row.label(text="")
+        col2 = col.column(align=True)
+        row = col2.row(align=True)
+        if context.mode == 'POSE':
+            row.operator(Tuxedo_OT_EndPoseMode.bl_idname,icon="ARMATURE_DATA")
+            row = col2.row(align=True)
+            row.operator(Tuxedo_OT_ApplyAsRest.bl_idname,icon="ARMATURE_DATA")
+            row = col2.row(align=True)
+            row.operator(Tuxedo_OT_SavePoseAsShapekey.bl_idname,icon='ARMATURE_DATA')
+        else:
+            row.operator(Tuxedo_OT_StartPoseMode.bl_idname,icon="ARMATURE_DATA")
+            
 
         
 

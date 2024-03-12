@@ -5,7 +5,7 @@ from . import bake as Bake
 from .tools.translate import t
 from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
 from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-from .tools.core import has_shapekeys, get_shapekeys_ft, materials_list_update, get_meshes_objects
+from .tools import core
 
 #to make sure all of our ui section tabs get registered, otherwise the @ marker doesn't work on them - @989onan
 from .ui_sections import *
@@ -83,7 +83,7 @@ class Material_Grouping_UL_List_Reload(Operator):
     bl_label = t('reloadmats')
 
     def execute(self, context):
-        materials_list_update(context)
+        core.materials_list_update(context)
 
         return{'FINISHED'}
 
@@ -300,7 +300,7 @@ class BakePanel(Panel):
         self.empty_material_slots = set()
         self.too_many_uvmaps = set()
         
-        for obj in get_meshes_objects(context):
+        for obj in core.get_meshes_objects(context):
             if obj.name not in context.view_layer.objects:
                 continue
             if obj.hide_get():
@@ -332,7 +332,7 @@ class BakePanel(Panel):
         if context.scene.bake_pass_ao:
             if context.scene.bake_illuminate_eyes:
                 self.multires_obj_names = []
-                for obj in get_meshes_objects(context):
+                for obj in core.get_meshes_objects(context):
                     if obj.name not in context.view_layer.objects:
                         continue
                     if obj.hide_get():
@@ -483,7 +483,7 @@ class FT_Shapes_UL(Panel):
         row.prop(scene, 'ft_frown', icon='SHAPEKEY_DATA')
 
         #Check mesh selections
-        if ft_mesh and has_shapekeys(bpy.data.objects[ft_mesh]):
+        if ft_mesh and core.has_shapekeys(bpy.data.objects[ft_mesh]):
             #Info
 
             row = col.row(align=True)
@@ -512,7 +512,7 @@ class FT_Shapes_UL(Panel):
                 row.prop(scene, 'ft_shapekey_enable_' + str(i), icon='CHECKMARK')
                 # Determine whether this key is already going to be auto-populated
                 label = SRanipal_Labels[i]
-                basis = get_shapekeys_ft(self, context)[0][0]
+                basis = core.get_shapekeys_ft(self, context)[0][0]
                 if any(string in label for string in ['Blink', 'squeeze', 'Wide']):
                     if context.scene.ft_blink != basis:
                         row.enabled = False

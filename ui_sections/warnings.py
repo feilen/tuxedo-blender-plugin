@@ -1,11 +1,8 @@
 import bpy
-import addon_utils
 import mathutils
-
-from .. import bake as Bake
 from ..properties import get_steam_library
 from ..tools.translate import t
-from ..tools.core import get_meshes_objects, get_armature, simplify_bonename
+from ..tools import core
 from ..tools.dictionaries import bone_names
 
 from ..ui import register_ui_tab
@@ -88,7 +85,7 @@ class Bake_PT_warnings:
         if any(item.export_format == "GMOD" for item in context.scene.bake_platforms):
             has_gmod_error = False
             has_polygon_error = False
-            for obj in get_meshes_objects(context):
+            for obj in core.get_meshes_objects(context):
                 #print(len(obj.data.polygons))
                 if len(obj.data.polygons) > 9900:
                     has_gmod_error = True
@@ -100,7 +97,7 @@ class Bake_PT_warnings:
                 col2 = row.column(align=True)
                 col2.label(text="To keep under the hard limit of 10000 per mesh for Gmod,")
                 col2.label(text="meshes above 9900 will be reduced by Tuxedo during bake.")
-            armature = get_armature(context)
+            armature = core.get_armature(context)
             if armature:
                 reverse_bone_lookup = dict()
                 bone_arm_list = ["right_wrist","left_wrist","right_arm","left_arm","left_elbow","right_elbow"]
@@ -112,8 +109,8 @@ class Bake_PT_warnings:
                 #print(reverse_bone_lookup)
                 arm_bones = {}
                 for bone in armature.data.bones:
-                    if simplify_bonename(bone.name) in reverse_bone_lookup:
-                        arm_bones[reverse_bone_lookup[simplify_bonename(bone.name)]] = bone
+                    if core.simplify_bonename(bone.name) in reverse_bone_lookup:
+                        arm_bones[reverse_bone_lookup[core.simplify_bonename(bone.name)]] = bone
                 #print(arm_bones)
                 for bone_name in bone_arm_list:
                     bone_vec = mathutils.Vector((0,1,0))

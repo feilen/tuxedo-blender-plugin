@@ -356,3 +356,18 @@ Importing.need_importer, "You do not have the required importer for the {extensi
 Importer.mmd_anim_importer.label,"MMD Animation",,
 Importer.mmd_anim_importer.desc,"Import a MMD Animation (.vmd)",,
 Importing.importer_search_term,"https://search.brave.com/search?q=blender+{extension}+importer+addon&source=web",,
+
+Tools.start_pose_mode.label,"Start Pose Mode",,
+Tools.start_pose_mode.desc,"Begin pose mode and reset pose transforms",,
+
+Tools.end_pose_mode.label,"End Pose Mode",,
+Tools.end_pose_mode.desc,"End pose mode and reset pose transforms",,
+
+Tools.armature_apply_as_rest.label,"Apply pose as rest pose",,
+Tools.armature_apply_as_rest.desc,"Apply pose as rest pose, may break animations in some programs",,
+
+Tools.armature_apply_as_shapekey.label,"Apply pose as rest pose",,
+Tools.armature_apply_as_shapekey.desc,"Apply pose as rest pose, may break animations in some programs",,
+
+Tools.save_pose_as_shapekey.desc,"Save current pose as a shapekey",,
+Tools.save_pose_as_shapekey.label,"Save as Shapekey",,

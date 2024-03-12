@@ -1,4 +1,5 @@
 # GPL Licence
+import itertools
 import threading
 import time
 import subprocess
@@ -143,8 +144,8 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
     # remove old bones
     try:
         bpy.context.view_layer.objects.active = armature
-        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        Set_Mode(context,mode='OBJECT')
+        Set_Mode(context,mode='EDIT')
     except:
         print("Oh here comes a crash from the merge bone weights!")
     for bone_name in bone_names:
@@ -239,6 +240,89 @@ def apply_modifier(mod):
             return
     bpy.context.view_layer.objects.active = mod.id_data
     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+def apply_modifier_for_obj_with_shapekeys(mod):
+    if mod.type == 'ARMATURE':
+        # Armature modifiers are a special case: they don't have a show_render
+        # property, so we have to use the show_viewport property instead
+        if not mod.show_viewport:
+            return
+    else:
+        if not mod.show_render:
+            return
+    obj = mod.id_data
+    old_mod_name = mod.name
+    context = bpy.context
+    Set_Mode(context,'OBJECT')
+
+    obj_names = []
+    print("start applying modifiers for mesh with shapekeys")
+
+    select_set_all_curmode(context,'DESELECT')
+    for key in obj.data.shape_keys.key_blocks:
+        keyname = key.name
+        obj_names.append(keyname)
+
+        newobj = obj.copy()
+        newobj.data = obj.data.copy()
+        newobj.animation_data_clear()
+        
+        context.collection.objects.link(newobj)
+        select_set_all_curmode(context,'DESELECT')
+        select(newobj)
+        set_active(newobj)
+        try:
+            bpy.data.objects[keyname].name += "conflicting_name" #get rid of conflicting name in data model
+        except:
+            pass
+        newobj.name = keyname #set name to allow blender data model to set new name
+        
+
+        #assign the key we have iterated to as the active key on the mesh
+        for key2 in newobj.data.shape_keys.key_blocks:
+            key2.value = 0
+        newobj.active_shape_key_index = newobj.data.shape_keys.key_blocks.find(keyname)
+
+        bpy.ops.object.shape_key_move(type='TOP')
+        bpy.ops.object.shape_key_move(type='TOP')
+
+        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+        print("object duplicated for shapekey "+keyname)
+            
+        print("applying "+old_mod_name+" modifier for "+newobj.name)
+        bpy.ops.object.modifier_move_to_index(modifier=old_mod_name, index=0)
+        apply_modifier(newobj.modifiers[old_mod_name])
+    
+    select_set_all_curmode(context,'DESELECT')
+    select(obj)
+    set_active(obj)
+    for key2 in obj.data.shape_keys.key_blocks:
+        key2.value = 0
+    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+
+    for bpy_object in obj_names:
+        bpy_object_obj = bpy.data.objects[bpy_object]
+        select(bpy_object_obj)
+    select(obj)
+    set_active(obj)
+
+    bpy.ops.object.join_shapes()
+    obj.active_shape_key_index = 0 
+    bpy.ops.object.shape_key_remove(all=False)
+
+
+    select(obj,sel=False)
+    for bpy_object in obj_names:
+        bpy_object_obj = bpy.data.objects[bpy_object]
+        delete(bpy_object_obj)
+    
+
+    print("finished applying modifier for object with shapekeys.")
+
+    return True    
+
+
+
 
 def join_meshes(context, armature_name):
     bpy.data.objects[armature_name]
@@ -356,9 +440,27 @@ def version_too_new():
     return is_too_new
 
 def unselect_all():
-    for obj in get_objects():
-        select(obj, False)
+    
+        for obj in get_objects():
+            select(obj, False)
+    
 
+#nice wrapper method to make 
+def select_set_all_curmode(context=bpy.context,action='DESELECT'):
+    if(context == 'OBJECT'):
+        bpy.ops.object.select_all(action=action)
+    elif(context == 'EDIT'):
+        for obj in bpy.context.selected_objects: #iterate over all objects, this thankfully includes the active object.
+            match obj.type:
+                case 'MESH':
+                    bpy.ops.mesh.select_all(action=action)
+                case 'CURVE':
+                    bpy.ops.curve.select_all(action=action)
+                case 'ARMATURE':
+                    bpy.ops.armature.select_all(action=action)
+    elif(context == 'POSE'):
+        bpy.ops.pose.select_all(action=action)
+    
 def get_objects():
     return bpy.context.scene.objects if version_2_79_or_older() else bpy.context.view_layer.objects
 
