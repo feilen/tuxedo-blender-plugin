@@ -447,6 +447,8 @@ class FT_Shapes_UL(Panel):
         layout = self.layout
         scene = context.scene
         ft_mesh = scene.ft_mesh
+        if ft_mesh == "NONE":
+            ft_mesh = None
 
         #Start Layout
         col = layout.column()

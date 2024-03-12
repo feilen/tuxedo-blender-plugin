@@ -170,7 +170,10 @@ def get_meshes(self, context):
     for mesh in get_meshes_objects(context):
         choices.append((mesh.name, mesh.name, mesh.name))
 
-    bpy.types.Object.Enum = sorted(choices, key=lambda x: tuple(x[0].lower()))
+    choices2 = []
+    choices2.append(("NONE","NONE","NONE"))
+    choices2.extend(sorted(choices, key=lambda x: tuple(x[0].lower())))
+    bpy.types.Object.Enum = choices2
     return bpy.types.Object.Enum
 
 def get_meshes_objects(context, armature_name=None):

@@ -2,7 +2,7 @@ from bpy.types import Scene, PropertyGroup, Object, OperatorFileListElement
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 
-from .tools.core import get_meshes, get_shapekeys_ft
+from .tools import core
 from .tools.tools import SRanipal_Labels
 from .globals import import_types
 
@@ -557,22 +557,22 @@ def register_properties():
         default=True
     )
     # Mesh Select
-    Scene.ft_mesh = EnumProperty(name='Mesh', description='Mesh to apply FT shape keys', items=get_meshes)
+    Scene.ft_mesh = EnumProperty(name='Mesh', description='Mesh to apply FT shape keys', items=core.get_meshes)
 
     # Viseme select
-    Scene.ft_aa = EnumProperty(name='aa/Jaw Down', description='This shapekey should ideally only move the mouth down.', items=get_shapekeys_ft)
-    Scene.ft_ch = EnumProperty(name='ch/Cheese', description='This shapekey should ideally only move the lips to expose the teeth.', items=get_shapekeys_ft)
-    Scene.ft_oh = EnumProperty(name='oh/Shock/aa/Jaw Down', description='This shapekey should move the bottom lips more than CH but not the top lips,  and may need to be created. Often AA works too.', items=get_shapekeys_ft)
-    Scene.ft_blink = EnumProperty(name='blink', description='Select shapekey to use for FT', items=get_shapekeys_ft)
-    Scene.ft_smile = EnumProperty(name='smile', description='Select shapekey to use for FT', items=get_shapekeys_ft)
-    Scene.ft_frown = EnumProperty(name='frown', description='Select shapekey to use for FT', items=get_shapekeys_ft)
+    Scene.ft_aa = EnumProperty(name='aa/Jaw Down', description='This shapekey should ideally only move the mouth down.', items=core.get_shapekeys_ft)
+    Scene.ft_ch = EnumProperty(name='ch/Cheese', description='This shapekey should ideally only move the lips to expose the teeth.', items=core.get_shapekeys_ft)
+    Scene.ft_oh = EnumProperty(name='oh/Shock/aa/Jaw Down', description='This shapekey should move the bottom lips more than CH but not the top lips,  and may need to be created. Often AA works too.', items=core.get_shapekeys_ft)
+    Scene.ft_blink = EnumProperty(name='blink', description='Select shapekey to use for FT', items=core.get_shapekeys_ft)
+    Scene.ft_smile = EnumProperty(name='smile', description='Select shapekey to use for FT', items=core.get_shapekeys_ft)
+    Scene.ft_frown = EnumProperty(name='frown', description='Select shapekey to use for FT', items=core.get_shapekeys_ft)
 
     # Shape Keys
     for i, ft_shape in enumerate(SRanipal_Labels):
         setattr(Scene, "ft_shapekey_" + str(i), EnumProperty(
             name='',
             description='Select shapekey to use for SRanipal',
-            items=get_shapekeys_ft)
+            items=core.get_shapekeys_ft)
         )
     # Enable Shape Key Creation
     for i, ft_shape in enumerate(SRanipal_Labels):

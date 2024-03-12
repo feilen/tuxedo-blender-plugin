@@ -1,4 +1,15 @@
-from .globals import blender, version
+bl_info = { #haha this works here hell yeah
+    'name': 'Tuxedo Blender Plugin',
+    'category': '3D View',
+    'author': 'Feilen',
+    'location': 'View 3D > Tool Shelf > Tuxedo',
+    'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
+    'version': (0, 4, 2),
+    'blender': (4, 0), 
+    'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
+    'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
+    'warning': '',
+}
 
 is_reloading = False
 if "bpy" not in locals():
@@ -33,7 +44,10 @@ else:
     #this is needed since it doesn't see them unless imported... - @989onan
     from . import bake, properties, ui
     from . import tools
+    from . import globals
     
+    
+
     from os.path import dirname, basename, isfile, join
     
     #this... is awful I'm sorry but this is the only way of dynamically load all the files under the directory
@@ -45,20 +59,6 @@ else:
     modules = glob.glob(join(dirname(__file__), "tools/*.py"))
     for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
         exec("from .tools import "+module_name)
-
-
-bl_info = {
-    'name': 'Tuxedo Blender Plugin',
-    'category': '3D View',
-    'author': 'Feilen',
-    'location': 'View 3D > Tool Shelf > Tuxedo',
-    'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
-    'version': version,
-    'blender': blender,
-    'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
-    'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
-    'warning': '',
-}
 
 
 
@@ -88,6 +88,8 @@ def register():
 
     classes.clear()
 
+    globals.version = bl_info['version']
+    globals.blender = bl_info['blender']
     # Properties
     register_properties()
     print("========= TUXEDO REGISTRY FINISHED =========")

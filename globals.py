@@ -1,8 +1,6 @@
 import os
 import typing
 import bpy
-version = (0, 4, 2)
-blender = (4, 0)
 
 def import_multi_files(method = None, directory: typing.Optional[str] = None, files: typing.Union[bpy.types.OperatorFileListElement, typing.Any] = None, filepath: typing.Optional[str] = ""):
     if not filepath:
@@ -13,7 +11,9 @@ def import_multi_files(method = None, directory: typing.Optional[str] = None, fi
             print("run method!")
             method(directory, fullpath)
 
-
+#these get populated by init.
+version = None
+blender = None
 
 #each import should map to a type. even in the case that multiple methods should import together, or have the same import method. Make sure the lambdas match so they get grouped together
 #In the case of a file importer that takes only one file argument and each one needs individual import, use above method. (example of it in use is ".dae" format)
