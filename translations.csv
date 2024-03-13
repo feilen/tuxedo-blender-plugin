@@ -310,9 +310,6 @@ FT.select_shapes_3,"Currently requires rotation to be applied.",,
 FT.mesh_missing,"Select the mesh with face shape keys.",,
 FT.shapes_panel_label,"Face Tracking Generation",,
 
-
-
-
 Scene.decimation_remove_doubles.label,Remove Doubles,ΘçìΦñçπéÆσëèΘÖñ,∞¥┤∞ñæ ∞á£Ω▒░
 Scene.decimation_remove_doubles.desc,Uncheck this if you get issues with this checked,Uncheck this if you got issues with with this checked,δ¼╕∞á£Ω░Ç δÉá ∞ï£ ∞▓┤φü¼δÑ╝ φò┤∞á£φòÿ∞ä╕∞Üö
 DecimationPanel.warn.notIfBaking,Not reccomended if baking!,,베이킹 할 시 권장되지 않습니다!
@@ -371,3 +368,17 @@ Tools.armature_apply_as_shapekey.desc,"Apply pose as rest pose, may break animat
 
 Tools.save_pose_as_shapekey.desc,"Save current pose as a shapekey",,
 Tools.save_pose_as_shapekey.label,"Save as Shapekey",,
+
+Importer.export_resonite.label,"Export to Resonite",,
+Importer.export_resonite.desc,"Export to Resonite as a GLTF. Make sure your model is to scale in blender, and import as meters in Resonite.",,
+
+Importer.export_vrchat.label,"Export to VRChat",,
+Importer.export_vrchat.desc,"Export to VRChat, may also work for ChilloutVR. Is similar to Cats export.",,
+
+Tools.apply_modifier_for_object_with_shape_keys.desc,"Apply any modifier for object with shapekeys",,
+Tools.apply_modifier_for_object_with_shape_keys.label,"Apply modifier for object with shapekeys",,
+
+Tools.modifiers_enum_label.label,"Modifier",,
+Tools.modifiers_enum_label.desc,"Modifier on mesh to apply",,
+
+

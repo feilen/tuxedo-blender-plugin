@@ -22,10 +22,8 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
     bl_idname = 'tuxedo.import_any_model'
     bl_label = t('Tools.import_any_model.label')
     bl_description = t('Tools.import_any_model.desc')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+    bl_options = {'REGISTER', 'UNDO'}
     files: bpy.props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN', 'SKIP_SAVE'})
-    
-    
     
     filter_glob: bpy.props.StringProperty(default = imports, options={'HIDDEN','SKIP_SAVE'})
     directory: bpy.props.StringProperty(maxlen=1024, subtype='FILE_PATH', options={'HIDDEN', 'SKIP_SAVE'})
@@ -90,10 +88,67 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
 
                 print("importer error was:")
                 print(e)
-        
-
 
         return {'FINISHED'}
+
+
+@wrapper_registry
+class Tuxedo_OT_ExportVRC(bpy.types.Operator):
+    bl_idname = 'tuxedo.export_vrchat'
+    bl_label = t('Importer.export_vrchat.label')
+    bl_description = t('Importer.export_vrchat.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filepath: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        if core.get_armature(context) is None:
+            return False
+        return True
+
+    def execute(self, context):
+        # Monkey patch FBX exporter again to import empty shape keys
+        core.patch_fbx_exporter()
+        #settings stolen from cats.
+        bpy.ops.export_scene.fbx('INVOKE_AREA',
+                                object_types={'EMPTY', 'ARMATURE', 'MESH', 'OTHER'},
+                                use_mesh_modifiers=False,
+                                add_leaf_bones=False,
+                                bake_anim=False,
+                                apply_scale_options='FBX_SCALE_ALL',
+                                path_mode='AUTO',
+                                embed_textures=True,
+                                mesh_smooth_type='OFF')
+        return {'FINISHED'}
+
+@wrapper_registry
+class Tuxedo_OT_ExportResonite(bpy.types.Operator):
+    bl_idname = 'tuxedo.export_resonite'
+    bl_label = t('Importer.export_resonite.label')
+    bl_description = t('Importer.export_resonite.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+    filepath: bpy.props.StringProperty()
+
+
+    @classmethod
+    def poll(cls, context):
+        if core.get_armature(context) is None:
+            return False
+        return True
+
+    def execute(self, context):
+        #settings stolen from cats.
+        bpy.ops.export_scene.gltf('INVOKE_AREA',
+            export_image_format = 'WEBP',
+            export_image_quality = 75,
+            export_materials = 'EXPORT',
+            export_animations = True,
+            export_animation_mode = 'ACTIONS',
+            export_nla_strips_merged_animation_name = 'Animation',
+            export_nla_strips = True)
+        return {'FINISHED'}
+
 
 
 

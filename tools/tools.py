@@ -1,3 +1,4 @@
+import typing
 import bmesh
 import bpy
 import math
@@ -11,9 +12,35 @@ from .translate import t
 
 from ..class_register import wrapper_registry
 
-from bpy.types import Operator
+from bpy.types import Context, Operator
 
 from mathutils.geometry import intersect_point_line
+
+
+#a vastly improved and simplified apply modifier for object with shape keys.
+@wrapper_registry
+class Tuxedo_OT_ApplyModifierForObjectWithShapeKeys(bpy.types.Operator):
+    bl_idname = 'tuxedo.apply_modifier_for_object_with_shape_keys'
+    bl_label = t('Tools.apply_modifier_for_object_with_shape_keys.label')
+    bl_description = t('Tools.apply_modifier_for_object_with_shape_keys.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifiers: bpy.props.EnumProperty(name=t('Tools.modifiers_enum_label.label'), description=t('Tools.modifiers_enum_label.desc'), items=core.get_modifiers_active)
+
+    def draw(self, context):
+        self.layout.label(text="apply modifier for: \""+context.object.name+"\"")
+        self.layout.prop(self, "modifiers")
+
+    def execute(self, context: Context) -> typing.Set[str] | typing.Set[int]:
+        
+        result = core.apply_modifier_for_obj_with_shapekeys(context.object.modifiers[self.modifiers], delete_old=True)
+        if (result != True):
+            self.report({'ERROR'}, result)
+
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 
 @wrapper_registry
 class Tuxedo_OT_StartPoseMode(bpy.types.Operator):
@@ -83,7 +110,9 @@ class Tuxedo_OT_ApplyAsRest(bpy.types.Operator):
                 
                 if modifier == None: continue
                 if core.has_shapekeys(obj):
-                    core.apply_modifier_for_obj_with_shapekeys(modifier)
+                    result = core.apply_modifier_for_obj_with_shapekeys(modifier)
+                    if (result != True):
+                        self.report({'ERROR'},result)
                 else:
                     core.apply_modifier(modifier)
         

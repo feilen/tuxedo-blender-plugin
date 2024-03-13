@@ -18,9 +18,6 @@ from ..globals import blender
 # this stores how we do simple functions that happen multiple times, and may need version checking
 # because of this, DONT PUT CLASSES HERE.
 # Before you make your own method, check here for one that does the same thing, since it will save you time.
-# 
-
-
 
 def open_web_after_delay_multi_threaded(delay: typing.Optional[float] = 1.0, url: typing.Union[str, typing.Any] = ""):
     thread = threading.Thread(target=open_web_after_delay,args=[delay,url],name="open_browser_thread")
@@ -244,7 +241,10 @@ def apply_modifier(mod):
     bpy.context.view_layer.objects.active = mod.id_data
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
-def apply_modifier_for_obj_with_shapekeys(mod):
+def get_modifiers_active(self, context):
+    return [(modifier.name, modifier.name, modifier.name) for modifier in context.object.modifiers]
+
+def apply_modifier_for_obj_with_shapekeys(mod, delete_old = False):
     if mod.type == 'ARMATURE':
         # Armature modifiers are a special case: they don't have a show_render
         # property, so we have to use the show_viewport property instead
@@ -313,16 +313,24 @@ def apply_modifier_for_obj_with_shapekeys(mod):
     obj.active_shape_key_index = 0 
     bpy.ops.object.shape_key_remove(all=False)
 
+    vertcount = len(bpy.data.objects[obj_names[0]].data.vertices)
+
+    for obj_name in obj_names:
+        if len(bpy.data.objects[obj_name].data.vertices) != vertcount:
+            return "Shape keys ended up with different number of vertices!\nAll shape keys needs to have the same number of vertices after modifier is applied.\nOtherwise joining such shape keys will fail!"
 
     select(obj,sel=False)
     for bpy_object in obj_names:
         bpy_object_obj = bpy.data.objects[bpy_object]
         delete(bpy_object_obj)
     
+    select(obj)
+    set_active(obj)
+    if delete_old: bpy.ops.object.modifier_remove(modifier=old_mod_name)
 
     print("finished applying modifier for object with shapekeys.")
 
-    return True    
+    return True  
 
 
 

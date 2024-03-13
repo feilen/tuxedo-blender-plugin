@@ -4,6 +4,7 @@ import addon_utils
 from . import bake as Bake
 from .tools.translate import t
 from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
+from .tools import tools
 from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import core
 
@@ -179,6 +180,11 @@ class ToolPanel(Panel):
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
+
+        
+        row = col.row(align=True)
+        row.operator(tools.Tuxedo_OT_ApplyModifierForObjectWithShapeKeys.bl_idname)
+        
 
         row = col.row(align=True)
         row.prop(context.scene, 'decimation_animation_weighting', expand=True)

@@ -10,6 +10,7 @@ bl_info = { #haha this works here hell yeah
     'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
     'warning': '',
 }
+import os
 
 is_reloading = False
 if "bpy" not in locals():
@@ -92,6 +93,7 @@ def register():
     globals.blender = bl_info['blender']
     # Properties
     register_properties()
+    custom_icons()
     print("========= TUXEDO REGISTRY FINISHED =========")
     #needs to be after registering properties, because it accesses a property - @989onan
     print("========= READING STEAM REGISTRY KEYS FOR GMOD =========")
@@ -129,7 +131,16 @@ def register():
         print("Could not read steam libraries! Error below.")
         print(e)
     print("========= FINISHED READING STEAM REGISTRY KEYS FOR GMOD =========")
-    
+
+
+
+def custom_icons():
+    globals.icons_dict = bpy.utils.previews.new()
+    icons_dir = os.path.join(os.path.dirname(__file__), "images", "icons")
+
+    for icon,file in globals.icon_names.items():
+        globals.icons_dict.load(icon, os.path.join(icons_dir, file), 'IMAGE')
+
 
 def unregister():
     print("========= DEREGISTERING TUXEDO =========")
@@ -145,6 +156,7 @@ def unregister():
     for i, ft_shape in enumerate(SRanipal_Labels):
         delattr(Scene, "ft_shapekey_enable_" + str(i))
     print("========= DEREGISTERING TUXEDO FINISHED =========")
+    bpy.utils.previews.remove(globals.icons_dict)
 
 if __name__ == '__main__':
     register()
