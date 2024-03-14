@@ -3,8 +3,9 @@ import addon_utils
 
 from . import bake as Bake
 from .tools.translate import t
-from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
+from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels, Tuxedo_OT_ConvertToResonite
 from .tools import tools
+from .tools import gmod_tools
 from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
 from .tools import core
 
@@ -184,7 +185,21 @@ class ToolPanel(Panel):
         
         row = col.row(align=True)
         row.operator(tools.Tuxedo_OT_ApplyModifierForObjectWithShapeKeys.bl_idname)
+
+        row = col.row(align=True)
+        row.label(text=t('Tools.merge_bones.label'))
+        row.operator(tools.Tuxedo_OT_MergeBoneWeightsToActive.bl_idname)
+        row.operator(tools.Tuxedo_OT_MergeBoneWeightsToParents.bl_idname)
+        row = col.row(align=True)
+        row.prop(context.scene, 'delete_old_bones_merging')
         
+        row = col.row(align=True)
+        row.label(text=t('Tools.translate.label'),icon="WORLD")
+        row = col.row(align=True)
+        row.operator(tools.ConvertToSecondlifeButton.bl_idname)
+        row.operator(gmod_tools.ConvertToValveButton.bl_idname)
+        row.operator(tools.Tuxedo_OT_ConvertToResonite.bl_idname)
+
 
         row = col.row(align=True)
         row.prop(context.scene, 'decimation_animation_weighting', expand=True)

@@ -1,9 +1,9 @@
 # GPL Licence
 import bpy
-from bpy_types import Operator
-from bpy_extras.io_utils import ImportHelper
 import os
 import pathlib
+from bpy_types import Operator, Context
+from bpy_extras.io_utils import ImportHelper
 from bpy.types import Scene
 from . import core
 
@@ -14,6 +14,7 @@ from .translate import t
 from ..class_register import wrapper_registry
 
 from ..globals import imports, import_types
+
 
 
 #Imports any model according to the ..globals imports variable. This uses import_types to import each model type, allowing users to import any model they want.
@@ -30,7 +31,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
 
     
     #since I wrote this myself, a bit more efficent than cats. mostly - @989onan
-    def execute(self, context):
+    def execute(self, context: bpy.types.Context):
         file_grouping_dict = {}#group our files so our importers can import them together. in the case of OBJ+MTL and others that need grouped files, this is extremely important.
 
         #check if we are importing multiple files
@@ -42,7 +43,6 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
         except Exception as e:
             is_multi = False
             print(e)
-        context = context
                 
             
         #put the files together into lists of same importers
@@ -82,7 +82,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
             except AttributeError as e:
                 print("Warning, you may not have the required importer!")
                 
-                core.open_web_after_delay_multi_threaded(delay=12, url=t('Importing.importer_search_term').format("extension",file_group_name))
+                core.open_web_after_delay_multi_threaded(delay=12, url=t('Importing.importer_search_term').format(extension = file_group_name))
 
                 self.report({'ERROR'},t('Importing.need_importer').format(extension = file_group_name))
 

@@ -2,6 +2,7 @@ import bpy
 
 from .. import bake as Bake
 from ..tools.translate import t
+from .. import ui
 
 from ..ui import register_ui_tab #need this for registering our class to the ui
 
@@ -52,8 +53,8 @@ class Bake_PT_advanced_platform_options:
             row = col.row(align=True)
             row.prop(item, 'lods', expand=True)
             row = col.row(align=True)
-            row.operator(Bake_Lod_New.bl_idname)
-            row.operator(Bake_Lod_Delete.bl_idname)
+            row.operator(ui.Bake_Lod_New.bl_idname)
+            row.operator(ui.Bake_Lod_Delete.bl_idname)
         row = col.row(align=True)
         row.prop(item, 'merge_twistbones', expand=True)
         row = col.row(align=True)

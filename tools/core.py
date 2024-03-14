@@ -67,7 +67,7 @@ def shape_key_to_basis(context, obj, shape_key_name):
         v.co = shape_key.data[v.index].co
     obj.data.update()
 
-def merge_bone_weights(context, armature, bone_names, active_bone_name):
+def merge_bone_weights(context, armature, bone_names, active_bone_name, remove_old=False):
     if not isinstance(bone_names, list):
         bone_names = [bone_names]
     if not isinstance(active_bone_name, list):
@@ -102,8 +102,22 @@ def merge_bone_weights(context, armature, bone_names, active_bone_name):
                             obj.vertex_groups.new(name=active_bone_name)
                             active_bone_index = obj.vertex_groups[active_bone_name].index
                             v.groups[active_bone_index].weight += g.weight
+    if remove_old:
+        try:
+            bpy.context.view_layer.objects.active = armature
+            Set_Mode(context,mode='OBJECT')
+            Set_Mode(context,mode='EDIT')
+        except:
+            print("Oh here comes a crash from the merge bone weights!")
+        try:
+            bone_names.remove(active_bone_name[0])
+        except:
+            pass
+        for bone_name in bone_names:
+            print(bone_name)
+            armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
 
-def merge_bone_weights_to_respective_parents(context, armature, bone_names):
+def merge_bone_weights_to_respective_parents(context, armature, bone_names, remove_old=True):
     if not isinstance(bone_names, list):
         bone_names = [bone_names]
     if not isinstance(armature, bpy.types.Object):
@@ -130,23 +144,29 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names):
                         bone = armature.data.bones[vgroup_lookup[g.group]]
                         if bone.parent and bone.parent.name in obj.vertex_groups:
                             obj.vertex_groups[bone.parent.name].add([v.index], g.weight, 'ADD')
+
                 except Exception as e:
                     pass # this is because of null vertex group reading, and we kinda don't care all that much about it - @989onan
-
-        for bone_name in bone_names:
-            # remove old bones vertex groups
-            if bone_name in obj.vertex_groups:
-                obj.vertex_groups.remove(obj.vertex_groups[bone_name])
+        if remove_old:
+            try:
+                bpy.context.view_layer.objects.active = armature
+                Set_Mode(context,mode='OBJECT')
+                Set_Mode(context,mode='EDIT')
+            except:
+                print("Oh here comes a crash from the merge bone weights!")
+            for bone_name in bone_names:
+                armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
 
     # remove old bones
-    try:
-        bpy.context.view_layer.objects.active = armature
-        Set_Mode(context,mode='OBJECT')
-        Set_Mode(context,mode='EDIT')
-    except:
-        print("Oh here comes a crash from the merge bone weights!")
-    for bone_name in bone_names:
-        armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
+    if remove_old:
+        try:
+            bpy.context.view_layer.objects.active = armature
+            Set_Mode(context,mode='OBJECT')
+            Set_Mode(context,mode='EDIT')
+        except:
+            print("Oh here comes a crash from the merge bone weights!")
+        for bone_name in bone_names:
+            armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
 
 def patch_fbx_exporter():
     fbx_utils.get_bid_name = get_bid_name
@@ -184,12 +204,14 @@ def get_meshes_objects(context, armature_name=None):
 
 
 
-def add_shapekey(obj, shapekey_name, from_mix=False):
+def add_shapekey(obj, shapekey_name, from_mix=False) -> bpy.types.ShapeKey:
     if not has_shapekeys(obj) or shapekey_name not in obj.data.shape_keys.key_blocks:
         shape_key = obj.shape_key_add(name=shapekey_name, from_mix=from_mix)
         return shape_key
+    
 
-def get_armature(context, armature_name=None):
+
+def get_armature(context, armature_name=None) -> bpy.types.Object:
     if armature_name:
         obj = bpy.data.objects[armature_name]
         if obj.type == "ARMATURE":
@@ -244,7 +266,7 @@ def apply_modifier(mod):
 def get_modifiers_active(self, context):
     return [(modifier.name, modifier.name, modifier.name) for modifier in context.object.modifiers]
 
-def apply_modifier_for_obj_with_shapekeys(mod, delete_old = False):
+def apply_modifier_for_obj_with_shapekeys(mod,delete_old=False):
     if mod.type == 'ARMATURE':
         # Armature modifiers are a special case: they don't have a show_render
         # property, so we have to use the show_viewport property instead
@@ -335,7 +357,7 @@ def apply_modifier_for_obj_with_shapekeys(mod, delete_old = False):
 
 
 
-def join_meshes(context, armature_name):
+def join_meshes(context, armature_name) -> None:
     bpy.data.objects[armature_name]
     meshes = get_meshes_objects(context, armature_name)
     if not meshes:

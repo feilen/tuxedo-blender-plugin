@@ -241,8 +241,10 @@ Tools.anim_weight_incl_shapekeys.desc,"Factor shapekeys into animation weighting
 
 BakePanel.WarningPanel.desc,"Different warnings/errors before bake.",,
 BakePanel.WarningPanel.label,"Warnings:",,
-GmodPanel.gmod_visibility.shown_by_default,"In Game Visibility",,
-GmodPanel.gmod_visibility.is_toggleable,"In Game Toggleable",,
+GmodPanel.gmod_visibility.shown_by_default.label,"In Game Visibility",,
+GmodPanel.gmod_visibility.shown_by_default.desc,"Whether the mesh should be visible by default in game",,
+GmodPanel.gmod_visibility.is_toggleable.label,"In Game Toggleable",,
+GmodPanel.gmod_visibility.is_toggleable.desc,"Whether the mesh should be togglable via body groups in game through the character menu",,
 GmodPanel.gmod_visibility.list_label,"Gmod Game Visibility",,
 
 BakePanel.vrc_q_excellent,"VRChat Quest Excellent",,
@@ -294,12 +296,13 @@ Tools.gen_twist_bones.desc,"Attempt to generate twistbones for the selected bone
 Tools.gen_twist_bones.success,"Successfully added twistbones",,
 
 Tools.convert_to_secondlife.label,"Convert Bones To Second Life",,
-Tools.convert_to_secondlife.desc,"Converts all main bone names to second life.\nMake sure your model has the standard bone names from after using Fix Model",,
+Tools.convert_to_secondlife.desc,"Uses a dictionary of known bone names to convert all main bone names to second life.",,
 Tools.convert_bones.fail,"Failed to translate {translate_bone_fails} bones! They will be merged to their parent bones.",,
+Tools.convert_bones_resonite.fail,"Failed to translate {translate_bone_fails} bones! These may be dynamic bones.",,
 Tools.convert_bones.success,"Connected all bones!",,
 
 Tools.convert_to_valve.label,"Convert Bones To Valve",,
-Tools.convert_to_valve.desc,"Converts all main bone names to default valve bone names. \nMake sure your model has the standard bone names from after using Fix Model",,
+Tools.convert_to_valve.desc,"Uses a dictionary of known bone names to convert all main bone names to default valve bone names.",,
 Tools.export_gmod_addon.desc,"Compile and export as Gmod playermodel addon to your addons. May not always work.",,
 Tools.export_gmod_addon.label,"Export Gmod Addon",,
 
@@ -381,4 +384,15 @@ Tools.apply_modifier_for_object_with_shape_keys.label,"Apply modifier for object
 Tools.modifiers_enum_label.label,"Modifier",,
 Tools.modifiers_enum_label.desc,"Modifier on mesh to apply",,
 
+Tools.merge_weights_to_active.label,"Merge To Active",,
+Tools.merge_weights_to_active.desc,"Merge selected bone weights to selected active bone",,
+Tools.merge_weights_to_parents.label,"Merge To Parents",,
+Tools.merge_weights_to_parents.desc,"Merge selected bones to each of their parents, so that they are safely deleted.",,
 
+Tools.delete_old_bones_merging.desc,"Delete bones that no longer have weights after merging them.",,
+Tools.delete_old_bones_merging.label,"Delete Merged Bones",,
+Tools.merge_bones.label,"Merge bones:",,
+Tools.translate.label,"Translate: ",,
+
+Tools.convert_to_resonite.label,"Convert Bones To Resonite",,
+Tools.convert_to_resonite.desc,"Uses a dictionary of known bone names to convert to Resonite's requirements.",,

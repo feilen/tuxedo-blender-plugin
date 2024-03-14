@@ -277,11 +277,12 @@ def register_properties():
         items=tab_enums
     )
     
+    Scene.delete_old_bones_merging = BoolProperty(name = t('Tools.delete_old_bones_merging.label'), description=t('Tools.delete_old_bones_merging.desc'), default=False)
     
     
     #Gmod visiblity for compiling garry's mod model body groups
-    Object.gmod_shown_by_default = BoolProperty(name = t('GmodPanel.gmod_visibility.shown_by_default'), default=True)
-    Object.gmod_is_toggleable = BoolProperty(name = t('GmodPanel.gmod_visibility.is_toggleable'), default=False)
+    Object.gmod_shown_by_default = BoolProperty(name = t('GmodPanel.gmod_visibility.shown_by_default.label'),  description=t('GmodPanel.gmod_visibility.shown_by_default.desc'), default=True)
+    Object.gmod_is_toggleable = BoolProperty(name = t('GmodPanel.gmod_visibility.is_toggleable.label'), description=t('GmodPanel.gmod_visibility.is_toggleable.desc'), default=False)
     Scene.gmod_toggle_list_index = IntProperty(default=0, get=(lambda self : -1), set=(lambda self,context : None))
     
     class MaterialListGrouper(PropertyGroup):
@@ -581,3 +582,4 @@ def register_properties():
             description='Enable SRanipal Shapekey Creation',
             default=True)
         )
+    
