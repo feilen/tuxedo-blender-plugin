@@ -322,6 +322,7 @@ DecimationPanel.preset.good.label,Good,良い,
 DecimationPanel.preset.good.description,The maximum number of tris you can have for a Good rating.,あなたが良い評価のために持つことができるトリスの最大数,당신의 아바타가 Good 등급을 받을 수 있는 최대 삼각폴리곤(Tris) 개수입니다.
 DecimationPanel.preset.quest.label,Quest,,
 DecimationPanel.preset.quest.description,"The recommended number of tris for Quest avatars.",,
+ToolPanel.decimation_panel.label,"Decimate:",,
 Scene.decimation_animation_weighting.label,Animation weighting,,
 Scene.decimation_animation_weighting.desc,"Weight decimation based on shape keys and vertex group overlap
 Results in better animating topology by trading off overall shape accuracy
@@ -406,3 +407,9 @@ Translations.translation_coll_target.label,"Translate",,
 Translations.translate_mmd.desc,"Translate from MMD to english using MMD Tools. You need MMD Tools installed.",,
 Translations.translate_mmd.label,"Translate MMD to English",,
 Tools.apply_modifier_for_object_with_shape_keys.drawlabel1,"apply modifier for: \"{name}\""
+
+FixModel.Warning.1,"Fix model is depreciated.",,
+FixModel.Warning.2,"This is due to it's highly destructive nature, and it didn't fix anything.",,
+FixModel.Warning.3,"The tools that Tuxedo provides can be used to do everything fix model could.",,
+FixModel.Warning.4,"These tools are non destructive, undoable, and don't ruin your model.",,
+FixModel.Warning.5,"Thank you for your understanding.",,

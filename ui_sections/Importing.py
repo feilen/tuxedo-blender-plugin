@@ -57,7 +57,26 @@ class Tuxedo_PT_ImportingPanel(Panel):
         row.operator(Tuxedo_OT_ExportVRC.bl_idname,icon_value=globals.icons_dict["vrchat"].icon_id)
         row = col.row(align=True)
         row.operator(Tuxedo_OT_ExportResonite.bl_idname,icon_value=globals.icons_dict["resonite"].icon_id)
+        row = col.row(align=False)
+        row.label(text="")
 
+        #this is because people will want it.
+        height = 0.6
+        row = col.row(align=True)
+        row.scale_y = height
+        row.label(text=t('FixModel.Warning.1'), icon="INFO")
+        row = col.row(align=True)
+        row.scale_y = height
+        row.label(text=t('FixModel.Warning.2'), icon="BLANK1")
+        row = col.row(align=True)
+        row.scale_y = height
+        row.label(text=t('FixModel.Warning.3'), icon="BLANK1")
+        row = col.row(align=True)
+        row.scale_y = height
+        row.label(text=t('FixModel.Warning.4'), icon="BLANK1")
+        row = col.row(align=True)
+        row.scale_y = height
+        row.label(text=t('FixModel.Warning.5'), icon="BLANK1")
 
         row = col.row(align=False)
         row.label(text="")

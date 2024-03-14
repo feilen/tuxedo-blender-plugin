@@ -278,7 +278,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
         print("testing if SMD tools exist.")
         try:
-            bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
+            bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..")+"/assets/garrysmod/")
         except AttributeError:
             bpy.ops.tuxedo_bake.nosource('INVOKE_DEFAULT')
             return {'FINISHED'}
@@ -1059,7 +1059,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         context.view_layer.objects.active = body_armature
 
         print("Using importer with append enabled to yeet proportions fix anim onto our model")
-        bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "reference.smd"}], append = "APPEND",directory=os.path.dirname(os.path.abspath(__file__))+"/assets/garrysmod/")
+        bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "reference.smd"}], append = "APPEND",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")+"/assets/garrysmod/")
 
         print("keying animation reference.")
         body_armature.animation_data.action = bpy.data.actions["reference"]
