@@ -32,7 +32,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
     
     #since I wrote this myself, a bit more efficent than cats. mostly - @989onan
     def execute(self, context: bpy.types.Context):
-        file_grouping_dict = {}#group our files so our importers can import them together. in the case of OBJ+MTL and others that need grouped files, this is extremely important.
+        file_grouping_dict: dict[str, list[dict[str,str]]] = dict()#group our files so our importers can import them together. in the case of OBJ+MTL and others that need grouped files, this is extremely important.
 
         #check if we are importing multiple files
         is_multi = False
@@ -60,16 +60,16 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
                 except Exception as e:
                     print("error when trying to find a value of the same value in the kinds of importers. May just be an import type that's a singlet:")
                     print(e)
-                fullpath = os.path.join(os.path.dirname(self.filepath),os.path.basename(self.filepath))
+                fullpath: str = os.path.join(os.path.dirname(self.filepath),os.path.basename(self.filepath))
                 name = pathlib.Path(fullpath).suffix.replace(".","")
                 if name not in file_grouping_dict: file_grouping_dict[name] = []
                 file_grouping_dict[name].append({"name": fullpath}) #emulate passing a list of files.
 
         else:
-            fullpath = os.path.join(os.path.dirname(self.filepath),os.path.basename(self.filepath))
+            fullpath: str = os.path.join(os.path.dirname(self.filepath),os.path.basename(self.filepath))
             name = pathlib.Path(fullpath).suffix.replace(".","")
             if name not in file_grouping_dict: file_grouping_dict[name] = []
-            file_grouping_dict[name].append({"name": fullpath}) #pass a random thing, should be fine
+            file_grouping_dict[name].append({"name": fullpath}) #emulate passing a list of files.
         
         #import the files together to make sure things like obj import together. This is important
         for file_group_name,files in file_grouping_dict.items():

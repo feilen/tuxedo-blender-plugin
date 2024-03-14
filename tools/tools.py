@@ -6,15 +6,43 @@ import webbrowser
 import operator
 import numpy as np
 
+from .. import globals
+
 from .dictionaries import bone_names
 from . import core
-from .translate import t
+from .translate import t, translation_enum, translate_mmd
 
 from ..class_register import wrapper_registry
 
 from bpy.types import Context, Operator
 
 from mathutils.geometry import intersect_point_line
+
+
+
+
+@wrapper_registry
+class Tuxedo_OT_TranslateMMD(Operator):
+    bl_idname = 'tuxedo.translate_mmd'
+    bl_label = t('Translations.translate_mmd.label')
+    bl_description = t('Translations.translate_mmd.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    translation_enum: bpy.props.EnumProperty(name=t('Translations.translation_coll_target.label'),description=t('Translations.translation_coll_target.desc'),items=translation_enum)
+    
+    def draw(self, context: bpy.types.Context):
+        self.layout.prop(self, "translation_enum")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    @classmethod
+    def poll(self, context: bpy.types.Context):
+        return (translation_enum(self, context) is not None) and (globals.mmd_tools_exist)
+
+    def execute(self, context: bpy.types.Context):
+        translate_mmd(self.translation_enum, context)
+        return {'FINISHED'}
 
 
 @wrapper_registry
@@ -181,7 +209,7 @@ class Tuxedo_OT_ApplyModifierForObjectWithShapeKeys(bpy.types.Operator):
     modifiers: bpy.props.EnumProperty(name=t('Tools.modifiers_enum_label.label'), description=t('Tools.modifiers_enum_label.desc'), items=core.get_modifiers_active)
 
     def draw(self, context):
-        self.layout.label(text="apply modifier for: \""+context.object.name+"\"")
+        self.layout.label(text=t('Tools.apply_modifier_for_object_with_shape_keys.drawlabel1').format(name=context.object.name))
         self.layout.prop(self, "modifiers")
 
     def execute(self, context: bpy.types.Context):

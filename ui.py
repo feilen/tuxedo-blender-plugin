@@ -199,6 +199,8 @@ class ToolPanel(Panel):
         row.operator(tools.ConvertToSecondlifeButton.bl_idname)
         row.operator(gmod_tools.ConvertToValveButton.bl_idname)
         row.operator(tools.Tuxedo_OT_ConvertToResonite.bl_idname)
+        row = col.row(align=True)
+        row.operator(tools.Tuxedo_OT_TranslateMMD.bl_idname)
 
 
         row = col.row(align=True)

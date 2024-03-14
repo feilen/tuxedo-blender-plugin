@@ -1,11 +1,12 @@
 import os
 import typing
-from typing import TypedDict
 from bpy.utils.previews import ImagePreviewCollection
 import bpy
-from collections.abc import Mapping
+import importlib.util
+mmd_tools_exist = importlib.util.find_spec("mmd_tools") is not None
 
-def import_multi_files(method = None, directory: typing.Optional[str] = None, files: typing.Union[bpy.types.OperatorFileListElement, typing.Any] = None, filepath: typing.Optional[str] = ""):
+
+def import_multi_files(method = None, directory: typing.Optional[str] = None, files: list[dict[str,str]] = None, filepath: typing.Optional[str] = ""):
     if not filepath:
         method(directory, filepath)
     else:
@@ -25,7 +26,7 @@ icon_names = {
 
 #each import should map to a type. even in the case that multiple methods should import together, or have the same import method. Make sure the lambdas match so they get grouped together
 #In the case of a file importer that takes only one file argument and each one needs individual import, use above method. (example of it in use is ".dae" format)
-import_types = {
+import_types: dict[str, typing.Callable[[str, list[dict[str,str]], str], None]] = {
     "fbx": (lambda directory, files, filepath : bpy.ops.import_scene.fbx(files=files, directory=directory, filepath=filepath,automatic_bone_orientation=False,use_prepost_rot=False,use_anim=False)),
     "smd": (lambda directory, files, filepath : bpy.ops.import_scene.smd(files=files, directory=directory, filepath=filepath)),
     "dmx": (lambda directory, files, filepath: bpy.ops.import_scene.smd(files=files, directory=directory, filepath=filepath)),

@@ -9,7 +9,6 @@ from .dictionaries import bone_names
 import bmesh
 import math
 import webbrowser
-from io_scene_fbx import fbx_utils
 import typing
 
 from ..globals import blender
@@ -164,6 +163,7 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names, remo
             armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
 
 def patch_fbx_exporter():
+    from io_scene_fbx import fbx_utils
     fbx_utils.get_bid_name = get_bid_name
 
 # Blender-specific key generators - monkeypatched to force name if present

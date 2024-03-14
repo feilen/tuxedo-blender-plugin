@@ -396,3 +396,13 @@ Tools.translate.label,"Translate: ",,
 
 Tools.convert_to_resonite.label,"Convert Bones To Resonite",,
 Tools.convert_to_resonite.desc,"Uses a dictionary of known bone names to convert to Resonite's requirements.",,
+
+Translations.translation_group.desc,"Translate {tgroup} from mmd to english.",,
+Translations.translation_group.label,"Translate {tgroup}",,
+
+Translations.translation_coll_target.desc,"The type of collection of objects to translate",,
+Translations.translation_coll_target.label,"Translate",,
+
+Translations.translate_mmd.desc,"Translate from MMD to english using MMD Tools. You need MMD Tools installed.",,
+Translations.translate_mmd.label,"Translate MMD to English",,
+Tools.apply_modifier_for_object_with_shape_keys.drawlabel1,"apply modifier for: \"{name}\""
