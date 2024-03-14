@@ -184,7 +184,7 @@ class Tuxedo_OT_ApplyModifierForObjectWithShapeKeys(bpy.types.Operator):
         self.layout.label(text="apply modifier for: \""+context.object.name+"\"")
         self.layout.prop(self, "modifiers")
 
-    def execute(self, context: Context) -> typing.Set[str] | typing.Set[int]:
+    def execute(self, context: bpy.types.Context):
         
         result = core.apply_modifier_for_obj_with_shapekeys(context.object.modifiers[self.modifiers],delete_old=True)
         if (result != True):
@@ -203,10 +203,10 @@ class Tuxedo_OT_StartPoseMode(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context: Context):
+    def poll(cls, context: bpy.types.Context):
         return core.get_armature(context)
 
-    def execute(self, context: Context) -> typing.Set[str] | typing.Set[int]:
+    def execute(self, context: bpy.types.Context):
         armature = core.get_armature(context)
 
         core.Set_Mode(context,'OBJECT')
