@@ -31,9 +31,9 @@ bone_names = {
     "index_3_r": ["indexfinger3r","index3r","rindex3","indexdistalr"],
 
     "thumb_0_r": ["thumb0r","rthumb0","thumbmetacarpalr"],
-    "thumb_1_r": ['thumb0r',"rthumb0","thumbproximalr"],
-    "thumb_2_r": ['thumb1r',"rthumb1","thumbintermediater"],
-    "thumb_3_r": ['thumb2r',"rthumb2","thumbdistalr"],
+    "thumb_1_r": ['thumb1r',"rthumb1","thumbproximalr"],
+    "thumb_2_r": ['thumb2r',"rthumb2","thumbintermediater"],
+    "thumb_3_r": ['thumb3r',"rthumb3","thumbdistalr"],
 
     "right_leg": ["rightleg", "legr", "rleg", "upperlegr", "rupperleg", "thighr", "rightupperleg", "uplegr", "rupleg"],
     "right_knee": ["rightknee", "kneer", "rknee", "lowerlegr", "calfr", "rlowerleg", "rcalf", "rightlowerleg", "lowlegr", "rlowleg"],
@@ -68,9 +68,9 @@ bone_names = {
     "index_3_l": ["indexfinger3l","index3l","lindex3","indexdistall"],
 
     "thumb_0_l": ["thumb0l","lthumb0","thumbmetacarpall"],
-    "thumb_1_l": ['thumb0l',"lthumb0","thumbproximall"],
-    "thumb_2_l": ['thumb1l',"lthumb1","thumbintermediatel"],
-    "thumb_3_l": ['thumb2l',"lthumb2","thumbdistall"],
+    "thumb_1_l": ['thumb1l',"lthumb1","thumbproximall"],
+    "thumb_2_l": ['thumb2l',"lthumb2","thumbintermediatel"],
+    "thumb_3_l": ['thumb3l',"lthumb3","thumbdistall"],
 
     "left_leg": ["leftleg", "legl", "lleg", "upperlegl", "lupperleg", "thighl", "leftupperleg", "uplegl", "lupleg"],
     "left_knee": ["leftknee", "kneel", "lknee", "lowerlegl", "llowerleg", "calfl", "lcalf", "leftlowerleg", 'lowlegl', 'llowleg'],

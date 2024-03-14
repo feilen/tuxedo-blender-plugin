@@ -484,13 +484,12 @@ def select_set_all_curmode(context=bpy.context,action='DESELECT'):
         bpy.ops.object.select_all(action=action)
     elif(context == 'EDIT'):
         for obj in bpy.context.selected_objects: #iterate over all objects, this thankfully includes the active object.
-            match obj.type:
-                case 'MESH':
-                    bpy.ops.mesh.select_all(action=action)
-                case 'CURVE':
-                    bpy.ops.curve.select_all(action=action)
-                case 'ARMATURE':
-                    bpy.ops.armature.select_all(action=action)
+            if obj.type == 'MESH':
+                bpy.ops.mesh.select_all(action=action)
+            if obj.type == 'CURVE':
+                bpy.ops.curve.select_all(action=action)
+            if obj.type == 'ARMATURE':
+                bpy.ops.armature.select_all(action=action)
     elif(context == 'POSE'):
         bpy.ops.pose.select_all(action=action)
     
