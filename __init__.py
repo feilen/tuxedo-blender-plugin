@@ -135,6 +135,7 @@ def register():
 
 
 def custom_icons():
+    import bpy.utils.previews
     globals.icons_dict = bpy.utils.previews.new()
     icons_dir = os.path.join(os.path.dirname(__file__), "images", "icons")
 

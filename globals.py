@@ -1,6 +1,7 @@
 import os
 import typing
 from typing import TypedDict
+from bpy.utils.previews import ImagePreviewCollection
 import bpy
 from collections.abc import Mapping
 
@@ -16,7 +17,7 @@ def import_multi_files(method = None, directory: typing.Optional[str] = None, fi
 #these get populated by init.
 version = None
 blender = None
-icons_dict: typing.Type[bpy.utils.previews.ImagePreviewCollection]
+icons_dict: typing.Type[ImagePreviewCollection]
 icon_names = {
     "resonite":"RSN_Logomark_Color_1080.png",
     "vrchat":"VRC_Logo.png"

@@ -478,7 +478,7 @@ def unselect_all():
             select(obj, False)
     
 
-#nice wrapper method to make 
+#nice wrapper method to change modes
 def select_set_all_curmode(context=bpy.context,action='DESELECT'):
     if(context == 'OBJECT'):
         bpy.ops.object.select_all(action=action)
