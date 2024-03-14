@@ -147,15 +147,10 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names, remo
 
                 except Exception as e:
                     pass # this is because of null vertex group reading, and we kinda don't care all that much about it - @989onan
-        if remove_old:
-            try:
-                bpy.context.view_layer.objects.active = armature
-                Set_Mode(context,mode='OBJECT')
-                Set_Mode(context,mode='EDIT')
-            except:
-                print("Oh here comes a crash from the merge bone weights!")
-            for bone_name in bone_names:
-                armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
+        for bone_name in bone_names:
+            # remove old bones vertex groups
+            if bone_name in obj.vertex_groups:
+                obj.vertex_groups.remove(obj.vertex_groups[bone_name])
 
     # remove old bones
     if remove_old:
