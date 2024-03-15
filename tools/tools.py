@@ -19,6 +19,28 @@ from bpy.types import Context, Operator
 from mathutils.geometry import intersect_point_line
 
 
+@wrapper_registry
+class Tuxedo_OT_ShapekeyToBasis(Operator):
+    bl_idname = 'tuxedo.shapekey_to_basis'
+    bl_label = t('Translations.shapekey_to_basis.label')
+    bl_description = t('Translations.shapekey_to_basis.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    @classmethod
+    def poll(self, context: bpy.types.Context):
+        return core.has_shapekeys(context.active_object) and hasattr(context.active_object.active_shape_key,'name')
+        
+    def execute(self, context: bpy.types.Context):
+        obj: bpy.types.Object = context.active_object
+        data: bpy.types.Mesh = obj.data
+        name: str = data.shape_keys.key_blocks[obj.active_shape_key_index].name
+        if not core.apply_shapekey_to_basis(context,obj,name,delete_old=False):
+            self.report({'ERROR'}, t('Translations.shapekey_to_basis.err1'))
+            return {'CANCELLED'}
+        else:
+            return {'FINISHED'}
+
 
 
 @wrapper_registry

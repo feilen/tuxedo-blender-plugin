@@ -3,6 +3,7 @@ import itertools
 import threading
 import time
 import subprocess
+from SourceIO.library.source2.data_types.keyvalues3.types import Object
 import bpy
 import numpy as np
 from .dictionaries import bone_names
@@ -58,13 +59,32 @@ def get_children_recursive(parent):
     else:
         return parent.children_recursive
 
-def shape_key_to_basis(context, obj, shape_key_name):
+def apply_shapekey_to_basis(context: bpy.types.Context, obj: bpy.types.Object, shape_key_name: str, delete_old: bool = False):
     if shape_key_name not in obj.data.shape_keys.key_blocks:
-        return
-    shape_key = obj.data.shape_keys.key_blocks[shape_key_name]
-    for v in obj.data.vertices:
-        v.co = shape_key.data[v.index].co
-    obj.data.update()
+        return False
+    shapekeynum = obj.data.shape_keys.key_blocks.find(shape_key_name)
+
+    Set_Mode(context, 'EDIT')
+
+    select_set_all_curmode(context, 'SELECT')
+
+    
+    obj.active_shape_key_index = 0
+    bpy.ops.mesh.blend_from_shape(shape = shape_key_name, add=True, blend=1)
+    obj.active_shape_key_index = shapekeynum
+    select_set_all_curmode(context, 'SELECT')
+    bpy.ops.mesh.blend_from_shape(shape = shape_key_name, add=True, blend=-2)
+    
+
+    select_set_all_curmode(context, 'DESELECT')
+    
+    Set_Mode(context,'OBJECT')
+    print("blended!")
+
+    if delete_old:
+        obj.active_shape_key_index = shapekeynum
+        bpy.ops.object.shape_key_remove(all=False)
+    return True
 
 def merge_bone_weights(context, armature, bone_names, active_bone_name, remove_old=False):
     if not isinstance(bone_names, list):
@@ -364,7 +384,7 @@ def join_meshes(context, armature_name) -> None:
     bpy.ops.object.join()
 
 def has_shapekeys(obj):
-    return obj.type == 'MESH' and obj.data and hasattr(obj.data,'shape_keys') and len(obj.data.shape_keys.key_blocks) > 1
+    return obj.type == 'MESH' and hasattr(obj, 'data') and hasattr(obj.data,'shape_keys') and hasattr(obj.data.shape_keys, 'key_blocks') and len(obj.data.shape_keys.key_blocks) > 1
 
 # Remove doubles using bmesh
 def remove_doubles(mesh, margin):
@@ -475,9 +495,9 @@ def unselect_all():
 
 #nice wrapper method to change modes
 def select_set_all_curmode(context=bpy.context,action='DESELECT'):
-    if(context == 'OBJECT'):
+    if(context.object.mode == 'OBJECT'):
         bpy.ops.object.select_all(action=action)
-    elif(context == 'EDIT'):
+    elif(context.object.mode == 'EDIT'):
         for obj in bpy.context.selected_objects: #iterate over all objects, this thankfully includes the active object.
             if obj.type == 'MESH':
                 bpy.ops.mesh.select_all(action=action)

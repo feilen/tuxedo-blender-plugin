@@ -1544,8 +1544,9 @@ class BakeButton(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         if apply_keys:
             for obj in get_objects(collection.all_objects, filter_func=lambda obj: core.has_shapekeys(obj)):
-                core.add_shapekey(obj, "Tuxedo applykey", True)
-                core.shape_key_to_basis(context, obj, "Tuxedo applykey")
+                meshobj: bpy.types.Object = obj
+                core.add_shapekey(meshobj, "Tuxedo applykey", True)
+                core.apply_shapekey_to_basis(context, meshobj, "Tuxedo applykey")
                 obj.active_shape_key_index = 0
                 # Ensure all keys are now set to 0.0
                 for key in obj.data.shape_keys.key_blocks:
