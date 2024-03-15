@@ -413,3 +413,6 @@ FixModel.Warning.2,"This is due to it's highly destructive nature, and it didn't
 FixModel.Warning.3,"The tools that Tuxedo provides can be used to do everything fix model could.",,
 FixModel.Warning.4,"These tools are non destructive, undoable, and don't ruin your model.",,
 FixModel.Warning.5,"Thank you for your understanding.",,
+Tools.shapekey_to_basis.label,"make this shapekey the default position of the mesh,",,
+Tools.shapekey_to_basis.desc,"",,
+Tools.shapekey_to_basis.desc,"failed to apply shape key!",,

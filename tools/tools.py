@@ -206,6 +206,10 @@ class Tuxedo_OT_ApplyModifierForObjectWithShapeKeys(bpy.types.Operator):
     bl_description = t('Tools.apply_modifier_for_object_with_shape_keys.desc')
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context: bpy.types.Context):
+        return (bpy.context.mode == 'OBJECT') and (context.active_object is not None) and core.has_shapekeys(context.active_object)
+
     modifiers: bpy.props.EnumProperty(name=t('Tools.modifiers_enum_label.label'), description=t('Tools.modifiers_enum_label.desc'), items=core.get_modifiers_active)
 
     def draw(self, context):
@@ -1232,7 +1236,7 @@ class FT_OT_CreateShapeKeys(Operator):
             #Clear all existing values for shape keys
             ops.object.shape_key_clear()
 
-            basis_key = core.core.get_shapekeys_ft(self, context)[0][0]
+            basis_key = core.get_shapekeys_ft(self, context)[0][0]
             basis_key_ref = object.data.shape_keys.key_blocks[basis_key]
             basis_key_data = np.empty((len(basis_key_ref.data), 3), dtype=np.float32)
             basis_key_ref.data.foreach_get("co", np.ravel(basis_key_data))

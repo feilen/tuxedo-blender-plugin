@@ -873,7 +873,7 @@ class BakeButton(bpy.types.Operator):
         proc.wait()
         print("Finished Texture bake for \""+texturename+"\"!")
 
-    def perform_bake(self, context):
+    def perform_bake(self, context: bpy.types.Context):
         is_unittest = context.scene.tuxedo_is_unittest
         if is_unittest:
 

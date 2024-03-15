@@ -364,7 +364,7 @@ def join_meshes(context, armature_name) -> None:
     bpy.ops.object.join()
 
 def has_shapekeys(obj):
-    return obj.type == 'MESH' and obj.data and obj.data.shape_keys and len(obj.data.shape_keys.key_blocks) > 1
+    return obj.type == 'MESH' and obj.data and hasattr(obj.data,'shape_keys') and len(obj.data.shape_keys.key_blocks) > 1
 
 # Remove doubles using bmesh
 def remove_doubles(mesh, margin):
