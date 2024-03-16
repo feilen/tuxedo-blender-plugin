@@ -20,6 +20,189 @@ from mathutils.geometry import intersect_point_line
 
 
 @wrapper_registry
+class Tuxedo_OT_CreateDigitigradeLegs(bpy.types.Operator):
+    bl_idname = "armature.createdigitigradelegs"
+    bl_label = t('Tools.create_digitigrade_legs.label')
+    bl_description = t('Tools.create_digitigrade_legs.desc')
+
+    @classmethod
+    def poll(cls, context):
+        if(context.active_object is None):
+            return False
+        if(context.selected_editable_bones is not None):
+            if(len(context.selected_editable_bones) == 2):
+                return True
+        return False
+
+    def execute(self, context):
+
+        for digi0 in context.selected_editable_bones:
+            digi1 = None
+            digi2 = None
+            digi3 = None
+
+            try:
+                digi1 = digi0.children[0]
+                digi2 = digi1.children[0]
+                digi3 = digi2.children[0]
+            except:
+                print("bone format incorrect! Please select a chain of 4 continious bones!")
+            digi4 = None
+            try:
+                digi4 = digi3.children[0]
+            except:
+                print("no toe bone. Continuing.")
+            digi0.select = True
+            digi1.select = True
+            digi2.select = True
+            digi3.select = True
+            if(digi4):
+                digi4.select = True
+            bpy.ops.armature.roll_clear()
+            bpy.ops.armature.select_all(action='DESELECT')
+
+            scene = context.scene
+            #creating transform for upper leg
+            digi0.select = True
+            bpy.ops.transform.create_orientation(name="CATS_digi0", overwrite=True)
+            bpy.ops.armature.select_all(action='DESELECT')
+
+
+            #duplicate digi0 and assign it to thigh
+            thigh = core.duplicatebone(digi0)
+            bpy.ops.armature.select_all(action='DESELECT')
+
+            #make digi2 parrallel to digi1
+            digi2.align_orientation(digi0)
+
+            #extrude thigh
+            thigh.select_tail = True
+            bpy.ops.armature.extrude_move(ARMATURE_OT_extrude={"forked":False},TRANSFORM_OT_translate=None)
+            #set new bone to calf varible
+            bpy.ops.armature.select_more()
+            calf = context.selected_bones[0]
+            bpy.ops.armature.select_all(action='DESELECT')
+
+            #set calf end to  digi2 end
+            calf.tail = digi2.tail
+
+            #make copy of calf, flip it, and then align bone so that it's head is moved to match in align phase
+            flipedcalf = core.duplicatebone(calf)
+            bpy.ops.armature.select_all(action='DESELECT')
+            flipedcalf.select = True
+            bpy.ops.armature.switch_direction()
+            bpy.ops.armature.select_all(action='DESELECT')
+            flippeddigi1 = core.duplicatebone(digi1)
+            bpy.ops.armature.select_all(action='DESELECT')
+            flippeddigi1.select = True
+            bpy.ops.armature.switch_direction()
+            bpy.ops.armature.select_all(action='DESELECT')
+
+
+
+            #align flipped calf to flipped middle leg to move the head
+            flipedcalf.align_orientation(flippeddigi1)
+
+            flipedcalf.length = flippeddigi1.length
+
+            #assign calf tail to flipped calf head so it moves calf's head
+            calf.head = flipedcalf.tail
+
+            #delete helper bones
+            bpy.ops.armature.select_all(action='DESELECT')
+            flippeddigi1.select = True
+            bpy.ops.armature.delete()
+            bpy.ops.armature.select_all(action='DESELECT')
+            flipedcalf.select = True
+            bpy.ops.armature.delete()
+            bpy.ops.armature.select_all(action='DESELECT')
+
+
+            #Tada! It's done! Now to duplicate toes and change parents
+
+
+            #duplicate old foot and reparent
+            newfoot = core.duplicatebone(digi3)
+            newfoot.parent = calf
+            #create toe bone if it exists
+            if(digi4):
+                #duplicate old toe and reparent
+                newtoe = core.duplicatebone(digi4)
+                newtoe.parent = newfoot
+            #finally done!
+        return {'FINISHED'}
+    
+    
+
+
+
+@wrapper_registry
+class Tuxedo_OT_DeleteZeroWeightBones(Operator):
+    bl_idname = 'tuxedo.delete_zero_weight_bones'
+    bl_label = t('Tools.delete_zero_weight_bones.label')
+    bl_description = t('Tools.delete_zero_weight_bones.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    @classmethod
+    def poll(self, context: bpy.types.Context):
+        return context.active_object and context.active_object.type == "ARMATURE" and (context.object.mode == "EDIT" or context.object.mode == "POSE" or context.object.mode == "OBJECT") and (len(context.active_object.children) > 0)
+
+    def execute(self, context: bpy.types.Context):
+        armature = context.active_object
+        data: bpy.types.Armature = armature.data
+        weighted_groups: dict[bpy.types.Object, set[str]] = core.get_zero_and_weight_vertex_groups(armature=armature, invert=True)
+
+        #find similar bones, where the bones are weighted to entirely nothing.
+        #https://stackoverflow.com/a/10066661
+        result: set[str] = set([i.name for i in data.bones])
+
+        for obj,groups in weighted_groups.items():
+            print([i for i in groups])
+            result = result - groups
+        
+        num: int = 0
+        prevmode = context.object.mode
+        core.Set_Mode(context,mode='EDIT')
+        for name in result:
+            data.edit_bones.remove(data.edit_bones[name])
+            num += 1
+        
+        core.Set_Mode(context,mode='OBJECT')
+        armature.update_tag(refresh={'DATA'})
+        core.Set_Mode(context,mode=prevmode)
+
+        self.report({'INFO'}, t('Tools.delete_zero_weight_bones.number').format(amount=num))
+
+        return {'FINISHED'}
+
+
+@wrapper_registry
+class Tuxedo_OT_DeleteZeroWeightVertexGroups(Operator):
+    bl_idname = 'tuxedo.delete_zero_weight_vertex_groups'
+    bl_label = t('Tools.delete_zero_weight_vertex_groups.label')
+    bl_description = t('Tools.delete_zero_weight_vertex_groups.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context: bpy.types.Context):
+        return context.active_object and context.active_object.type == "ARMATURE" and (context.object.mode == "EDIT" or context.object.mode == "POSE" or context.object.mode == "OBJECT") and (len(context.active_object.children) > 0)
+
+    def execute(self, context: bpy.types.Context):
+        armature = context.active_object
+        zero_weight_vertex_groups: dict[bpy.types.Object, set[str]] = core.get_zero_and_weight_vertex_groups(armature=armature)
+        
+        num: int = 0
+
+        for obj,groups in zero_weight_vertex_groups.items():
+            for group in groups:
+                obj.vertex_groups.remove(obj.vertex_groups[group])
+                num += 1
+
+        self.report({'INFO'}, t('Tools.delete_zero_weight_vertex_groups.number').format(amount=num))
+        return {'FINISHED'}
+
+@wrapper_registry
 class Tuxedo_OT_ShapekeyToBasis(Operator):
     bl_idname = 'tuxedo.shapekey_to_basis'
     bl_label = t('Translations.shapekey_to_basis.label')
@@ -115,6 +298,7 @@ class Tuxedo_OT_ConvertToResonite(Operator):
             'left_arm': "UpperArm.L",
             'left_elbow': "ForeArm.L",
             'left_wrist': "Hand.R",
+
             'pinkie_1_l': "pinkie1.L",
             'pinkie_2_l': "pinkie2.L",
             'pinkie_3_l': "pinkie3.L",
@@ -290,8 +474,8 @@ class Tuxedo_OT_EndPoseMode(bpy.types.Operator):
         core.Set_Mode(context,'OBJECT')
         return {'FINISHED'}
 
-
-@wrapper_registry
+#didn't know this existed already as PoseToRest - @989onan
+"""@wrapper_registry
 class Tuxedo_OT_ApplyAsRest(bpy.types.Operator):
     bl_idname = 'tuxedo.armature_apply_as_rest'
     bl_label = t('Tools.armature_apply_as_rest.label')
@@ -299,7 +483,7 @@ class Tuxedo_OT_ApplyAsRest(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context: Context):
+     def poll(cls, context: Context):
         return core.get_armature(context)
 
     def execute(self, context: Context):
@@ -331,7 +515,7 @@ class Tuxedo_OT_ApplyAsRest(bpy.types.Operator):
 
         bpy.ops.pose.armature_apply()
         core.Set_Mode(context,'OBJECT')
-        return {'FINISHED'}
+        return {'FINISHED'} """
 
 @wrapper_registry
 class Tuxedo_OT_SavePoseAsShapekey(bpy.types.Operator):
@@ -953,8 +1137,8 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 @wrapper_registry
 class PoseToRest(bpy.types.Operator):
     bl_idname = 'tuxedo.pose_to_rest'
-    bl_label = "apply pose as rest pose"
-    bl_description = "Applies armature's pose as rest pose safely, taking shapekeys into account"
+    bl_label = t('Tools.pose_to_rest.label')
+    bl_description = t('Tools.pose_to_rest.label')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     armature_name: bpy.props.StringProperty(

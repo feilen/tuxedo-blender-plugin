@@ -8,13 +8,11 @@ from ..tools.core import version_too_new
 
 from ..tools.importing import Tuxedo_OT_ImportAnyModel, Tuxedo_OT_ExportVRC, Tuxedo_OT_ExportResonite
 
-from ..tools.tools import Tuxedo_OT_ApplyAsRest, Tuxedo_OT_SavePoseAsShapekey, Tuxedo_OT_StartPoseMode, Tuxedo_OT_EndPoseMode
+from ..tools.tools import PoseToRest, Tuxedo_OT_SavePoseAsShapekey, Tuxedo_OT_StartPoseMode, Tuxedo_OT_EndPoseMode
 
 from ..tools.translate import t
 
 from ..class_register import wrapper_registry
-
-
 
 
 @wrapper_registry
@@ -85,13 +83,13 @@ class Tuxedo_PT_ImportingPanel(Panel):
         if context.mode == 'POSE':
             row.operator(Tuxedo_OT_EndPoseMode.bl_idname,icon='POSE_HLT')
             row = col2.row(align=True)
-            row.operator(Tuxedo_OT_ApplyAsRest.bl_idname,icon='SHAPEKEY_DATA')
+            row.operator(PoseToRest.bl_idname,icon='SHAPEKEY_DATA')
             row = col2.row(align=True)
             row.operator(Tuxedo_OT_SavePoseAsShapekey.bl_idname,icon='POSE_HLT')
         else:
             row.operator(Tuxedo_OT_StartPoseMode.bl_idname,icon='POSE_HLT')
             
-            
+
 
         
 

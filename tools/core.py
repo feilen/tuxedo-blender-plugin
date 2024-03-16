@@ -63,7 +63,7 @@ def apply_shapekey_to_basis(context: bpy.types.Context, obj: bpy.types.Object, s
     if shape_key_name not in obj.data.shape_keys.key_blocks:
         return False
     shapekeynum = obj.data.shape_keys.key_blocks.find(shape_key_name)
-
+    
     Set_Mode(context, 'EDIT')
 
     select_set_all_curmode(context, 'SELECT')
@@ -79,7 +79,6 @@ def apply_shapekey_to_basis(context: bpy.types.Context, obj: bpy.types.Object, s
     select_set_all_curmode(context, 'DESELECT')
     
     Set_Mode(context,'OBJECT')
-    print("blended!")
 
     if delete_old:
         obj.active_shape_key_index = shapekeynum
@@ -422,7 +421,42 @@ def Set_Mode(context, mode):
         bpy.ops.object.mode_set(mode=mode,toggle=False)
     else:
         bpy.ops.object.mode_set(mode=mode,toggle=False)
+
+def duplicatebone(b):
+    arm = bpy.context.object.data
+    cb = arm.edit_bones.new(b.name)
+
+    cb.head = b.head
+    cb.tail = b.tail
+    cb.matrix = b.matrix
+    cb.parent = b.parent
+    return cb
+
+
+#remove zero weight bones or zero weights <- for control+f this giantic file.
+def get_zero_and_weight_vertex_groups(armature: bpy.types.Object, invert: bool = False) -> dict[bpy.types.Object, set[str]]:
+    objects_and_groups: dict[bpy.types.Object, set[str]] = dict()
+    
+    for obj in [i for i in armature.children if i.type == "MESH"]:
+        weighted_groups: set[str] = set()
+        data: bpy.types.Mesh = obj.data
+        vertex_groups: set[str] = set([i.name for i in obj.vertex_groups])
+        #we're doing it this way and adding to a set, because being consistent with your parsing is helpful in programming langauges
+        #because preventing cache skipping and accessing data in order and only once is good - @989onan 
+        for vert in data.vertices:
+            for group in vert.groups:
+                if (group.weight > 0.0):
+                    weighted_groups.add(obj.vertex_groups[group.group].name)
+        if(invert):
+            unweighted: set[str] = set(weighted_groups)
+        else:
+            unweighted: set[str] = set(vertex_groups).difference(weighted_groups)
         
+
+        objects_and_groups[obj] = unweighted
+
+    return objects_and_groups
+
 def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True):
     """Mix the weights of two vertex groups on the mesh, optionally removing the vertex group named vg_from."""
     mesh.active_shape_key_index = 0

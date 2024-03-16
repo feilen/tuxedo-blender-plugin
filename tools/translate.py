@@ -1,5 +1,5 @@
 # GPL Licence
-import csv
+import json
 import os
 import typing
 import bpy
@@ -8,6 +8,8 @@ from bpy_types import Context
 from .. import globals
 
 
+# Thanks to https://www.thegrove3d.com/learn/how-to-translate-a-blender-addon/ for the idea
+# Thanks to Resonite by Yellow Dog Man Studios for the idea of translating based on Jsons! (found ideas inside of steam distributable)
 
 translation_types: dict[str, list[typing.Callable[[Context], bpy.types.ID]]] = {
     'BONES': [(lambda context: context.object.pose.bones)],
@@ -37,11 +39,19 @@ def translation_enum(self, context: bpy.types.Context):
 
 translation_dictionary: dict[str, str] = dict()
 
-with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', "translations.csv")), 'r') as csvfile:
-    reader = csv.reader(csvfile)
-    for row in reader:
-        if len(row) >= 2:
-            translation_dictionary[row[0]] = row[1]
+language_minor = "en"
+if "_" in bpy.app.translations.locale:
+    language_minor = bpy.app.translations.locale.split("_")[0]
+else:
+    language_minor = bpy.app.translations.locale
+
+
+if not os.path.exists(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'translations', language_minor+".json"))):
+    language_minor = "en"
+
+with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'translations', language_minor+".json")), 'r') as file:
+
+    translation_dictionary = json.load(fp=file)["messages"]
 
 def t(str_key):
     if str_key not in translation_dictionary:

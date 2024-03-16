@@ -6,6 +6,7 @@ import math
 import numpy as np
 import subprocess
 import shutil
+import webbrowser
 
 from .class_register import wrapper_registry
 from .tools.translate import t
@@ -26,10 +27,9 @@ class BakeTutorialButton(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
-        #webbrowser.open(t('tuxedo_bake.tutorial_button.URL'))
+        webbrowser.open(t('tuxedo_bake.tutorial_button.URL'))
 
-        #TODO
-        #self.report({'INFO'}, t('tuxedo_bake.tutorial_button.success'))
+        self.report({'INFO'}, t('tuxedo_bake.tutorial_button.success'))
         return {'FINISHED'}
 
 # Convienience filter function for retrieving objects

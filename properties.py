@@ -68,23 +68,23 @@ def register_properties():
             max=70000
         )
         use_lods: BoolProperty(
-            name=t("generate_lods"),
+            name=t("Bake.generate_lods.label"),
             description=t("generate_courser_decimation_levels_for_efficient_rendering"),
             default=False
         )
         lods: FloatVectorProperty(
-            name=t("lods"),
-            description=t('lod_generation_levels_as_a_percent_of_the_max_tris'),
+            name=t("Bake.lods.label"),
+            description=t('Bake.lods.desc'),
             #min=0.0,
             #max=1.0
         )
         use_physmodel: BoolProperty(
-            name=t("generate_physics_model"),
-            description=t("generate_an_additional_lod_used_for_simplified_physics_interactions"),
+            name=t("Bake.generate_physics_model.label"),
+            description=t("Bake.generate_physics_model.desc"),
             default=False
         )
         physmodel_lod: FloatProperty(
-            name=t("physmodel_percent"),
+            name=t("Bake.physmodel_percent.label"),
             default=0.1,
             min=0.0,
             max=1.0
@@ -100,8 +100,8 @@ def register_properties():
             default=False
         )
         merge_twistbones: BoolProperty(
-            name=t("merge_twist_bones"),
-            description=t("merge_any_bone_with_twist_in_the_name_useful_as_quest_does_not_support_constraints"),
+            name=t("Bake.merge_twist_bones.label"),
+            description=t("Bake.merge_twist_bones.desc"),
             default=False
         )
         metallic_alpha_pack: EnumProperty(
@@ -114,43 +114,43 @@ def register_properties():
             default="NONE"
         )
         metallic_pack_ao: BoolProperty(
-            name=t("pack_ao_to_metallic_green"),
-            description=t("pack_ambient_occlusion_to_the_green_channel_saves_a_texture_as_unity_uses_g_for_ao_r_for_metallic"),
+            name=t("Bake.pack_ao_to_metallic_green.label"),
+            description=t("Bake.pack_ao_to_metallic_green.desc"),
             default=True
         )
         diffuse_vertex_colors: BoolProperty(
-            name=t("bake_to_vertex_colors"),
-            description=t("rebake_to_vertex_colors_after_initial_bake_avoids_an_entire_extra_texture_if_your_colors_are_simple_enough_incorperates_ao"),
+            name=t("Bake.bake_to_vertex_colors.label"),
+            description=t("Bake.bake_to_vertex_colors.desc"),
             default=False
         )
         diffuse_alpha_pack: EnumProperty(
             name=t('Scene.bake_diffuse_alpha_pack.label'),
             description=t('Scene.bake_diffuse_alpha_pack.desc'),
             items=[
-                ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("TRANSPARENCY", t("Scene.bake_diffuse_alpha_pack.transparency.label"), t("Scene.bake_diffuse_alpha_pack.transparency.desc")),
-                ("SMOOTHNESS", t("Scene.bake_diffuse_alpha_pack.smoothness.label"), t("Scene.bake_diffuse_alpha_pack.smoothness.desc")),
-                ("EMITMASK", "Emit Mask", "A single-color emission mask, for use with preapplied emission")
+                ("NONE", t("Scene.bake_alpha_pack.none.label"), t("Scene.bake_alpha_pack.none.desc")),
+                ("TRANSPARENCY", t("Scene.bake_alpha_pack.transparency.label"), t("Scene.bake_alpha_pack.transparency.desc")),
+                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.bake_alpha_pack.smoothness.desc")),
+                ("EMITMASK", t("Scene.bake_alpha_pack.emit.label"), t("Scene.bake_alpha_pack.emit.label"))
             ],
             default="NONE"
         )
         normal_alpha_pack: EnumProperty(
-            name=t("normal_alpha_pack"),
-            description=t('Scene.bake_diffuse_alpha_pack.desc'),
+            name=t("Bake.normal_alpha_pack.label"),
+            description=t('Bake.normal_alpha_pack.desc'),
             items=[
-                ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("SPECULAR", "Specular", t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("SMOOTHNESS", "Smoothness", t("Scene.bake_diffuse_alpha_pack.none.desc")),
+                ("NONE", t("Scene.bake_alpha_pack.none.label"), t("Scene.bake_alpha_pack.none.desc")),
+                ("SPECULAR", t("Scene.bake_alpha_pack.specular.label"), t("Scene.bake_alpha_pack.specular.desc")),
+                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.normal_alpha_pack.smoothness.desc")),
             ],
             default="NONE"
         )
         normal_invert_g: BoolProperty(
-            name=t("invert_green_channel"),
-            description=t("source_engine_uses_an_inverse_green_channel_this_fixes_that_on_export"),
+            name=t("Bake.invert_green_channel.label"),
+            description=t("Bake.invert_green_channel.desc"),
             default=False
         )
         diffuse_premultiply_ao: BoolProperty(
-            name=t("premultiply_diffuse_w_ao"),
+            name=t("Bake.premultiply_diffuse_w_ao.label"),
             description=t('Scene.bake_pass_questdiffuse.desc'),
             default=False
         )
@@ -165,8 +165,8 @@ def register_properties():
             subtype='FACTOR'
         )
         smoothness_premultiply_ao: BoolProperty(
-            name=t("premultiply_smoothness_w_ao"),
-            description=t("while_not_technically_accurate_this_avoids_the_shine_effect_on_obscured_portions_of_your_model"),
+            name=t("Bake.premultiply_smoothness_w_ao.label"),
+            description=t("Bake.premultiply_smoothness_w_ao.desc"),
             default=False
         )
         smoothness_premultiply_opacity: FloatProperty(
@@ -180,8 +180,8 @@ def register_properties():
             subtype='FACTOR'
         )
         translate_bone_names: EnumProperty(
-            name=t("translate_bone_names"),
-            description=t("target_another_bone_naming_standard_when_exporting_requires_standard_bone_names"),
+            name=t("Bake.translate_bone_names.label"),
+            description=t("Bake.translate_bone_names.desc"),
             items=[
                 ("NONE", "None", "Don't translate any bones"),
                 ("VALVE", "Valve", "Translate to Valve conventions when exporting, for use with Source Engine"),
@@ -190,8 +190,8 @@ def register_properties():
             default="NONE"
         )
         export_format: EnumProperty(
-            name=t('export_format'),
-            description=t('model_format_to_use_when_exporting'),
+            name=t('Bake.export_format.label'),
+            description=t('Bake.export_format.desc'),
             items=[
                 ("FBX", "FBX", "FBX export format, for use with Unity"),
                 ("DAE", "DAE", "Collada DAE, for use with Second Life and older engines"),
@@ -199,21 +199,21 @@ def register_properties():
             ]
         )
         image_export_format: EnumProperty(
-            name=t('image_export_format'),
-            description=t('image_type_to_use_when_exporting'),
+            name=t('Bake.image_export_format.label'),
+            description=t('Bake.image_export_format.desc'),
             items=[
                 ("TGA", ".tga", "targa export format, for use with Gmod"),
                 ("PNG", ".png", "png format, for use with most platforms.")
             ]
         )
         specular_setup: BoolProperty(
-            name=t('specular_setup'),
-            description=t("convert_diffuse_and_metallic_to_premultiplied_diffuse_and_specular_compatible_with_older_engines"),
+            name=t('Bake.specular_setup.label'),
+            description=t("Bake.specular_setup.desc"),
             default=False
         )
         specular_alpha_pack: EnumProperty(
-            name=t("specular_alpha_channel"),
-            description=t("what_to_pack_to_the_alpha_channel_of_specularity"),
+            name=t("Bake.specular_alpha_channel.label"),
+            description=t("Bake.specular_alpha_channel.desc"),
             items=[
                 ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
                 ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), "Smoothness, for use with Second Life")
@@ -221,21 +221,22 @@ def register_properties():
             default="NONE"
         )
         phong_setup: BoolProperty(
-            name=t('phong_setup_source'),
-            description=t("for_source_engine_only_provides_diffuse_lighting_reflections_for_nonmetallic_objects"),
+            name=t('Bake.phong_setup_source.label'),
+            description=t("Bake.phong_setup_source.desc"),
             default=False
         )
         diffuse_emit_overlay: BoolProperty(
-            name=t('diffuse_emission_overlay'),
-            description=t('blends_emission_into_the_diffuse_map_for_engines_without_a_seperate_emission_map'),
+            name=t('Bake.diffuse_emission_overlay.label'),
+            description=t('Bake.diffuse_emission_overlay.desc'),
             default=False
         )
+
         specular_smoothness_overlay: BoolProperty(
-            name=t('specular_smoothness_overlay'),
-            description=t('merges_smoothness_into_the_specular_map_for_engines_without_a_seperate_smoothness_map'),
+            name=t('Bake.specular_smoothness_overlay.label'),
+            description=t('Bake.specular_smoothness_overlay.desc'),
             default=False
         )
-        gmod_model_name: StringProperty(name='Gmod Model Name', default="")
+        gmod_model_name: StringProperty(name=t('Gmod.gmod_model_name.label'), description=t('Gmod.gmod_model_name.desc'), default="")
         prop_bone_handling: EnumProperty(
             name=t('BakePanel.prop_handling.label'),
             description=t('BakePanel.prop_handling.desc'),
@@ -265,8 +266,8 @@ def register_properties():
     
 
     Scene.bake_cleanup_shapekeys = BoolProperty(
-        name=t("cleanup_shapekeys"),
-        description=t("remove_backup_shapekeys_in_the_final_result_eg_key__reverted_or_blinkold"),
+        name=t("Bake.cleanup_shapekeys.label"),
+        description=t("cleanup_shapekeys.label"),
         default=True
     )
     
@@ -332,14 +333,14 @@ def register_properties():
     )
 
     Scene.uvp_lock_islands = BoolProperty(
-        name=t("keep_overlapping_islands_uvp"),
+        name=t("Bake.keep_overlapping_islands_uvp.label"),
         description=t("experimental_try_to_keep_uvps_lock_overlapping_enabled"),
         default=False
     )
 
     Scene.bake_device = EnumProperty(
-        name=t('bake_device'),
-        description=t('device_to_bake_on_gpu_gives_a_significant_speedup_but_can_cause_issues_depending_on_your_graphics_drivers'),
+        name=t('Bake.bake_device.label'),
+        description=t('Bake.bake_device.desc'),
         default='GPU',
         items=[
             ('CPU', 'CPU', 'Perform bakes on CPU (Safe)'),
@@ -365,14 +366,14 @@ def register_properties():
     )
 
     Scene.bake_sharpen = BoolProperty(
-        name=t("sharpen_bakes"),
-        description=t("sharpen_resampled_images_after_baking_diffusesmoothnessmetallic_reccomended_as_any_sampling_will_cause_blur"),
+        name=t("Bake.sharpen_bakes.label"),
+        description=t("Bake.sharpen_bakes.desc"),
         default=True
     )
 
     Scene.bake_denoise = BoolProperty(
-        name=t("denoise_renders"),
-        description=t("denoise_the_resulting_image_after_emitao_reccomended_as_this_will_reduce_the_grainy_quality_of_inexpensive_rendering"),
+        name=t("Bake.denoise_renders.label"),
+        description=t("Bake.denoise_renders.desc"),
         default=True
     )
 
@@ -414,26 +415,14 @@ def register_properties():
 
     Scene.bake_apply_keys = BoolProperty(
         name=t("apply_current_shapekey_mix"),
-        description=t("when_selected_currently_active_shape_keys_will_be_applied_to_the_basis_this_is_extremely_beneficial_to_performance_if_your_avatar_is_intended_to_default_to_one_shapekey_mix_as_having_active_shapekeys_all_the_time_is_expensive_keys_ending_in_bake_are_always_applied_to_the_basis_and_removed_completely_regardless_of_this_option"),
+        description=t("Bake.apply_current_shapekeys.desc"),
         default=False
     )
 
     Scene.bake_ignore_hidden = BoolProperty(
-        name=t("ignore_hidden_objects"),
-        description=t("ignore_currently_hidden_objects_when_copying"),
+        name=t("Bake.ignore_hidden_objects.label"),
+        description=t("Bake.ignore_hidden_objects.desc"),
         default=True
-    )
-
-    Scene.bake_show_advanced_general_options = BoolProperty(
-        name=t("advanced_general_options"),
-        description=t("will_show_extra_options_related_to_which_bake_passes_are_performed_and_how"),
-        default=False
-    )
-
-    Scene.bake_show_advanced_platform_options = BoolProperty(
-        name=t("advanced_platform_options"),
-        description=t("will_show_extra_options_related_to_applicable_bones_and_texture_packing_setups"),
-        default=False
     )
 
     Scene.bake_pass_ao = BoolProperty(
@@ -449,14 +438,14 @@ def register_properties():
     )
 
     Scene.bake_emit_indirect = BoolProperty(
-        name=t("bake_projected_light"),
-        description=t("bake_the_effect_of_emission_on_nearby_surfaces_results_in_much_more_realistic_lighting_effects_but_can_animate_less_well"),
+        name=t("Bake.bake_projected_light.label"),
+        description=t("Bake.bake_projected_light.desc"),
         default=False
     )
 
     Scene.bake_emit_exclude_eyes = BoolProperty(
-        name=t("exclude_eyes"),
-        description=t("bakes_the_effect_of_any_eye_glow_onto_surrounding_objects_but_not_viceversa_improves_animation_when_eyes_are_moving_around"),
+        name=t("Bake.exclude_eyes.label"),
+        description=t("Bake.exclude_eyes.desc"),
         default=True
     )
 
@@ -473,14 +462,14 @@ def register_properties():
     )
 
     Scene.bake_optimize_solid_materials = BoolProperty(
-        name=t("optimize_solid_materials"),
-        description=t("optimizes_solid_materials_by_making_a_small_area_for_them_ao_pass_will_nullify"),
+        name=t("Bake.optimize_solid_materials.label"),
+        description=t("Bake.optimize_solid_materials.desc"),
         default=True
     )
 
     Scene.bake_unwrap_angle = FloatProperty(
-        name=t("unwrap_angle"),
-        description=t("the_angle_reproject_uses_when_unwrapping_larger_angles_yield_less_islands_but_more_stretching_and_smaller_does_opposite"),
+        name=t("Bake.unwrap_angle.label"),
+        description=t("Bake.unwrap_angle.desc"),
         default=66.0,
         min=0.1,
         max=89.9,
@@ -512,8 +501,8 @@ def register_properties():
     )
 
     Scene.generate_twistbones_upper = BoolProperty(
-        name=t("generate_upperhalf"),
-        description=t("generate_the_twistbones_on_the_upper_half_of_the_bone_usually_used_for_upper_legs"),
+        name=t("Bake.generate_upperhalf.label"),
+        description=t("Bake.generate_upperhalf.desc"),
         default=False
     )
 

@@ -7,7 +7,7 @@ from .translate import t
 class AutoDecimatePresetGood(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_good'
     bl_label = t('DecimationPanel.preset.good.label')
-    bl_description = t('DecimationPanel.preset.good.description')
+    bl_description = t('DecimationPanel.preset.good.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
@@ -18,7 +18,7 @@ class AutoDecimatePresetGood(bpy.types.Operator):
 class AutoDecimatePresetExcellent(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_excellent'
     bl_label = t('DecimationPanel.preset.excellent.label')
-    bl_description = t('DecimationPanel.preset.excellent.description')
+    bl_description = t('DecimationPanel.preset.excellent.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
@@ -29,7 +29,7 @@ class AutoDecimatePresetExcellent(bpy.types.Operator):
 class AutoDecimatePresetQuest(bpy.types.Operator):
     bl_idname = 'tuxedo_decimation.preset_quest'
     bl_label = t('DecimationPanel.preset.quest.label')
-    bl_description = t('DecimationPanel.preset.quest.description')
+    bl_description = t('DecimationPanel.preset.quest.desc')
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
