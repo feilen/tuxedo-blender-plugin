@@ -7,7 +7,7 @@ mmd_tools_exist = importlib.util.find_spec("mmd_tools") is not None
 
 
 def import_multi_files(method = None, directory: typing.Optional[str] = None, files: list[dict[str,str]] = None, filepath: typing.Optional[str] = ""):
-    if not filepath:
+    if not files:
         method(directory, filepath)
     else:
         for file in files:

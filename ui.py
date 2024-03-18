@@ -209,10 +209,9 @@ class ToolPanel(Panel):
         row = col.row(align=False)
         row.operator(tools.Tuxedo_OT_DeleteZeroWeightVertexGroups.bl_idname)
         row = col.row(align=False)
-        row.label(text=t('Tools.general.label'),icon="TRASH")
+        row.label(text=t('Tools.general.label'))
         row = col.row(align=True)
         row.operator(tools.Tuxedo_OT_CreateDigitigradeLegs.bl_idname)
-        
 
         row = col.row(align=True)
         row.label(text=t('ToolPanel.decimation_panel.label'),icon='MOD_DECIM')

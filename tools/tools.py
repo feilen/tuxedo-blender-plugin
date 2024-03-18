@@ -19,6 +19,25 @@ from bpy.types import Context, Operator
 from mathutils.geometry import intersect_point_line
 
 
+
+@wrapper_registry
+class Tuxedo_OT_RemoveDoublesSafely(bpy.types.Operator):
+    bl_idname = 'tuxedo.remove_doubles_safely'
+    bl_label = t('Tools.remove_doubles_safely.label')
+    bl_description = t('Tools.remove_doubles_safely.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context: bpy.types.Context):
+        return (bpy.context.mode == 'OBJECT') and (context.active_object is not None) and (context.active_object.type == "MESH")
+
+    margin: bpy.props.FloatProperty(default=.00001)
+
+    def execute(self, context: bpy.types.Context):
+        core.remove_doubles_safely(mesh=context.active_object.data, margin=self.margin)
+
+        return {'FINISHED'}
+    
 @wrapper_registry
 class Tuxedo_OT_CreateDigitigradeLegs(bpy.types.Operator):
     bl_idname = "armature.createdigitigradelegs"
@@ -714,7 +733,7 @@ class SmartDecimation(bpy.types.Operator):
         for mesh in meshes_obj:
             core.triangulate_mesh(mesh)
             if context.scene.decimation_remove_doubles:
-                core.remove_doubles(mesh, 0.00001)
+                core.remove_doubles_safely(mesh.data, 0.00001)
             tris_count += get_tricount(mesh.data.polygons)
             core.add_shapekey(mesh, 'Tuxedo Basis', False)
 

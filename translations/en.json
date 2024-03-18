@@ -349,6 +349,7 @@
 
         "Tools.apply_modifier_for_object_with_shape_keys.desc":"Apply any modifier for object with shapekeys",
         "Tools.apply_modifier_for_object_with_shape_keys.label":"Apply modifier for object with shapekeys",
+        "Tools.apply_modifier_for_object_with_shape_keys.drawlabel1":"apply modifier for: \"{name}\"",
 
         "Tools.modifiers_enum_label.label":"Modifier",
         "Tools.modifiers_enum_label.desc":"Modifier on mesh to apply",
@@ -374,7 +375,6 @@
 
         "Translations.translate_mmd.desc":"Translate from MMD to english using MMD Tools. You need MMD Tools installed.",
         "Translations.translate_mmd.label":"Translate MMD to English",
-        "Tools.apply_modifier_for_object_with_shape_keys.drawlabel1":"apply modifier for: \"{name}\"",
 
         "FixModel.Warning.1":"Fix model is depreciated.",
         "FixModel.Warning.2":"This is due to it's highly destructive nature, and it didn't fix anything.",
