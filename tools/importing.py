@@ -61,7 +61,7 @@ class Tuxedo_OT_ImportAnyModel(Operator, ImportHelper):
                     print("error when trying to find a value of the same value in the kinds of importers. May just be an import type that's a singlet:")
                     print(e)
                 if name not in file_grouping_dict: file_grouping_dict[name] = []
-                file_grouping_dict[name].append({"name": fullpath}) #emulate passing a list of files.
+                file_grouping_dict[name].append({"name": os.path.basename(file.name)}) #emulate passing a list of files.
 
         else:
             fullpath: str = os.path.join(os.path.dirname(self.filepath),os.path.basename(self.filepath))
