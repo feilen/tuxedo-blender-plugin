@@ -32,7 +32,7 @@
         "DecimationPanel.preset.excellent.label":"優れた",
         "DecimationPanel.warn.notIfBaking":"베이킹 할 시 권장되지 않습니다!",
         "DecimationPanel.preset.excellent.desc": "당신의 아바타가 Excellent 등급을 받을 수 있는 최대 삼각폴리곤(Tris) 개수입니다.",
-        "Tuxedo.tuxedo_max_tris.label":"삼각폴리곤(Tris)"
+        "Scene.tuxedo_max_tris.label":"삼각폴리곤(Tris)"
         
     }
 }

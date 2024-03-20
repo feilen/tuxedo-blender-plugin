@@ -1,5 +1,9 @@
 # GPL Licence
+from ast import Set
+from gc import freeze
 import itertools
+from os import replace
+from textwrap import indent
 import threading
 import time
 import subprocess
@@ -11,6 +15,9 @@ import bmesh
 import math
 import webbrowser
 import typing
+from collections import Counter
+import mathutils
+
 
 from ..globals import blender
 
@@ -368,10 +375,66 @@ def apply_modifier_for_obj_with_shapekeys(mod,delete_old=False):
 
     return True  
 
+def connect_bones(context: bpy.types.Context, armature: bpy.types.Armature):
+    prev_mode = context.object.mode
+    Set_Mode(context, "EDIT")
+    bone: bpy.types.EditBone = None
+    for bone in (armature.edit_bones if prev_mode != "EDIT" else [i for i in armature.edit_bones if (i.select == True) or (i.select_head == True) or (i.select_tail == True)]):
+        if len(bone.children) == 1:
+            child: bpy.types.EditBone = bone.children[0]
+            bone.tail.xyz = child.head.xyz
+            armature.edit_bones.active = child
+            armature.edit_bones.active.use_connect = True
+    Set_Mode(context, prev_mode)
+
+def dup_and_split_weights_bones(context: bpy.types.Context, armature_obj: bpy.types.Object):
+    armature: bpy.types.Armature = armature_obj.data
+    prev_mode = context.object.mode
+    Set_Mode(context, "EDIT")
+    bone: bpy.types.EditBone = None
+    bone_set: list[dict[str, str]] = []
+    for bone in [i for i in armature.edit_bones if (i.select == True) or (i.select_head == True) or (i.select_tail == True)]:
+        bone_copy: bpy.types.EditBone = duplicatebone(bone)
+        bone_copy.tail.xyz = bone.tail.xyz
+        bone_copy.head.xyz = bone.head.xyz
+        bone_copy.roll = bone.roll
+        bone_copy.name = bone.name + ".copy"
+        bone_set.append({"copy": bone_copy.name, "orig": bone.name})
+
+    #This should be pretty efficient, since we are only iterating the data we need instead of everything
+    #first we go over objects that are meshes, then the groups we want, then over all the vertices once per object
+    #during every vertex, we check the group we are currently on is on the vertex, and if it is, then divide it's weight by 2, and add half it's weight to a new vertex group that is the copied bone.
+    #This way we only do what we need to, rather than iterate over every vertex per group.
+    for obj in [i for i in armature_obj.children if i.type == "MESH"]:
+        mesh_data: bpy.types.Mesh = obj.data
+        group_orig: bpy.types.VertexGroup = None
+        for dict_bone in bone_set:
+            try:
+                group_orig = obj.vertex_groups[dict_bone["orig"]]
+                obj.vertex_groups.new(name=dict_bone["copy"])
+            except:
+                continue
+            vertex: bpy.types.MeshVertex = None
+            for weight_index,vertex in enumerate(mesh_data.vertices):
+                weight = -1
+                try:
+                    weight = group_orig.weight(weight_index)
+                except:
+                    continue
+                if weight and weight > 0:
+                    
+                    group_orig.add([weight_index], weight/2, "REPLACE")
+                    group_copy: bpy.types.VertexGroup = obj.vertex_groups[dict_bone["copy"]]
+                    group_copy.add([weight_index], weight/2, "REPLACE")
 
 
 
-def join_meshes(context, armature_name) -> None:
+            
+    
+    Set_Mode(context, prev_mode)
+
+
+def join_meshes(context: bpy.types.Context, armature_name: str) -> None:
     bpy.data.objects[armature_name]
     meshes = get_meshes_objects(context, armature_name)
     if not meshes:
@@ -382,19 +445,63 @@ def join_meshes(context, armature_name) -> None:
         mesh.select_set(True)
     bpy.ops.object.join()
 
-def has_shapekeys(obj):
+def has_shapekeys(obj) -> bool:
     return obj.type == 'MESH' and hasattr(obj, 'data') and hasattr(obj.data,'shape_keys') and hasattr(obj.data.shape_keys, 'key_blocks') and len(obj.data.shape_keys.key_blocks) > 1
 
-# Remove doubles using bmesh
-def remove_doubles(mesh, margin):
-    if mesh.type != 'MESH':
-        return
+# Remove doubles using bmesh safely
+def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .00001, merge_all: bool = True) -> None:
     bm = bmesh.new()
-    bm.from_mesh(mesh.data)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=margin)
-    bm.to_mesh(mesh.data)
+    bm.from_mesh(mesh)
+    vert: bmesh.types.BMVert = None
+    shared_locs: dict[mathutils.Vector, list[bmesh.types.BMVert]] = dict()
+    #TODO: FIX ME TO TAKE SHAPEKEYS INTO ACCOUNT!
+    #This isn't very efficient, but it will do for now - @989onan
+    for vert in [i for i in bm.verts if i.select == True and merge_all or not merge_all]: #only include selected if merge all is enabled.
+        key: mathutils.Vector = vert.co.xyz
+        key = key.freeze()
+        if key not in shared_locs:
+            shared_locs[key] = []
+        shared_locs[key].append(vert.index)
+    data: bpy.types.bpy_prop_collection[bpy.types.ShapeKeyPoint] = None
+    shape_vert: bpy.types.ShapeKeyPoint = None
+    #remove vertice groups for vertices that change position in any of the shapekeys, since they shouldn't be merged if it moves on any shapekey (EX: mouth lips would get sealed if this didn't filter those shapekeys)
+    #This doesn't filter verts that don't share points, but this allows us to make sure that if a vertex moves to share vertices with another vertex exactly during a shapekey,
+    #The points aren't considered the same and the vertice is not considered stationary
+    #this way the code only removes vertices affected by shapekeys, so even if vertices don't share vertex positions with others they end up in the merge.
+    #now this may cause an issue with vertices moved by shapekeys that could merge with a stationary neighbor, but then why are you splitting the vertices apart that you wanna merge?!? like hello? 
+    bm.verts.ensure_lookup_table()
+    for data in mesh.shape_keys.key_blocks:
+        for index,shape_vert in enumerate(data.data):
+            key: mathutils.Vector = shape_vert.co.xyz
+            key = key.freeze()
+            key2: mathutils.Vector = bm.verts[index].co.xyz
+            key2 = key2.freeze()
+            if key in shared_locs:
+                if index not in shared_locs[key]:
+                    shared_locs.pop(key2)
+            else:
+                try:
+                    shared_locs.pop(key2)
+                except:
+                    pass
     bm.free()
-    mesh.data.update()
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    #Finally we take all the filtered indices, get their coorisponding bmesh vert, and then flatten them into a list. This way these verts will be the only ones that are attempted for a merge.
+    bm.verts.ensure_lookup_table()
+    final_merge: list[bmesh.types.BMVert] = []
+    for coord,shared_coord_list in shared_locs.items():
+        for vertex_num in shared_coord_list:
+            final_merge.append(bm.verts[vertex_num])
+            
+    prevmode = bpy.context.object.mode
+    Set_Mode(context=bpy.context, mode = "OBJECT")
+    bmesh.ops.remove_doubles(bm, verts=final_merge, dist=margin)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+    Set_Mode(context=bpy.context, mode = prevmode)
     
 def triangulate_mesh(mesh):
     bm = bmesh.new()
@@ -422,7 +529,7 @@ def Set_Mode(context, mode):
     else:
         bpy.ops.object.mode_set(mode=mode,toggle=False)
 
-def duplicatebone(b):
+def duplicatebone(b: bpy.types.EditBone) -> bpy.types.EditBone:
     arm = bpy.context.object.data
     cb = arm.edit_bones.new(b.name)
 

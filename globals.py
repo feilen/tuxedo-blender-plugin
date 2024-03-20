@@ -30,11 +30,11 @@ icon_names = {
 #In the case of a file importer that takes only one file argument and each one needs individual import, use above method. (example of it in use is ".dae" format)
 import_types: dict[str, typing.Callable[[str, list[dict[str,str]], str], None]] = {
     "fbx": (lambda directory, files, filepath : bpy.ops.import_scene.fbx(files=files, directory=directory, filepath=filepath,automatic_bone_orientation=False,use_prepost_rot=False,use_anim=False)),
-    "smd": (lambda directory, files, filepath : eval(SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
-    "dmx": (lambda directory, files, filepath: eval(SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
+    "smd": (lambda directory, files, filepath : eval("bpy."+SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
+    "dmx": (lambda directory, files, filepath: eval("bpy."+SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
     "gltf": (lambda directory, files, filepath : bpy.ops.import_scene.gltf(files=files, filepath=filepath)),
     "glb": (lambda directory, files, filepath : bpy.ops.import_scene.gltf(files=files, filepath=filepath)),
-    "qc": (lambda directory, files, filepath : eval(SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
+    "qc": (lambda directory, files, filepath : eval("bpy."+SmdImporter.bl_idname+".(files=files, directory=directory, filepath=filepath)")),
     "obj": (lambda directory, files, filepath : bpy.ops.wm.obj_import(files=files, directory=directory, filepath=filepath)),
     "dae": (lambda directory, files, filepath : import_multi_files(directory=directory, files=files, filepath=filepath, method = (lambda directory, filepath:  bpy.ops.wm.collada_import(filepath=filepath, auto_connect = True, find_chains = True, fix_orientation = True)))),
     "3ds": (lambda directory, files, filepath : bpy.ops.import_scene.max3ds(files=files, directory=directory, filepath=filepath)),

@@ -61,15 +61,15 @@ def register_properties():
             default=True
         )
         max_tris: IntProperty(
-            name=t('Scene.max_tris.label'),
-            description=t('Scene.max_tris.desc'),
+            name=t('Scene.tuxedo_max_tris.label'),
+            description=t('Scene.tuxedo_max_tris.desc'),
             default=7500,
             min=1,
             max=70000
         )
         use_lods: BoolProperty(
             name=t("Bake.generate_lods.label"),
-            description=t("generate_courser_decimation_levels_for_efficient_rendering"),
+            description=t("Bake.generate_lods.desc"),
             default=False
         )
         lods: FloatVectorProperty(
@@ -108,8 +108,8 @@ def register_properties():
             name=t('Scene.bake_metallic_alpha_pack.label'),
             description=t('Scene.bake_metallic_alpha_pack.desc'),
             items=[
-                ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
-                ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), t("Scene.bake_metallic_alpha_pack.smoothness.desc"))
+                ("NONE", t("Scene.bake_alpha_pack.none.label"), t("Scene.bake_alpha_pack.none.desc")),
+                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.bake_alpha_pack.smoothness.desc"))
             ],
             default="NONE"
         )
@@ -139,8 +139,8 @@ def register_properties():
             description=t('Bake.normal_alpha_pack.desc'),
             items=[
                 ("NONE", t("Scene.bake_alpha_pack.none.label"), t("Scene.bake_alpha_pack.none.desc")),
-                ("SPECULAR", t("Scene.bake_alpha_pack.specular.label"), t("Scene.bake_alpha_pack.specular.desc")),
-                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.normal_alpha_pack.smoothness.desc")),
+                ("SPECULAR", t("Scene.bake_alpha_pack.specular.label"), t("Scene.bake_alpha_pack.normal.specular.desc")),
+                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.bake_alpha_pack.smoothness.desc")),
             ],
             default="NONE"
         )
@@ -215,8 +215,8 @@ def register_properties():
             name=t("Bake.specular_alpha_channel.label"),
             description=t("Bake.specular_alpha_channel.desc"),
             items=[
-                ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
-                ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), "Smoothness, for use with Second Life")
+                ("NONE", t("Scene.bake_alpha_pack.none.label"), t("Scene.bake_alpha_pack.none.desc")),
+                ("SMOOTHNESS", t("Scene.bake_alpha_pack.smoothness.label"), t("Scene.bake_alpha_pack_specular.smoothness.desc"))
             ],
             default="NONE"
         )
@@ -267,7 +267,7 @@ def register_properties():
 
     Scene.bake_cleanup_shapekeys = BoolProperty(
         name=t("Bake.cleanup_shapekeys.label"),
-        description=t("cleanup_shapekeys.label"),
+        description=t("Bake.cleanup_shapekeys.label"),
         default=True
     )
     
@@ -334,7 +334,7 @@ def register_properties():
 
     Scene.uvp_lock_islands = BoolProperty(
         name=t("Bake.keep_overlapping_islands_uvp.label"),
-        description=t("experimental_try_to_keep_uvps_lock_overlapping_enabled"),
+        description=t("Bake.keep_overlapping_islands_uvp.desc"),
         default=False
     )
 

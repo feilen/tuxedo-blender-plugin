@@ -82,11 +82,15 @@
         "Scene.bake_alpha_pack.transparency.label":"Transparency",
         "Scene.bake_alpha_pack.transparency.desc":"Pack Transparency",
         "Scene.bake_alpha_pack.smoothness.label":"Smoothness",
+        "Scene.bake_alpha_pack.specular.label":"Specular",
+        "Scene.bake_alpha_pack.normal.specular.desc":"Pack Specular into alpha for normals. Useful for Gmod.",
+
         "Scene.bake_alpha_pack.smoothness.desc":"Pack Smoothness. Most efficient if you don't have transparency or metallic textures.",
         "Scene.bake_alpha_pack.emit.desc":"A single-color emission mask, for use with preapplied emission",
         "Scene.bake_alpha_pack.emit.label":"Emit Mask",
         "Scene.bake_metallic_alpha_pack.smoothness.desc":"Pack Smoothness. Use this if your Diffuse alpha channel is already populated with Transparency",
         "Scene.draft_quality_desc":"Reduce the number of samples and cap resolution at 1024, speeds up iteration",
+        "Scene.bake_alpha_pack.specular.smoothness.desc":"Smoothness, for use with Second Life",
 
         "Tools.twist_tutorial.label":"Twistbones Tutorial",
         "Tools.twist_tutorial.desc":"This will open a basic tutorial on how to setup and use these constraints. You can skip to the Unity section.",
@@ -108,7 +112,7 @@
         "tuxedo_bake.tutorial_button.URL":"https://github.com/feilen/tuxedo-blender-plugin/wiki",
         "tuxedo_bake.tutorial_button.success":"Bake Tutorial opened.",
         "apply_current_shapekey_mix":"Apply current shapekey mix",
-        "bake_device":"Bake Device",
+        "Bake.bake_device.label":"Bake Device",
         "Bake.bake_projected_light.label":"Bake projected light",
         "Bake.bake_projected_light.desc":"Bake the effect of emission on nearby surfaces. Results in much more realistic lighting effects, but can animate less well.",
         "Bake.bake_to_vertex_colors.label":"Bake to vertex colors",
@@ -147,8 +151,8 @@
         "Bake.generate_physics_model.label":"Generate Physics Model",
         "Bake.generate_upperhalf.desc":"Generate the twistbones on the upper half of the bone. Usually used for upper legs.",
         "Bake.generate_upperhalf.label":"Generate Upperhalf",
-        "Bake.gmod_model_name.label":"Gmod Model Name",
-        "Bake.gmod_model_name.desc":"The name for the model in the in game menu when selecting a player model.",
+        "Gmod.gmod_model_name.label":"Gmod Model Name",
+        "Gmod.gmod_model_name.desc":"The name for the model in the in game menu when selecting a player model.",
         "Bake.ignore_hidden_objects.desc":"Ignore currently hidden objects when copying",
         "Bake.ignore_hidden_objects.label":"Ignore hidden objects",
         "Bake.image_export_format.label":"Image export format",
@@ -200,8 +204,8 @@
         "BakePanel.nosource_1":"To use Tuxedo Source features, you must use the BlenderSourceTools addon.",
         "BakePanel.nosource_2":"The currently running script may also have hit a critical error.",
         "BakePanel.nosource_3":"Performing an undo is highly suggested.",
-        "BakePanel.open_gpu_settings":"Open GPU Settings (Top of the page)",
-        "BakePanel.warn_using_cpu":"No render device configured in Blender settings. Bake will use CPU",
+        "BakePanel.warn_using_cpu":"No render device configured below. Bake will use CPU",
+        "BakePanel.warn_no_cycles_addon":"Cycles addon not found! Please install or enable the cycles addon for blender.",
         "BakePanel.new_plat":"New Platform",
         "BakePanel.prop_handling.desc":"What to do with objects marked as Props",
         "BakePanel.prop_handling.label":"Prop objects",
@@ -397,7 +401,15 @@
         "Tools.delete_zero_weight_vertex_groups.number":"Deleted {amount} zero weight vertex groups.",
 
         "Tools.create_digitigrade_legs.label":"Create Digitigrade Legs",
-        "Tools.create_digitigrade_legs.desc":"Create digitigrade legs while in edit mode with digitigrade thighs selected."
+        "Tools.create_digitigrade_legs.desc":"Create digitigrade legs while in edit mode with digitigrade thighs selected.",
 
+        "Tools.remove_doubles_safely.label":"Remove Doubles Safely",
+        "Tools.remove_doubles_safely.desc":"Remove doubles but prevent shapekeys like lips from fusing together.",
+
+        "Tools.connect_bones.label":"Connect Bones",
+        "Tools.connect_bones.desc":"Connect bones with a parent that only has one child bone. So this won't break hands.",
+        
+        "Tools.duplicate_bones.label":"Duplicate Bones",
+        "Tools.duplicate_bones.desc":"Duplicate bones, splitting the weights between the original and copy. Good for twist bones."
     }
 }

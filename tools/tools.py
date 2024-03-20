@@ -19,6 +19,35 @@ from bpy.types import Context, Operator
 from mathutils.geometry import intersect_point_line
 
 
+@wrapper_registry
+class Tuxedo_OT_DuplicateBones(bpy.types.Operator):
+    bl_idname = 'tuxedo.duplicate_bones'
+    bl_label = t('Tools.duplicate_bones.label')
+    bl_description = t('Tools.duplicate_bones.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context: bpy.types.Context):
+        return context.object.mode == 'EDIT' and (context.active_object is not None) and (context.active_object.type == "ARMATURE")
+
+    def execute(self, context: bpy.types.Context):
+        core.dup_and_split_weights_bones(context, context.object)
+        return {'FINISHED'}
+
+@wrapper_registry
+class Tuxedo_OT_ConnectBones(bpy.types.Operator):
+    bl_idname = 'tuxedo.connect_bones'
+    bl_label = t('Tools.connect_bones.label')
+    bl_description = t('Tools.connect_bones.desc')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context: bpy.types.Context):
+        return (context.object.mode == 'OBJECT' or context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "ARMATURE")
+
+    def execute(self, context: bpy.types.Context):
+        core.connect_bones(context, context.object.data)
+        return {'FINISHED'}
 
 @wrapper_registry
 class Tuxedo_OT_RemoveDoublesSafely(bpy.types.Operator):
@@ -29,12 +58,12 @@ class Tuxedo_OT_RemoveDoublesSafely(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return (bpy.context.mode == 'OBJECT') and (context.active_object is not None) and (context.active_object.type == "MESH")
+        return (context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "MESH")
 
     margin: bpy.props.FloatProperty(default=.00001)
 
     def execute(self, context: bpy.types.Context):
-        core.remove_doubles_safely(mesh=context.active_object.data, margin=self.margin)
+        core.remove_doubles_safely(mesh=context.active_object.data, margin=self.margin, merge_all=False)
 
         return {'FINISHED'}
     

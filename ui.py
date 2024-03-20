@@ -158,17 +158,6 @@ class Bake_Lod_Delete(Operator):
         return{'FINISHED'}
 
 @wrapper_registry
-class Open_GPU_Settings(Operator):
-    bl_idname = "tuxedo_bake.open_gpu_settings"
-    bl_label = t('BakePanel.open_gpu_settings')
-
-    def execute(self, context):
-        bpy.ops.screen.userpref_show()
-        context.preferences.active_section = 'SYSTEM'
-
-        return{'FINISHED'}
-
-@wrapper_registry
 class ToolPanel(Panel):
     bl_label = t('ToolPanel.tools.label')
     bl_idname = 'VIEW3D_PT_tuxtools'
@@ -211,7 +200,12 @@ class ToolPanel(Panel):
         row = col.row(align=False)
         row.label(text=t('Tools.general.label'))
         row = col.row(align=True)
+        row.operator(tools.Tuxedo_OT_ConnectBones.bl_idname)
+        row.operator(tools.Tuxedo_OT_DuplicateBones.bl_idname)
+        row = col.row(align=True)
         row.operator(tools.Tuxedo_OT_CreateDigitigradeLegs.bl_idname)
+        row = col.row(align=True)
+        row.operator(tools.Tuxedo_OT_RemoveDoublesSafely.bl_idname)
 
         row = col.row(align=True)
         row.label(text=t('ToolPanel.decimation_panel.label'),icon='MOD_DECIM')
@@ -314,6 +308,7 @@ class BakePanel(Panel):
     bl_category = 'Tuxedo'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+
     
     def draw(self, context):
         layout = self.layout
@@ -448,7 +443,17 @@ class BakePanel(Panel):
                 row = col.row(align=True)
                 row.label(text=t('BakePanel.warn_using_cpu'), icon="INFO")
                 row = col.row(align=True)
-                row.operator(Open_GPU_Settings.bl_idname, icon="SETTINGS")
+            import importlib.util
+            if importlib.util.find_spec("cycles.properties") is not None:
+                from cycles.properties import CyclesPreferences
+                cycles_addon: bpy.types.Addon = context.preferences.addons["cycles"].preferences
+                cycles_addon.layout = col
+                cycles_addon.draw(context)
+            else:
+                row = col.row(align=True)
+                row.label(text=t('BakePanel.warn_no_cycles_addon'), icon="INFO")
+                row = col.row(align=True)
+                    
             if not addon_utils.check("render_auto_tile_size")[1] and bpy.app.version <= (2, 93):
                 row = col.row(align=True)
                 row.label(text=t('BakePanel.warn_auto_tile_size'), icon="INFO")
