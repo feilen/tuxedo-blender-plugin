@@ -1,0 +1,38 @@
+{
+    "localeCode": "ko",
+    "authors": ["Siromori"],
+    "messages":{
+        "BakePanel.label":"베이크(Bake)",
+        "BakePanel.versionTooOld":"Blender 4.0.1 버전 이상에서만 호환",
+        "BakePanel.autodetectlabel":"자동감지:",
+        "BakePanel.generaloptions.label":"일반 옵션:",
+        "BakePanel.noheadfound":"\"Head\" 본 발견되지 않음!",
+        "BakePanel.overlapfix.label":"중복 수정:",
+        "BakePanel.bakepasses.label":"베이크 패스:",
+        "BakePanel.transparencywarning":"현재 투명도가 선택되지 않았습니다!",
+        "BakePanel.smoothnesswarning":"현재 부드러움이 선택되지 않았습니다!",
+        "BakePanel.doublepackwarning":"두군데에 부드러움이 설정되었습니다!",
+        "Scene.bake_resolution.label":"해상도",
+        "Scene.bake_resolution.desc":"테스쳐들의 결과 해상도.\\n- 2048 데스크탑 용\\n- 1024 퀘스트 용",
+        "Scene.bake_use_decimation.label":"버텍스 줄이기(Decimate)",
+        "Scene.bake_use_decimation.desc":"베이킹하기 전에 폴리 카운트를 줄인 다음 노멀 맵을 사용하여 디테일을 복원합니다.",
+        "Scene.bake_generate_uvmap.desc":"UV 맵 생성",
+        "Scene.bake_uv_overlap_correction.label":"중복 보정",
+        "Scene.bake_prioritize_face.label":"머리 / 눈 우선 순위 지정",
+        "Scene.bake_quick_compare.label":"빠른 비교",
+        "Scene.bake_face_scale.label":"머리 / 눈 스케일",
+        "Scene.bake_illuminate_eyes.label":"눈을 최대 밝기로 설정",
+        "Scene.bake_pass_smoothness.label":"부드러움",
+        "Scene.bake_pass_diffuse.label":"확산 (색상)",
+        "Scene.bake_preserve_seams.label":"이음새 유지",
+        "Scene.bake_pass_normal.label":"노말 (범프)",
+        "tuxedo_bake.error.no_meshes":"메쉬가 발견되지 않음!",
+        "tuxedo_bake.tutorial_button.label":"사용법",
+        "DecimationPanel.preset.good.label":"良い",
+        "DecimationPanel.preset.excellent.label":"優れた",
+        "DecimationPanel.warn.notIfBaking":"베이킹 할 시 권장되지 않습니다!",
+        "DecimationPanel.preset.excellent.desc": "당신의 아바타가 Excellent 등급을 받을 수 있는 최대 삼각폴리곤(Tris) 개수입니다.",
+        "Scene.tuxedo_max_tris.label":"삼각폴리곤(Tris)"
+        
+    }
+}

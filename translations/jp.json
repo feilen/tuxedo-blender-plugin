@@ -1,0 +1,11 @@
+{
+    "localeCode": "jp",
+    "authors": ["Jordo","Ruuubick"],
+    "messages":{
+        "BakePanel.label":"焼く",
+        "DecimationPanel.preset.excellent.desc": "優れた評価を得るために持つことができるトリスの最大数",
+        "DecimationPanel.preset.good.desc":"あなたが良い評価のために持つことができるトリスの最大数",
+        "Scene.tuxedo_max_tris.label":"トリス"
+        
+    }
+}
