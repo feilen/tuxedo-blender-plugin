@@ -15,7 +15,7 @@
 <img src="assets/markdown-img-paste-20220320213501867.png" width="500" />
 <img src="assets/markdown-img-paste-20220320214819574.png" width="500" />
 
-_Up/Left: 'Good' 10000 tri version of model, running on Quest 1. Up/Right: 'Excellent' 32k tri model, running on Desktop.  Ambient occlusion and lighting baked and premultiplied._
+_Up/Left: 'Good' 10000 tri version of model, running on Quest 1. Up/Right: 'Excellent' 32k tri model, running on Desktop.  Ambient occlusion and lighting baked and premultiplied._   
 
 _Down/Left: Nearly the same model, but running in Garry's Mod. Down/Right: Same model, but in Second Life._
 
