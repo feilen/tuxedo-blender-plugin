@@ -27,7 +27,7 @@ class Tuxedo_OT_DuplicateBones(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return context.object.mode == 'EDIT' and (context.active_object is not None) and (context.active_object.type == "ARMATURE")
+        return (context.active_object is not None) and (context.object.mode == 'EDIT') and (context.active_object.type == "ARMATURE")
 
     def execute(self, context: bpy.types.Context):
         core.dup_and_split_weights_bones(context, context.object)
@@ -42,7 +42,7 @@ class Tuxedo_OT_ConnectBones(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return (context.object.mode == 'OBJECT' or context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "ARMATURE")
+        return (context.active_object is not None) and (context.object.mode == 'OBJECT' or context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "ARMATURE")
 
     def execute(self, context: bpy.types.Context):
         core.connect_bones(context, context.object.data)
@@ -57,7 +57,7 @@ class Tuxedo_OT_RemoveDoublesSafely(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return (context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "MESH")
+        return (context.active_object is not None) and (context.object.mode == 'EDIT') and (context.active_object is not None) and (context.active_object.type == "MESH")
 
     margin: bpy.props.FloatProperty(default=.00001)
 
@@ -290,7 +290,7 @@ class Tuxedo_OT_TranslateMMD(Operator):
 
     @classmethod
     def poll(self, context: bpy.types.Context):
-        return (translation_enum(self, context) is not None) and (globals.mmd_tools_exist)
+        return (translation_enum(self, context) is not None) and (globals.mmd_tools_exist) and core.get_meshes_objects(context)
 
     def execute(self, context: bpy.types.Context):
         translate_mmd(self.translation_enum, context)
@@ -738,9 +738,11 @@ class SmartDecimation(bpy.types.Operator):
         default=9900
     )
 
-#    def poll(cls, context):
-#        return True #context.view_layer.objects.active and context.view_layer.objects.selected
-#
+
+    @classmethod
+    def poll(cls, context):
+        return core.get_armature(context) and (context.active_object is not None) and (context.object is not None)
+
     def execute(self, context):
         animation_weighting = context.scene.decimation_animation_weighting
         animation_weighting_factor = context.scene.decimation_animation_weighting_factor
