@@ -1,4 +1,4 @@
-from bpy.types import Scene, PropertyGroup, Object, OperatorFileListElement
+from bpy.types import Scene, PropertyGroup, Object
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, CollectionProperty, StringProperty, FloatVectorProperty
 from bpy.utils import register_class
 

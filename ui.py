@@ -3,7 +3,7 @@ import addon_utils
 
 from . import bake as Bake
 from .tools.translate import t
-from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels, Tuxedo_OT_ConvertToResonite
+from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
 from .tools import tools
 from .tools import gmod_tools
 from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
@@ -445,7 +445,6 @@ class BakePanel(Panel):
                 row = col.row(align=True)
             import importlib.util
             if importlib.util.find_spec("cycles.properties") is not None:
-                from cycles.properties import CyclesPreferences
                 cycles_addon: bpy.types.Addon = context.preferences.addons["cycles"].preferences
                 cycles_addon.layout = col
                 cycles_addon.draw(context)

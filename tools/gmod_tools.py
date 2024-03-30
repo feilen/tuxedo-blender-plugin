@@ -14,7 +14,6 @@ from .translate import t
 from . import core
 from .dictionaries import bone_names
 
-from bpy.types import Operator 
 from bpy.props import StringProperty
 
 ######### GMOD SCRIPTS #########

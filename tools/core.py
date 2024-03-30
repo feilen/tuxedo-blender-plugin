@@ -1,13 +1,6 @@
 # GPL Licence
-from ast import Set
-from gc import freeze
-import itertools
-from os import replace
-from textwrap import indent
 import threading
 import time
-import subprocess
-from SourceIO.library.source2.data_types.keyvalues3.types import Object
 import bpy
 import numpy as np
 from .dictionaries import bone_names
@@ -15,7 +8,6 @@ import bmesh
 import math
 import webbrowser
 import typing
-from collections import Counter
 import mathutils
 
 
@@ -453,8 +445,7 @@ def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .0
     bm = bmesh.new()
     bm.from_mesh(mesh)
     vert: bmesh.types.BMVert = None
-    shared_locs: dict[mathutils.Vector, list[bmesh.types.BMVert]] = dict()
-    #TODO: FIX ME TO TAKE SHAPEKEYS INTO ACCOUNT!
+    shared_locs: dict[mathutils.Vector, list[int]] = dict()
     #This isn't very efficient, but it will do for now - @989onan
     for vert in [i for i in bm.verts if i.select == True and merge_all or not merge_all]: #only include selected if merge all is enabled.
         key: mathutils.Vector = vert.co.xyz
@@ -464,11 +455,11 @@ def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .0
         shared_locs[key].append(vert.index)
     data: bpy.types.bpy_prop_collection[bpy.types.ShapeKeyPoint] = None
     shape_vert: bpy.types.ShapeKeyPoint = None
-    #remove vertice groups for vertices that change position in any of the shapekeys, since they shouldn't be merged if it moves on any shapekey (EX: mouth lips would get sealed if this didn't filter those shapekeys)
-    #This doesn't filter verts that don't share points, but this allows us to make sure that if a vertex moves to share vertices with another vertex exactly during a shapekey,
-    #The points aren't considered the same and the vertice is not considered stationary
-    #this way the code only removes vertices affected by shapekeys, so even if vertices don't share vertex positions with others they end up in the merge.
-    #now this may cause an issue with vertices moved by shapekeys that could merge with a stationary neighbor, but then why are you splitting the vertices apart that you wanna merge?!? like hello? 
+    #remove vertice groups for vertices that change position too far away from a neighbor in any of the shapekeys, (EX: mouth lips would get sealed if this didn't filter those shapekeys)
+    #This doesn't filter verts that don't share points, but this allows us to make sure that if a vertex moves to share grouping with others that stay close together during a shapekey.
+    # this is no where near perfect, because it discards points that could move away from each other on a shapekey but on all shapekeys one could still merge with a common neighboring vertex 
+    # (ex: a vertex orbiting another at merging distance in 20 different shapekeys. this would invalidat that vertex from merging to any other vertex, but we would ideally wanna merge with the one it's orbiting), but this is close enough.
+    #TODO: Can we use scipy? Please? I could try making this perfect with such, or just discard the idea of perfect I guess...
     bm.verts.ensure_lookup_table()
     for data in mesh.shape_keys.key_blocks:
         for index,shape_vert in enumerate(data.data):
@@ -476,12 +467,9 @@ def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .0
             key = key.freeze()
             key2: mathutils.Vector = bm.verts[index].co.xyz
             key2 = key2.freeze()
-            if key in shared_locs:
-                if index not in shared_locs[key]:
-                    shared_locs.pop(key2)
-            else:
+            if (bm.verts[index].co-shape_vert.co).length > margin:
                 try:
-                    shared_locs.pop(key2)
+                    shared_locs[key2].remove(index)
                 except:
                     pass
     bm.free()
@@ -498,6 +486,7 @@ def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .0
     prevmode = bpy.context.object.mode
     Set_Mode(context=bpy.context, mode = "OBJECT")
     bmesh.ops.remove_doubles(bm, verts=final_merge, dist=margin)
+    bm.verts.ensure_lookup_table()
     bm.to_mesh(mesh)
     bm.free()
     mesh.update()

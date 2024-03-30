@@ -1,6 +1,6 @@
 import bpy
 
-from bpy.types import UIList, Operator, Panel
+from bpy.types import Panel
 from ..globals import blender as blenderversion
 from .. import globals
 

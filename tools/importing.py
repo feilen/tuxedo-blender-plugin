@@ -2,9 +2,8 @@
 import bpy
 import os
 import pathlib
-from bpy_types import Operator, Context
+from bpy_types import Operator
 from bpy_extras.io_utils import ImportHelper
-from bpy.types import Scene
 from . import core
 
 from .dictionaries import bone_names

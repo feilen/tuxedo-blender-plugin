@@ -4,8 +4,7 @@ import addon_utils
 from ..properties import get_steam_library
 from ..tools.translate import t
 
-from bpy.types import UIList, Operator, Panel
-from bpy_extras.io_utils import ImportHelper
+from bpy.types import UIList
 
 from ..class_register import wrapper_registry
 from ..ui import register_ui_tab

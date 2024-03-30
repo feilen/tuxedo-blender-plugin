@@ -1,4 +1,3 @@
-import typing
 import bmesh
 import bpy
 import math
