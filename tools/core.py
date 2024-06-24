@@ -461,17 +461,20 @@ def remove_doubles_safely(mesh: typing.Union[bpy.types.Mesh], margin: float = .0
     # (ex: a vertex orbiting another at merging distance in 20 different shapekeys. this would invalidat that vertex from merging to any other vertex, but we would ideally wanna merge with the one it's orbiting), but this is close enough.
     #TODO: Can we use scipy? Please? I could try making this perfect with such, or just discard the idea of perfect I guess...
     bm.verts.ensure_lookup_table()
-    for data in mesh.shape_keys.key_blocks:
-        for index,shape_vert in enumerate(data.data):
-            key: mathutils.Vector = shape_vert.co.xyz
-            key = key.freeze()
-            key2: mathutils.Vector = bm.verts[index].co.xyz
-            key2 = key2.freeze()
-            if (bm.verts[index].co-shape_vert.co).length > margin:
-                try:
-                    shared_locs[key2].remove(index)
-                except:
-                    pass
+    if hasattr(mesh, "shapekeys"):
+        for data in mesh.shape_keys.key_blocks:
+            for index,shape_vert in enumerate(data.data):
+                key: mathutils.Vector = shape_vert.co.xyz
+                key = key.freeze()
+                key2: mathutils.Vector = bm.verts[index].co.xyz
+                key2 = key2.freeze()
+                if (bm.verts[index].co-shape_vert.co).length > margin:
+                    try:
+                        shared_locs[key2].remove(index)
+                    except:
+                        pass
+    else:
+        pass
     bm.free()
     bm = bmesh.new()
     bm.from_mesh(mesh)

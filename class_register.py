@@ -67,9 +67,9 @@ def toposort(deps_dict):
 
 def sort_order(sorted_list):
     ordered_list = []
-    for classes in sorted_list:
-        if hasattr(classes, 'bl_order'):
-            ordered_list.append(classes)
-            sorted_list.remove(classes)
+    for classei in sorted_list:
+        if hasattr(classei, 'bl_order'):
+            ordered_list.append(classei)
+            sorted_list.remove(classei)
     ordered_list.sort(key=lambda x: x.bl_order, reverse=False)
     sorted_list.extend(ordered_list)

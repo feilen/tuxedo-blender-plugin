@@ -6,7 +6,7 @@
 bone_names = {
     "right_shoulder": ["rightshoulder", "shoulderr", "rshoulder"],
     "right_arm": ["rightarm", "armr", "rarm", "upperarmr", "rupperarm", "rightupperarm", "uparmr", "ruparm"],
-    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr","rlowerarm", "lowarmr", "rlowarm"],
+    "right_elbow": ["rightelbow", "elbowr", "relbow", "lowerarmr", "rightlowerarm", "lowerarmr","rlowerarm", "lowarmr", "rlowarm", "forearmr","rforearm"],
     "right_wrist": ["rightwrist", "wristr", "rwrist", "handr", "righthand", "rhand"],
 
     #hand l fingers
@@ -42,7 +42,7 @@ bone_names = {
 
     "left_shoulder": ["leftshoulder", "shoulderl", "lshoulder"],
     "left_arm": ["leftarm", "arml", "rarm", "upperarml", "lupperarm", "leftupperarm", "uparml", "luparm"],
-    "left_elbow": ["leftelbow", "elbowl", "lelbow", "lowerarml", "leftlowerarm", "lowerarml", "llowerarm", "lowarml", "llowarm"],
+    "left_elbow": ["leftelbow", "elbowl", "lelbow", "lowerarml", "leftlowerarm", "lowerarml", "llowerarm", "lowarml", "llowarm", "forearml","lforearm"],
     "left_wrist": ["leftwrist", "wristl", "lwrist", "handl", "lefthand", "lhand"],
 
     #hand l fingers

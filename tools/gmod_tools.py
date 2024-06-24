@@ -45,7 +45,7 @@ class ConvertToValveButton(bpy.types.Operator):
         if self.armature_name == "":
             armature = core.get_armature(context,self.armature_name)
         else:
-            armature = bpy.data.objects.get(self.armature_name)
+            armature = context.view_layer.objects.get(self.armature_name)
 
         reverse_bone_lookup = dict()
         for (preferred_name, name_list) in bone_names.items():
@@ -265,10 +265,10 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             core.Destroy_By_Name(context, obj)
 
         for obj in do_not_toggle_bodygroups:
-            mesh = bpy.data.objects.get(obj)
+            mesh = context.view_layer.objects.get(obj)
             mesh.hide_viewport = False
         for obj in hidden_by_default_bodygroups:
-            mesh = bpy.data.objects.get(obj)
+            mesh = context.view_layer.objects.get(obj)
             mesh.hide_set(False)
 
 
@@ -290,7 +290,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
 
         # move the armature to it's proper collection if it ended up outside. (somehow idk)
-        barneycollection = core.Move_to_New_Or_Existing_Collection(context, "barney_collection", objects_alternative_list = [bpy.data.objects.get("barney_reference_skeleton")])
+        barneycollection = core.Move_to_New_Or_Existing_Collection(context, "barney_collection", objects_alternative_list = [context.view_layer.objects.get("barney_reference_skeleton")])
 
 
         
@@ -432,12 +432,12 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             print("this is a barney bone name:" +barney_bone_name)
             core.Set_Mode(context, "OBJECT")
             bpy.ops.object.select_all(action='DESELECT')
-            context.view_layer.objects.active = bpy.data.objects[body_armature_name]
+            context.view_layer.objects.active = context.view_layer.objects[body_armature_name]
             core.Set_Mode(context, "EDIT")
 
             try:
-                obj = bpy.data.objects[barney_armature_name]
-                editbone = bpy.data.objects[body_armature_name].data.edit_bones[barney_bone_name]
+                obj = context.view_layer.objects[barney_armature_name]
+                editbone = context.view_layer.objects[body_armature_name].data.edit_bones[barney_bone_name]
                 bone = obj.pose.bones[barney_bone_name]
                 bone.rotation_mode = "XYZ"
                 newmatrix = Matrix.Translation((editbone.matrix[0][3],editbone.matrix[1][3],editbone.matrix[2][3]))
@@ -453,7 +453,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         core.Set_Mode(context, "OBJECT")
 
         bpy.ops.object.select_all(action='DESELECT')
-        context.view_layer.objects.active = bpy.data.objects[barney_armature_name]
+        context.view_layer.objects.active = context.view_layer.objects[barney_armature_name]
         core.Set_Mode(context, "POSE")
         print("doing an apply rest pose")
         bpy.ops.tuxedo.pose_to_rest()
@@ -469,7 +469,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
 
         
-        twisted_armature = bpy.data.objects[body_armature_name]
+        twisted_armature = context.view_layer.objects[body_armature_name]
         twisted_armature_bone_names = list(set([j.name for j in children_bone_recursive(twisted_armature.pose.bones["ValveBiped.Bip01_Pelvis"])]) - set(barney_pose_bone_names))
 
         def rotatebone(bone_name = ""):
@@ -547,7 +547,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
 
         print("putting armature back under reference collection")
-        core.Move_to_New_Or_Existing_Collection(context, refcoll.name, objects_alternative_list = [bpy.data.objects.get(body_armature_name)])
+        core.Move_to_New_Or_Existing_Collection(context, refcoll.name, objects_alternative_list = [context.view_layer.objects.get(body_armature_name)])
 
         core.update_viewport()
 
@@ -1038,7 +1038,7 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         
         print("adding animation data thats a dummy to every armature because otherwise it causes errors with the exporter...")
         print("The animations that need to be exported should be assigned to armatures that have all the bones specified in the animation, then exported")
-        for rig in bpy.data.objects:
+        for rig in context.view_layer.objects:
             if rig.type == "ARMATURE":
                 rig.animation_data_create()
                 rig.data.vs.action_selection = "CURRENT"
@@ -1188,7 +1188,7 @@ $sequence \"proportions\"{
         body_armature.animation_data.action = bpy.data.actions["idle"] #this carries a lot of weight... (basically without it, the usage of refcoll above in the qc won't work and it will break) - @989onan
         bpy.context.scene.frame_current += 1
 
-
+        
 
 
         print("writing body script file iteration 1. If this errors, please save your file!")
@@ -1201,6 +1201,18 @@ $sequence \"proportions\"{
         core.update_viewport()
 
         print("\n\n\n====EXPORTING EVERYTHING====\n\n\n")
+        body_mesh = None
+        for obj in context.view_layer.objects:
+            if obj.type == "MESH":
+                body_mesh = obj
+                core.Set_Mode(context, "OBJECT")
+                bpy.ops.object.select_all(action='SELECT')
+                context.view_layer.objects.active = body_mesh
+                core.Set_Mode(context, "EDIT")
+                bpy.ops.mesh.select_all(action='SELECT')
+                bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+                core.Set_Mode(context, "OBJECT")
+        
         bpy.ops.export_scene.smd(export_scene = True, collection=context.view_layer.layer_collection.collection.children[0].name)
 
         core.update_viewport()
@@ -1225,7 +1237,9 @@ $sequence \"proportions\"{
         compilefile.close()
 
         print("============= Compiling model! =============\n(THIS CAN TAKE A LONG TIME AND IS PRONE TO ERRORS!!!!)")
-        bpy.ops.smd.compile_qc(filepath=bpy.path.abspath(bpy.context.scene.vs.qc_path))
+        #bpy.ops.smd.compile_qc(filepath=) <- I wish I could use this but I had to write below since this method is broken - @989onan
+        studiomdl = subprocess.Popen([steam_librarypath+"/bin/studiomdl.exe", "-nop4", "-game", steam_librarypath+"/garrysmod", bpy.path.abspath(bpy.context.scene.vs.qc_path)])
+        studiomdl.communicate()
         #to prevent errors due to missing data because it changes
 
         print("Moving compiled model to addon folder.")
@@ -1332,7 +1346,8 @@ $Sequence \"idle\" {
 
         bpy.context.scene.vs.qc_path = "//Tuxedo Bake/" + sanitized_platform_name + "/"+sanitized_model_name+"/"+sanitized_model_name+"_arms.qc"
         print("Compiling arms model! (THIS CAN TAKE A LONG TIME AND IS PRONE TO ERRORS!!!!)")
-        bpy.ops.smd.compile_qc(filepath=bpy.path.abspath(bpy.context.scene.vs.qc_path))
+        studiomdl = subprocess.Popen([steam_librarypath+"/bin/studiomdl.exe", "-nop4", "-game", steam_librarypath+"/garrysmod", bpy.path.abspath(bpy.context.scene.vs.qc_path)])
+        studiomdl.communicate()
 
         print("Moving compiled arms model to addon folder.")
         #path after models must match model path in QC.
