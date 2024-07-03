@@ -697,6 +697,8 @@ class ExportGmodPlayermodel(bpy.types.Operator):
             obj.vertex_groups.active_index = 0
             bpy.ops.object.vertex_group_assign()
             core.Set_Mode(context, "OBJECT")
+            for i in range(0,len(obj.material_slots)):
+                bpy.ops.object.material_slot_remove()
 
         core.update_viewport()
 
