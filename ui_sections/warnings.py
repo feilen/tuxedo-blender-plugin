@@ -4,6 +4,7 @@ from ..properties import get_steam_library
 from ..tools.translate import t
 from ..tools import core
 from ..tools.dictionaries import bone_names
+import typing
 
 from ..ui import register_ui_tab
 
@@ -82,6 +83,33 @@ class Bake_PT_warnings:
                 row = col.row(align=True)
                 row.separator()
                 row.label(text=name + ": " + "{}".format(len(bpy.data.objects[name].data.uv_layers)), icon="OBJECT_DATA")
+        armature = core.get_armature(context)
+        armature_data: bpy.types.Armature = None
+        if(armature):
+            armature_data = armature.data
+         
+        if armature_data:
+            missing_prefered_names: list[str] = []
+
+
+            reverse_bone_lookup: dict[str, str] = dict()
+            for (preferred_name, name_list) in bone_names.items():
+                missing_prefered_names.append(preferred_name)
+                for name in name_list: 
+                    reverse_bone_lookup[name] = preferred_name
+                    
+            for bone in armature_data.bones:
+                if core.simplify_bonename(bone.name) in reverse_bone_lookup:
+                    if reverse_bone_lookup[core.simplify_bonename(bone.name)] in missing_prefered_names:
+                        missing_prefered_names.remove(reverse_bone_lookup[core.simplify_bonename(bone.name)])
+                        
+            for name in missing_prefered_names:
+                row = col.row(align=True)
+                has_error = True
+                row.label(text="Your armature is missing the "+core.simplify_bonename(name)+" bone! Try renaming it to that name to fix it!", icon="ARMATURE_DATA")
+
+            
+                    
         if any(item.export_format == "GMOD" for item in context.scene.bake_platforms):
             has_gmod_error = False
             has_polygon_error = False
@@ -97,27 +125,26 @@ class Bake_PT_warnings:
                 col2 = row.column(align=True)
                 col2.label(text="To keep under the hard limit of 10000 per mesh for Gmod,")
                 col2.label(text="meshes above 9900 will be reduced by Tuxedo during bake.")
-            armature = core.get_armature(context)
-            if armature:
-                reverse_bone_lookup = dict()
-                bone_arm_list = ["right_wrist","left_wrist","right_arm","left_arm","left_elbow","right_elbow"]
+            if armature_data:
+                reverse_bone_lookup: dict[str, str] = dict()
+                bone_arm_list: list[str] = ["right_wrist","left_wrist","right_arm","left_arm","left_elbow","right_elbow"]
                 for (preferred_name, name_list) in bone_names.items():
                     if preferred_name in bone_arm_list:
                         for name in name_list: 
                             reverse_bone_lookup[name] = preferred_name
                 #print("dictionary")
                 #print(reverse_bone_lookup)
-                arm_bones = {}
-                for bone in armature.data.bones:
+                arm_bones: dict[str, bpy.types.Bone] = {}
+                for bone in armature_data.bones:
                     if core.simplify_bonename(bone.name) in reverse_bone_lookup:
                         arm_bones[reverse_bone_lookup[core.simplify_bonename(bone.name)]] = bone
                 #print(arm_bones)
-                for bone_name in bone_arm_list:
+                for name,bone in arm_bones.items():
                     bone_vec = mathutils.Vector((0,1,0))
-                    bone_vec.rotate(arm_bones[bone_name].matrix_local.to_euler())
+                    bone_vec.rotate(bone.matrix_local.to_euler())
                     bone_vec.normalize()
                     
-                    if "_r" in bone_name or "right" in bone_name:
+                    if "right" in name:
                         bone_vec = bone_vec.dot(mathutils.Vector((-1,0,0)))
                     else:
                         bone_vec = bone_vec.dot(mathutils.Vector((1,0,0)))
@@ -126,7 +153,7 @@ class Bake_PT_warnings:
                     if 1-bone_vec > .005:
                         has_gmod_error = True
                         row = col.row(align=True)
-                        row.label(text="Your "+arm_bones[bone_name].name+" bone in edit mode is not in t-pose! difference:"+str(round((1-bone_vec)*1000)/10)+"%", icon="ARMATURE_DATA")
+                        row.label(text="Your "+bone.name+" bone in edit mode is not in t-pose! difference:"+str(round((1-bone_vec)*1000)/10)+"%", icon="ARMATURE_DATA")
             
             
             if not get_steam_library(None):
