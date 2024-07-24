@@ -4,9 +4,6 @@ import os
 import typing
 import bpy
 
-from bpy_types import Context
-from .. import globals
-
 
 # Thanks to https://www.thegrove3d.com/learn/how-to-translate-a-blender-addon/ for the idea
 # Thanks to Resonite by Yellow Dog Man Studios for the idea of translating based on Jsons! (found ideas inside of steam distributable)

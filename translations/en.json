@@ -319,8 +319,8 @@
         "Tuxedo.unsupported_version.2":"Some features may not work",
         "Tuxedo.unsupported_version.3":"Current version supported is {ver}",
 
-        "Tools.welcome.label":"Welcome",
-        "Tools.welcome.desc":"Starting panel for Tuxedo",
+        "Tuxedo.welcome.label":"Welcome",
+        "Tuxedo.welcome.desc":"Starting panel for Tuxedo",
 
 
         "FixModel.Warning.1":"Fix model is depreciated.",

@@ -198,7 +198,8 @@ def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
         else:
             item.diffuse_alpha_pack = "NONE"
 
-        item.use_decimation = max(core.get_tricount(obj) for obj in objects) > 9950
+        if len(objects) > 0:
+            item.use_decimation = max(core.get_tricount(obj) for obj in objects) > 9950
 
 
 
@@ -1507,7 +1508,7 @@ class BakeButton(bpy.types.Operator):
                 dp2 = img_channels_as_nparray("SCRIPT_displacement_inverse"+ str(matgroup) +".png")
                 # normalize each 0 to 1 using the same magnitude
                 # always expect 'min' for each to be 0, so skip that
-                overall_max = max(dp1[1].max(), dp2[1].max())
+                overall_max = max(dp1[1], dp2[1])
                 with open(bpy.path.abspath("//Tuxedo Bake/displacement"+ str(matgroup) +".txt"), "w") as fi:
                     # The height value in the shader does (x * height) - (height/2), which means the
                     # total magnitude (min - max) is = height. overall_max is only the positive or

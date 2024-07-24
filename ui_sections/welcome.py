@@ -2,7 +2,6 @@ import bpy
 
 from bpy.types import Panel
 from ..globals import blender as blenderversion
-from .. import globals
 
 from ..tools.core import version_too_new
 
@@ -13,9 +12,9 @@ from ..class_register import wrapper_registry
 
 @wrapper_registry
 class Tuxedo_PT_ImportingPanel(Panel):
-    bl_label = t('Importing.welcome.label')
+    bl_label = t('Tuxedo.welcome.label')
     bl_idname = "tuxedo.welcome"
-    bl_description = t('Importing.welcome.desc')
+    bl_description = t('Tuxedo.welcome.desc')
     bl_idname = 'VIEW3D_PT_tuximport'
     bl_category = 'Tuxedo'
     bl_space_type = 'VIEW_3D'
@@ -27,6 +26,9 @@ class Tuxedo_PT_ImportingPanel(Panel):
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
+
+        row = col.row(align=True)
+        row.label(text=t('Tuxedo.welcome.desc'), icon="VIEW_PAN")
 
         if(version_too_new()):
             row = col.row(align=True)

@@ -41,7 +41,7 @@ if is_reloading:
         exec("importlib.reload("+ui_obj+")")
 else:
     from .properties import register_properties, gmod_path, set_steam_library
-    from .tools.tools import SRanipal_Labels, Tuxedo_OT_ShapekeyToBasis
+    from .tools.tools import SRanipal_Labels
     from bpy.types import Scene
     #this is needed since it doesn't see them unless imported... - @989onan
     from . import bake, properties, ui
@@ -132,14 +132,6 @@ def register():
         print("Could not read steam libraries! Error below.")
         print(e)
     print("========= FINISHED READING STEAM REGISTRY KEYS FOR GMOD =========")
-
-    # add apply shapekey to basis to shapekeys menu.
-    if hasattr(bpy.types, 'MESH_MT_shape_key_specials'):
-        bpy.types.MESH_MT_shape_key_specials.append((lambda self, context: self.layout.separator()))
-        bpy.types.MESH_MT_shape_key_specials.append((lambda self, context: self.layout.operator(Tuxedo_OT_ShapekeyToBasis.bl_idname, icon="KEY_HLT")))
-    else:
-        bpy.types.MESH_MT_shape_key_context_menu.append((lambda self, context: self.layout.separator()))
-        bpy.types.MESH_MT_shape_key_context_menu.append((lambda self, context: self.layout.operator(Tuxedo_OT_ShapekeyToBasis.bl_idname, icon="KEY_HLT")))
 
 
 

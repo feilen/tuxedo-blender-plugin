@@ -4,7 +4,6 @@ from bpy.utils import register_class
 
 from .tools import core
 from .tools.tools import SRanipal_Labels
-from .globals import import_types
 
 from .tools.translate import t
 from .ui import tab_enums
