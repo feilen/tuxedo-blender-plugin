@@ -11,7 +11,7 @@ from .. import globals
 # Thanks to https://www.thegrove3d.com/learn/how-to-translate-a-blender-addon/ for the idea
 # Thanks to Resonite by Yellow Dog Man Studios for the idea of translating based on Jsons! (found ideas inside of steam distributable)
 
-translation_types: dict[str, list[typing.Callable[[Context], bpy.types.ID]]] = {
+""" translation_types: dict[str, list[typing.Callable[[Context], bpy.types.ID]]] = {
     'BONES': [(lambda context: context.object.pose.bones)],
     'OBJECT': [(lambda context: bpy.data.objects)],
     'SHAPEKEYS': [(lambda context: context.object.data.shape_keys.key_blocks)],
@@ -33,7 +33,7 @@ def translation_enum(self, context: bpy.types.Context):
         except AttributeError as e:
             pass
 
-    return enums
+    return enums """
 
 
 
@@ -60,7 +60,7 @@ def t(str_key):
     else:
         return translation_dictionary[str_key]
 
-def translate_mmd(translate_enum: str, context: bpy.types.Context):
+""" def translate_mmd(translate_enum: str, context: bpy.types.Context):
     #thank god for typing because this may work the first time because of such
     if globals.mmd_tools_exist:
         from mmd_tools import translations
@@ -72,7 +72,7 @@ def translate_mmd(translate_enum: str, context: bpy.types.Context):
                 pass
         return True
     else:
-        return False
+        return False """
 
 
 

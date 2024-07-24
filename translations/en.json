@@ -319,66 +319,9 @@
         "Tuxedo.unsupported_version.2":"Some features may not work",
         "Tuxedo.unsupported_version.3":"Current version supported is {ver}",
 
-        "Tools.import_any_model.label":"Import Any Model",
-        "Tools.import_any_model.desc":"Import almost any model into Blender. Contact us if you want one added.",
+        "Tools.welcome.label":"Welcome",
+        "Tools.welcome.desc":"Starting panel for Tuxedo",
 
-        "Importing.import_any_model.label":"Import Model",
-        "Importing.import_any_model.desc":"Panel for importing any model into Blender 3D",
-        "Importing.need_importer":"You do not have the required importer for the {extension} type! Opening web browser for importer search term...",
-        "Importer.mmd_anim_importer.label":"MMD Animation",
-        "Importer.mmd_anim_importer.desc":"Import a MMD Animation (.vmd)",
-        "Importing.importer_search_term":"https://search.brave.com/search?q=blender+{extension}+importer+addon&source=web",
-
-        "Tools.start_pose_mode.label":"Start Pose Mode",
-        "Tools.start_pose_mode.desc":"Begin pose mode and reset pose transforms",
-        "PoseToRest.success":"Successfully applied the previous pose as the rest pose.",
-
-        "Tools.end_pose_mode.label":"End Pose Mode",
-        "Tools.end_pose_mode.desc":"End pose mode and reset pose transforms",
-
-        "Tools.pose_to_rest.desc":"Applies armature's pose as rest pose safely, taking shapekeys into account",
-        "Tools.pose_to_rest.label":"apply pose as rest pose",
-
-        "Tools.armature_apply_as_shapekey.label":"Apply pose as rest pose",
-        "Tools.armature_apply_as_shapekey.desc":"Apply pose as rest pose, may break animations in some programs",
-
-        "Tools.save_pose_as_shapekey.desc":"Save current pose as a shapekey",
-        "Tools.save_pose_as_shapekey.label":"Save as Shapekey",
-
-        "Importer.export_resonite.label":"Export to Resonite",
-        "Importer.export_resonite.desc":"Export to Resonite as a GLTF. Make sure your model is to scale in blender, and import as meters in Resonite.",
-
-        "Importer.export_vrchat.label":"Export to VRChat",
-        "Importer.export_vrchat.desc":"Export to VRChat, may also work for ChilloutVR. Is similar to Cats export.",
-
-        "Tools.apply_modifier_for_object_with_shape_keys.desc":"Apply any modifier for object with shapekeys",
-        "Tools.apply_modifier_for_object_with_shape_keys.label":"Apply modifier for object with shapekeys",
-        "Tools.apply_modifier_for_object_with_shape_keys.drawlabel1":"apply modifier for: \"{name}\"",
-
-        "Tools.modifiers_enum_label.label":"Modifier",
-        "Tools.modifiers_enum_label.desc":"Modifier on mesh to apply",
-
-        "Tools.merge_weights_to_active.label":"Merge To Active",
-        "Tools.merge_weights_to_active.desc":"Merge selected bone weights to selected active bone",
-        "Tools.merge_weights_to_parents.label":"Merge To Parents",
-        "Tools.merge_weights_to_parents.desc":"Merge selected bones to each of their parents, so that they are safely deleted.",
-
-        "Tools.delete_old_bones_merging.desc":"Delete bones that no longer have weights after merging them.",
-        "Tools.delete_old_bones_merging.label":"Delete Merged Bones",
-        "Tools.merge_bones.label":"Merge bones:",
-        "Tools.translate.label":"Translate: ",
-
-        "Tools.convert_to_resonite.label":"Convert Bones To Resonite",
-        "Tools.convert_to_resonite.desc":"Uses a dictionary of known bone names to convert to Resonite's requirements.",
-
-        "Translations.translation_group.desc":"Translate {tgroup} from mmd to english.",
-        "Translations.translation_group.label":"Translate {tgroup}",
-
-        "Translations.translation_coll_target.desc":"The type of collection of objects to translate",
-        "Translations.translation_coll_target.label":"Translate",
-
-        "Translations.translate_mmd.desc":"Translate from MMD to english using MMD Tools. You need MMD Tools installed.",
-        "Translations.translate_mmd.label":"Translate MMD to English",
 
         "FixModel.Warning.1":"Fix model is depreciated.",
         "FixModel.Warning.2":"This is due to it's highly destructive nature, and it didn't fix anything.",
@@ -393,23 +336,6 @@
         "Tools.delete_zero_weight_bones.label":"Delete Zero Weight Bones",
         "Tools.delete_zero_weight_bones.number":"Deleted {amount} zero weight bones.",
         "Tools.delete.label":"Delete:",
-        "Tools.general.label":"General:",
-
-
-        "Tools.delete_zero_weight_vertex_groups.desc":"Delete vertex groups on objects under selected armature that have no vertices assigned to them.",
-        "Tools.delete_zero_weight_vertex_groups.label":"Delete Zero Weight Vertex Groups",
-        "Tools.delete_zero_weight_vertex_groups.number":"Deleted {amount} zero weight vertex groups.",
-
-        "Tools.create_digitigrade_legs.label":"Create Digitigrade Legs",
-        "Tools.create_digitigrade_legs.desc":"Create digitigrade legs while in edit mode with digitigrade thighs selected.",
-
-        "Tools.remove_doubles_safely.label":"Remove Doubles Safely",
-        "Tools.remove_doubles_safely.desc":"Remove doubles but prevent shapekeys like lips from fusing together.",
-
-        "Tools.connect_bones.label":"Connect Bones",
-        "Tools.connect_bones.desc":"Connect bones with a parent that only has one child bone. So this won't break hands.",
-        
-        "Tools.duplicate_bones.label":"Duplicate Bones",
-        "Tools.duplicate_bones.desc":"Duplicate bones, splitting the weights between the original and copy. Good for twist bones."
+        "Tools.general.label":"General:"
     }
 }

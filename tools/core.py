@@ -18,16 +18,6 @@ from ..globals import blender
 # because of this, DONT PUT CLASSES HERE.
 # Before you make your own method, check here for one that does the same thing, since it will save you time.
 
-def open_web_after_delay_multi_threaded(delay: typing.Optional[float] = 1.0, url: typing.Union[str, typing.Any] = ""):
-    thread = threading.Thread(target=open_web_after_delay,args=[delay,url],name="open_browser_thread")
-    thread.start()
-
-def open_web_after_delay(delay, url):
-    print("opening browser in "+str(delay)+" seconds.")
-    time.sleep(delay)
-    
-    webbrowser.open_new_tab(url)
-
 def Destroy_By_Name(context, name):
     bpy.ops.object.select_all(action='DESELECT')
     destroyed_object = bpy.data.objects.get(name)
