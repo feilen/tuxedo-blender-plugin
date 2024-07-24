@@ -1776,13 +1776,13 @@ class BakeButton(bpy.types.Operator):
             plat_collection = bpy.data.collections.new("Tuxedo Bake " + platform_name)
             #context.scene.collection.children.link(plat_collection)
             orig_scene.collection.children.link(plat_collection)
-
+            
             # Tree-copy all meshes
             plat_arm_copy = self.tree_copy(arm_copy, None, plat_collection, ignore_hidden,
                                            filter_func=lambda obj:
                                            (prop_bone_handling != "REMOVE") or
                                            'generatePropBones' not in obj or not obj['generatePropBones'])
-            plat_arm_copy.name = "Tuxedo Armature"
+            plat_arm_copy.name = "Tuxedo Armature" #<- this is referenced when exporting gmod, so make sure to change it there too if changing this string - @989onan
 
             # Create an extra scene to render in
             bpy.ops.scene.new(type="EMPTY") # copy keeps existing settings
@@ -2546,7 +2546,7 @@ class BakeButton(bpy.types.Operator):
                 elif export_format == "GMOD":
                     
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
-                    bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name=plat_arm_copy.name)
+                    bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name="Tuxedo Armature")
                     print("Starting back up Tuxedo baking system")
             
             # Reapply tuxedo material
