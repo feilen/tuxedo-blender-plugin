@@ -172,11 +172,14 @@ class Bake_PT_warnings:
         
         
         if not has_error:
+            main_panel.has_errors = False
             row = col.row(align=True)
             row.label(text="No general errors or warnings.", icon="CHECKMARK")
             for i in range(0,5):
                 row = col.row(align=True)
                 row.label(text="")
+        else:
+            main_panel.has_errors = True
         
         
 

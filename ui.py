@@ -291,6 +291,7 @@ class BakePanel(Panel):
         self.non_world_scale_names = set()
         self.empty_material_slots = set()
         self.too_many_uvmaps = set()
+        self.has_errors = False
         
         for obj in core.get_meshes_objects(context):
             if obj.name not in context.view_layer.objects:
@@ -422,6 +423,9 @@ class BakePanel(Panel):
             row.prop(context.scene, 'bake_device', expand=True)
             
             # Bake button
+            if self.has_errors:
+                row = col.row(align=True)
+                row.label(text=t('BakePanel.warning_errors'), icon="ERROR")
             row = col.row(align=True)
             row.operator(Bake.BakeButton.bl_idname, icon='RENDER_STILL')
             row = col.row(align=True)

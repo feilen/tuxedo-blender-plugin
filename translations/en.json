@@ -23,6 +23,7 @@
         "BakePanel.material_grouping.label":"Image Group",
         "BakePanel.alpha.label":"Alpha:",
         "BakePanel.transparencywarning":"Transparency isn't currently selected!",
+        "BakePanel.warning_errors":"There are currently errors! Check the errors tab for more info!",
         "BakePanel.smoothnesswarning":"Smoothness isn't currently selected!",
         "BakePanel.doublepackwarning":"Smoothness packed in two places!",
         "Scene.bake_resolution.label":"Resolution",
