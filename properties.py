@@ -236,6 +236,7 @@ def register_properties():
             default=False
         )
         gmod_model_name: StringProperty(name=t('Gmod.gmod_model_name.label'), description=t('Gmod.gmod_model_name.desc'), default="")
+        gmod_male: BoolProperty(name=t('Gmod.gmod_male.label'), default=True)
         prop_bone_handling: EnumProperty(
             name=t('BakePanel.prop_handling.label'),
             description=t('BakePanel.prop_handling.desc'),

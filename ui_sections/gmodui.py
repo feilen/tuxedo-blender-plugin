@@ -73,6 +73,7 @@ class GmodPanel:
             row.label(text=t('GmodPanel.gmod_not_found'), icon="ERROR")
         row = col.row(align=True)
         row.prop(item, "gmod_model_name", expand=True)
+        row.prop(item, "gmod_male", expand=True)
         
         col.label(text=t('GmodPanel.gmod_visibility.list_label'))
         row = col.row()

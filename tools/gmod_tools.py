@@ -14,7 +14,7 @@ from .translate import t
 from . import core
 from .dictionaries import bone_names
 
-from bpy.props import StringProperty
+from bpy.props import StringProperty, BoolProperty
 
 ######### GMOD SCRIPTS #########
 
@@ -160,6 +160,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
     gmod_model_name: bpy.props.StringProperty(default = "Missing No")
     platform_name: bpy.props.StringProperty(default = "Garrys Mod")
     armature_name: bpy.props.StringProperty(default = "")
+    male: BoolProperty(default=True)
 
     def execute(self, context):
         print("===============START GMOD EXPORT PROCESS===============")
@@ -168,6 +169,9 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         platform_name = self.platform_name
         sanitized_model_name = ""
         offical_model_name = ""
+
+        gender_file: str = "reference_male.smd" if self.male else "reference_female.smd"
+        gender_armature_name: str = "reference_male_skeleton" if self.male else "reference_female_skeleton"
         
         try:
             core.Set_Mode(context, "OBJECT")
@@ -277,7 +281,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
         print("testing if SMD tools exist.")
         try:
-            bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "barney_reference.smd"}], append = "NEW_ARMATURE",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..")+"/assets/garrysmod/")
+            bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': gender_file}], append = "NEW_ARMATURE",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")+"/assets/garrysmod/")
         except AttributeError:
             bpy.ops.tuxedo_bake.nosource('INVOKE_DEFAULT')
             return {'FINISHED'}
@@ -285,12 +289,10 @@ class ExportGmodPlayermodel(bpy.types.Operator):
         #clean imported stuff
         print("cleaning imported armature")
 
-        #delete imported mesh
-        core.Destroy_By_Name(context, "barney_reference")
-
 
         # move the armature to it's proper collection if it ended up outside. (somehow idk)
-        barneycollection = core.Move_to_New_Or_Existing_Collection(context, "barney_collection", objects_alternative_list = [context.view_layer.objects.get("barney_reference_skeleton")])
+        
+        barneycollection = core.Move_to_New_Or_Existing_Collection(context, "source_collection", objects_alternative_list = [context.view_layer.objects.get(gender_armature_name)])
 
 
         
@@ -394,7 +396,7 @@ class ExportGmodPlayermodel(bpy.types.Operator):
 
         print("grabbing barney armature")
         barney_armature = None
-        barneycollection = bpy.data.collections.get("barney_collection")
+        barneycollection = bpy.data.collections.get("source_collection")
 
         parentobj, barney_armature = core.Get_Meshes_And_Armature(context, barneycollection)
         assert(barneycollection is not None)
@@ -1363,6 +1365,12 @@ $Sequence \"idle\" {
             if os.path.exists(os.path.join(target_dir, file_name)):
                 os.remove(os.path.join(target_dir, file_name))
             shutil.move(os.path.join(source_dir, file_name), target_dir)
+
+
+        print("Cleaning up")
+
+        bpy.ops.scene.delete()
+        bpy.ops.outliner.orphans_purge()
 
 
         print("======================FINISHED GMOD PROCESS======================")

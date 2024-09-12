@@ -57,10 +57,10 @@ bone_names = {
     "ring_2_l": ["ringfinger2l","ring2l","lring2","ringintermediatel", "valvebipedbip01lfinger31"],
     "ring_3_l": ["ringfinger3l","ring3l","lring3","ringdistall", "valvebipedbip01lfinger32"],
 
-    "middle_0_l": ["middlefinger0l","middle_0l","lmiddle0","middlemetacarpall"],
-    "middle_1_l": ["middlefinger1l","middle_1l","lmiddle1","middleproximall", "valvebipedbip01lfinger2"],
-    "middle_2_l": ["middlefinger2l","middle_2l","lmiddle2","middleintermediatel", "valvebipedbip01lfinger21"],
-    "middle_3_l": ["middlefinger3l","middle_3l","lmiddle3","middledistall", "valvebipedbip01lfinger22"],
+    "middle_0_l": ["middlefinger0l","middle0l","lmiddle0","middlemetacarpall"],
+    "middle_1_l": ["middlefinger1l","middle1l","lmiddle1","middleproximall", "valvebipedbip01lfinger2"],
+    "middle_2_l": ["middlefinger2l","middle2l","lmiddle2","middleintermediatel", "valvebipedbip01lfinger21"],
+    "middle_3_l": ["middlefinger3l","middle3l","lmiddle3","middledistall", "valvebipedbip01lfinger22"],
 
     "index_0_l": ["indexfinger0l","index0l","lindex0","indexmetacarpall"],
     "index_1_l": ["indexfinger1l","index1l","lindex1","indexproximall", "valvebipedbip01lfinger1"],

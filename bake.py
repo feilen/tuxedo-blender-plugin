@@ -2545,9 +2545,9 @@ class BakeButton(bpy.types.Operator):
                                               export_animation_transformation_type=0, open_sim=False,
                                               limit_precision=False, keep_bind_info=False)
                 elif export_format == "GMOD":
-                    
+                    gmod_male = platform.gmod_male
                     #compile model. (TAKES JUST AS LONG AS BAKE OR MORE)
-                    bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name="Tuxedo Armature")
+                    bpy.ops.tuxedo.export_gmod_addon(steam_library_path=steam_library_path,gmod_model_name=gmod_model_name,platform_name=platform_name,armature_name="Tuxedo Armature", male=gmod_male)
                     print("Starting back up Tuxedo baking system")
             
             # Reapply tuxedo material
