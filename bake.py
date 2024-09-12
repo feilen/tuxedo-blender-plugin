@@ -2240,7 +2240,7 @@ class BakeButton(bpy.types.Operator):
                     image.pixels.foreach_set(normal_image.pixels[:])
                     if export_format == "GMOD":
                         vmtfile += "\n    \"$bumpmap\" \"models/"+sanitized_model_name+"/"+sanitized_name(image.name).replace(".tga","")+"\""
-                    if normal_alpha_pack != "NONE":
+                    if ((normal_alpha_pack == "SMOOTHNESS" and pass_smoothness) or (normal_alpha_pack == "SPECULAR" and specular_setup)):
                         print("Packing to normal alpha")
                         if normal_alpha_pack == "SPECULAR":
                             alpha_image = bpy.data.images[platform_img("specular"+str(group_num))]
