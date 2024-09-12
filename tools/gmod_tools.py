@@ -1062,9 +1062,10 @@ $collisionjoints \""""+physcoll.name+""".smd\"
         context.view_layer.objects.active = body_armature
 
         print("Using importer with append enabled to yeet proportions fix anim onto our model")
-        bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': "reference.smd"}], append = "APPEND",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")+"/assets/garrysmod/")
+        bpy.ops.import_scene.smd('EXEC_DEFAULT',files=[{'name': gender_file}], append = "APPEND",directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")+"/assets/garrysmod/")
 
         print("keying animation reference.")
+        bpy.data.actions[gender_file.replace(".smd","")].name = "reference"
         body_armature.animation_data.action = bpy.data.actions["reference"]
         for barney_bone_name in barney_pose_bone_names:
             bone = body_armature.pose.bones.get(barney_bone_name)
