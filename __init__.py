@@ -6,19 +6,6 @@ from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
 from .properties import register_properties
 from bpy.types import Scene
 
-bl_info = {
-    'name': 'Tuxedo Blender Plugin',
-    'category': '3D View',
-    'author': 'Feilen',
-    'location': 'View 3D > Tool Shelf > Tuxedo',
-    'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
-    'version': (0, 4, 1),
-    'blender': (2, 93, 0),
-    'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
-    'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
-    'warning': '',
-}
-
 classes = (
     # Auto decimate fns
     AutoDecimatePresetGood,
