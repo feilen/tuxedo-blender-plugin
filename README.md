@@ -276,4 +276,4 @@ Installation is pretty standard. Grab the latest .zip off the [releases](https:/
 
 ### Credits:
 
-This plugin was orignially by Feilen with contribrutions by 989onan
+This plugin was orignially by Feilen with contribrutions by 989onan full credit goes to the original team.
