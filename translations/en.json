@@ -109,8 +109,8 @@
         "tuxedo_bake.error.render_disabled":"One or more of your armature's meshes have rendering disabled!",
         "tuxedo_bake.info.success":"Success! Textures and model saved to 'CATS Bake' folder next to your .blend file.",
         "tuxedo_bake.tutorial_button.label":"How to use",
-        "tuxedo_bake.tutorial_button.desc":"This will open the Cats wiki page for the Bake panel",
-        "tuxedo_bake.tutorial_button.URL":"https://github.com/feilen/tuxedo-blender-plugin/wiki",
+        "tuxedo_bake.tutorial_button.desc":"This will open the Tuxedo wiki page for the Bake panel",
+        "tuxedo_bake.tutorial_button.URL":"https://github.com/teamneoneko/Unofficial-Tuxedo-Blender-Plugin/wiki",
         "tuxedo_bake.tutorial_button.success":"Bake Tutorial opened.",
         "apply_current_shapekey_mix":"Apply current shapekey mix",
         "Bake.bake_device.label":"Bake Device",
@@ -234,7 +234,9 @@
         "BakePanel.WarningPanel.label":"Warnings:",
         
         "Gmod.steam_library.label":"Steam Library",
-        "Gmod.steam_library.desc":"The automatically detected steam library that holds your gmod install. Please report to https://github.com/feilen/tuxedo-blender-plugin/issues if this is incorrect!",
+        "Gmod.steam_library.desc":"The automatically detected steam library that holds your gmod install. Please report to https://github.com/teamneoneko/Unofficial-Tuxedo-Blender-Plugin/issues if this is incorrect!",
+        "Gmod.NoInstall1":"Tuxedo was not able to find Gmod on your machine!",
+        "Gmod.NoInstall2":"You may not have gmod with steam installed. If this is a mistake, please make an issue report!",
         "GmodPanel.gmod_visibility.shown_by_default.label":"In Game Visibility",
         "GmodPanel.gmod_visibility.shown_by_default.desc":"Whether the mesh should be visible by default in game",
         "GmodPanel.gmod_visibility.is_toggleable.label":"In Game Toggleable",
@@ -310,6 +312,8 @@
         
 
         "GmodPanel.gmod_not_found":"Your gmod install was not found! Check Warnings!",
+        "Gmod.TPoseError": "Your {bone} bone in edit mode is not in t-pose! difference: {error_dif}%",
+        "Gmod.NoError":"No Gmod errors or warnings.",
         "advanced_platform_options_desc":"Advanced platform options like export formats and data generators like for physics models.",
         "GmodPanel.panel_desc":"The different options to use when compiling a Garry's Mod model.",
 

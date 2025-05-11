@@ -153,19 +153,19 @@ class Bake_PT_warnings:
                     if 1-bone_vec > .005:
                         has_gmod_error = True
                         row = col.row(align=True)
-                        row.label(text="Your "+bone.name+" bone in edit mode is not in t-pose! difference:"+str(round((1-bone_vec)*1000)/10)+"%", icon="ARMATURE_DATA")
+                        row.label(text=t("Gmod.TPoseError").format(bone=bone.name,error_dif=str(round((1-bone_vec)*1000)/10)), icon="ARMATURE_DATA")
             
             
             if not get_steam_library(None):
                 row = col.row(align=True)
                 has_gmod_error = True
                 col2 = row.column(align=True)
-                col2.label(text="Tuxedo was not able to find Gmod on your machine!", icon="ERROR")
-                col2.label(text="You may be on mac, linux, or don't have gmod with steam installed.", icon="ERROR")
+                col2.label(text=t("Gmod.NoInstall1"), icon="ERROR")
+                col2.label(text=t("Gmod.NoInstall2"), icon="ERROR")
             
             if not has_gmod_error:
                 row = col.row(align=True)
-                row.label(text="No Gmod errors or warnings.", icon="CHECKMARK")
+                row.label(text=t("Gmod.NoErrors"), icon="CHECKMARK")
             #add our gmod error to if we have errors, for displaying no error dialogue
             has_error = has_gmod_error or has_error
         
