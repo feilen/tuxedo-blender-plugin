@@ -6,18 +6,10 @@ import addon_utils
 from . import bake as Bake
 from .tools.translate import t
 from .tools.tools import GenerateTwistBones, TwistTutorialButton, SmartDecimation, RepairShapekeys, FitClothes, SRanipal_Labels
-from .tools import core
+from .tools import tools
+from .tools import gmod_tools
 from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetQuest, AutoDecimatePresetExcellent
-import glob
-from os.path import dirname, basename, isfile, join
-
-modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
-for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-    exec("from .ui_sections import "+module_name)
-#tools importing same bad way
-modules = glob.glob(join(dirname(__file__), "tools/*.py"))
-for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-    exec("from .tools import "+module_name)
+from .tools import core
 
 #to make sure all of our ui section tabs get registered, otherwise the @ marker doesn't work on them - @989onan
 from .ui_sections import *

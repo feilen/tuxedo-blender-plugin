@@ -2,19 +2,25 @@ import bpy
 import os
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
 from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL
-from .tools.tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, TwistTutorialButton, FT_OT_CreateShapeKeys, SRanipal_Labels,  RepairShapekeys
+
 from .class_register import order_classes, classes
 from .properties import set_steam_library
-from .tools.presets import AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest
-from .tools.gmod_tools import ExportGmodPlayermodel, ConvertToValveButton
+
+
+import glob
+from os.path import dirname, basename, isfile, join
+
+modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
+for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
+    exec("from .ui_sections import "+module_name)
+#tools importing same bad way
+modules = glob.glob(join(dirname(__file__), "tools/*.py"))
+for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
+    exec("from .tools import "+module_name)
 from .properties import register_properties
 from bpy.types import Scene
 from .ui_sections.advanced_platform_options import Bake_PT_advanced_platform_options
-from .ui_sections.bake_passes import Bake_PT_bake_passes
-from .ui_sections.general_options import Bake_PT_general_options
-from .ui_sections.gmodui import GmodPanel
-from .ui_sections.warnings import Bake_PT_warnings
-from .ui_sections.welcome import Tuxedo_PT_ImportingPanel
+
 from . import globals
 
 
