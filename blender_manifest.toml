@@ -1,0 +1,14 @@
+schema_version = "1.0.0"
+id = "unofficial_tuxedo_blender_plugin"
+version = "0.4.2"
+name = "Unofficial Tuxedo Blender Plugin"
+tagline = "Tools to improve and optimize models for various game engines"
+maintainer = "Neoneko <hello@neoneko.xyz>"
+type = "add-on"
+website = "https://github.com/feilen/tuxedo-blender-plugin"
+tags = ["Modeling", "Game Engine"]
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Import/export models and textures from/to disk"

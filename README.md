@@ -1,6 +1,8 @@
+### This is the Unoffical Tuxedo Blender Plugin which is maintained by the Neoneko team, the people whom also maintain the Unoffical Cats Blender Plugin. Please report issues here.
+
 ## Tuxedo Blender Plugin - a Blender plugin to make importing character models into various game engines painless and fast.
 
-[Questions? Join us on Discord!](https://discord.gg/meYbVvvxNN)
+[Questions? Join us on Discord!](https://discord.neoneko.xyz)
 
 <img src="images/quest-anim.gif" width="500" />
 
@@ -271,3 +273,7 @@ _'Dawn' model by [@zombies_in_soup](https://twitter.com/zombies_in_soup)_
 ### Installation:
 
 Installation is pretty standard. Grab the latest .zip off the [releases](https://github.com/feilen/tuxedo-blender-plugin/releases) page and install using Blender's addon settings.
+
+### Credits:
+
+This plugin was orignially by Feilen with contribrutions by 989onan full credit goes to the original team.

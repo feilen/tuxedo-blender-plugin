@@ -1,72 +1,57 @@
-bl_info = { #haha this works here hell yeah
-    'name': 'Tuxedo Blender Plugin',
-    'category': '3D View',
-    'author': 'Feilen',
-    'location': 'View 3D > Tool Shelf > Tuxedo',
-    'description': 'A variety of tools to improve and optimize models for use in a variety of game engines.',
-    'version': (0, 4, 2),
-    'blender': (4, 0), 
-    'wiki_url': 'https://github.com/feilen/tuxedo-blender-plugin',
-    'tracker_url': 'https://github.com/feilen/tuxedo-blender-plugin/issues',
-    'warning': '',
-}
-import os
+import bpy
+from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
+from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL
+from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, TwistTutorialButton, AutoDecimatePresetGood, AutoDecimatePresetExcellent, AutoDecimatePresetQuest, RepairShapekeys, ExportGmodPlayermodel, ConvertToValveButton, PoseToRest
+from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
+from .properties import register_properties
+from bpy.types import Scene
 
-is_reloading = False
-if "bpy" not in locals():
-    import bpy
-    is_reloading = False
-else:
-    is_reloading = True
+classes = (
+    # Auto decimate fns
+    AutoDecimatePresetGood,
+    AutoDecimatePresetExcellent,
+    AutoDecimatePresetQuest,
 
-from .class_register import order_classes, classes
+    # Bake fns
+    BakeAddCopyOnly,
+    BakeAddProp,
+    BakeButton,
+    BakePresetAll,
+    BakePresetDesktop,
+    BakePresetGmod,
+    BakePresetGmodPhong,
+    BakePresetQuest,
+    BakePresetSecondlife,
+    BakeRemoveCopyOnly,
+    BakeRemoveProp,
+    BakeTutorialButton,
 
-if is_reloading:
-    import importlib
-    #reload our imports so they reload when we hit F8.
-    importlib.reload(bake)
-    #supressWarnings
-    importlib.reload(properties)
-    importlib.reload(tools)
-    importlib.reload(ui)
-    importlib.reload(globals)
-    #reload the imports of the ui elements
-    import glob
-    modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
-    for ui_obj in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-        exec("importlib.reload("+ui_obj+")")
-    #reload the imports of the tools files
-    modules = glob.glob(join(dirname(__file__), "tools/*.py"))
-    for ui_obj in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-        exec("importlib.reload("+ui_obj+")")
-else:
-    from .properties import register_properties, gmod_path, set_steam_library
-    from .tools.tools import SRanipal_Labels
-    from bpy.types import Scene
-    #this is needed since it doesn't see them unless imported... - @989onan
-    from . import bake, properties, ui
-    from . import tools
-    from . import globals
-    
-    
+    # UI
+    ToolPanel,
+    BakePanel,
+    Bake_Lod_Delete,
+    Bake_Lod_New,
+    Bake_Platform_Delete,
+    Bake_Platform_List,
+    Bake_Platform_New,
+    Choose_Steam_Library,
+    Open_GPU_Settings,
 
-    from os.path import dirname, basename, isfile, join
-    
-    #this... is awful I'm sorry but this is the only way of dynamically load all the files under the directory
-    import glob
-    modules = glob.glob(join(dirname(__file__), "ui_sections/*.py"))
-    for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-        exec("from .ui_sections import "+module_name)
-    #tools importing same bad way
-    modules = glob.glob(join(dirname(__file__), "tools/*.py"))
-    for module_name in [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]:
-        exec("from .tools import "+module_name)
+    # Utilities
+    ConvertToSecondlifeButton,
+    FitClothes,
+    GenerateTwistBones,
+    TwistTutorialButton,
+    SmartDecimation,
+    RepairShapekeys,
+    ExportGmodPlayermodel,
+    ConvertToValveButton,
+    PoseToRest,
 
-
-
-
-
-
+    # Face Tracking
+    FT_OT_CreateShapeKeys,
+    FT_Shapes_UL,
+)
 
 def register():
     print("========= STARTING TUXEDO REGISTRY =========")
