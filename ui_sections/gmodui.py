@@ -60,7 +60,7 @@ class GmodPanel:
         except:
             return False
     
-    def draw_panel(main_panel, context, col):
+    def draw_panel(main_panel: bpy.types.Panel, context: bpy.types.Context, col: bpy.types.UILayout):
         
         
         item = context.scene.bake_platforms[context.scene.bake_platform_index]

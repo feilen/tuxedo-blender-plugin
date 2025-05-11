@@ -1,15 +1,15 @@
 import bpy
 
+from ..globals import UITab
 from ..tools.translate import t
 
 
 from ..ui import register_ui_tab #need this for registering our class to the ui
 
-
 #Making a class that looks like a blender panel just to use it to cut the code up for tabs
 #This is kinda a bad look but at least it makes the UI nice! - @989onan
 @register_ui_tab
-class Bake_PT_bake_passes:
+class Bake_PT_bake_passes(UITab):
     bl_label = t('BakePanel.bakepasses.label')
     bl_enum = "PASSES"
     bl_description = t('BakePanel.bakepasses.desc')
@@ -18,7 +18,7 @@ class Bake_PT_bake_passes:
     def poll(cls, context):
         return True
     
-    def draw_panel(main_panel, context, col):
+    def draw_panel(main_panel: bpy.types.Panel, context: bpy.types.Context, col: bpy.types.UILayout):
         row = col.row(align=True)
         row.prop(context.scene, 'bake_pass_diffuse', expand=True)
         if context.scene.bake_pass_diffuse:

@@ -17,7 +17,7 @@ class Bake_PT_general_options:
     def poll(cls, context):
         return context.scene.bake_platforms
     
-    def draw_panel(main_panel, context, col):
+    def draw_panel(main_panel: bpy.types.Panel, context: bpy.types.Context, col: bpy.types.UILayout):
         row = col.row(align=True)
         row.prop(context.scene, 'bake_sharpen', expand=True)
         row = col.row(align=True)

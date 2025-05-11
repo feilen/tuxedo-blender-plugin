@@ -23,7 +23,7 @@ class Bake_PT_advanced_platform_options:
         except:
             return False
     
-    def draw_panel(main_panel, context, col):
+    def draw_panel(main_panel: bpy.types.Panel, context: bpy.types.Context, col: bpy.types.UILayout):
         item = context.scene.bake_platforms[context.scene.bake_platform_index]
         if item.use_decimation:
             row = col.row(align=True)

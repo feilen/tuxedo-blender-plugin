@@ -150,7 +150,7 @@ class SmartDecimation(bpy.types.Operator):
         default=False
     )
     max_single_mesh_tris: bpy.props.IntProperty(
-        default=9900
+        default=99999999
     )
 
 
@@ -190,7 +190,7 @@ class SmartDecimation(bpy.types.Operator):
             decimated_a_mesh = False
             for mesh in meshes_obj:
                 tris = get_tricount(mesh)
-                if tris > self.max_single_mesh_tris:
+                if tris > self.max_single_mesh_tris or tris > context.scene.tuxedo_max_tris:
                     decimation = 1. + ((self.max_single_mesh_tris - tris) / tris)
                     print("Decimation to reduce mesh "+mesh.name+"less than max tris per mesh: " + str(decimation))
                     self.extra_decimation_weights(context, animation_weighting, mesh, armature, animation_weighting_factor, decimation)
@@ -594,210 +594,6 @@ class ConvertToSecondlifeButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
-
-# Code below Stolen from Cats Blender Plugin File "common.py", Sorry! But tbf we don't want depenencies. Full credit to the cats blender team!
-# Btw the code it's stolen from is GPL
-@wrapper_registry
-class PoseToRest(bpy.types.Operator):
-    bl_idname = 'tuxedo.pose_to_rest'
-    bl_label = t('Tools.pose_to_rest.label')
-    bl_description = t('Tools.pose_to_rest.label')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    armature_name: bpy.props.StringProperty(
-        default=''
-    )
-
-    @classmethod
-    def poll(cls, context):
-        armature = core.get_armature(context)
-        return armature and armature.mode == 'POSE'
-
-    def execute(self, context):
-
-        armature_obj = core.get_armature(context,self.armature_name)
-        mesh_objs = core.get_meshes_objects(context,armature_name=armature_obj.name)
-        for mesh_obj in mesh_objs:
-            me = mesh_obj.data
-            if me:
-                if me.shape_keys and me.shape_keys.key_blocks:
-                    # The mesh has shape keys
-                    shape_keys = me.shape_keys
-                    key_blocks = shape_keys.key_blocks
-                    if len(key_blocks) == 1:
-                        # The mesh only has a basis shape key, so we can remove it and then add it back afterwards
-                        # Get basis shape key
-                        basis_shape_key = key_blocks[0]
-                        # Save the name of the basis shape key
-                        original_basis_name = basis_shape_key.name
-                        # Remove the basis shape key so there are now no shape keys
-                        mesh_obj.shape_key_remove(basis_shape_key)
-                        # Apply the pose to the mesh
-                        PoseToRest.apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj)
-                        # Add the basis shape key back with the same name as before
-                        mesh_obj.shape_key_add(name=original_basis_name)
-                    else:
-                        # Apply the pose to the mesh, taking into account the shape keys
-                        PoseToRest.apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, context.scene)
-                else:
-                    # The mesh doesn't have shape keys, so we can easily apply the pose to the mesh
-                    PoseToRest.apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj)
-        # Once the mesh and shape keys (if any) have been applied, the last step is to apply the current pose of the
-        # bones as the new rest pose.
-        #
-        # From the poll function, armature_obj must already be in pose mode, but it's possible it might not be the
-        # active object e.g., the user has multiple armatures opened in pose mode, but a different armature is currently
-        # active. We can use an operator override to tell the operator to treat armature_obj as if it's the active
-        # object even if it's not, skipping the need to actually set armature_obj as the active object.
-        with bpy.context.temp_override(active_object = armature_obj): bpy.ops.pose.armature_apply()
-
-        # Stop pose mode after operation
-        armature = core.get_armature(context,self.armature_name)
-        context.view_layer.objects.active = armature
-
-        # Make all objects visible
-        for collection in bpy.data.collections:
-            for object in collection.all_objects[:]:
-                object.hide_set(False)
-
-        for pb in armature.data.bones:
-            pb.hide = False
-            pb.select = True
-
-        bpy.ops.pose.rot_clear()
-        bpy.ops.pose.scale_clear()
-        bpy.ops.pose.transforms_clear()
-
-        for pb in armature.data.bones:
-            pb.select = False
-
-        armature = core.get_armature(context,self.armature_name)
-        # armature.data.pose_position = 'REST'
-
-        for mesh in core.get_meshes_objects(context,armature_name=self.armature_name):
-            if core.has_shapekeys(mesh):
-                for shape_key in mesh.data.shape_keys.key_blocks:
-                    shape_key.value = 0
-
-
-
-
-        self.report({'INFO'}, t('PoseToRest.success'))
-        return {'FINISHED'}
-
-    @staticmethod
-    def apply_armature_to_mesh_with_no_shape_keys(armature_obj, mesh_obj):
-        armature_mod = mesh_obj.modifiers.new('PoseToRest', 'ARMATURE')
-        armature_mod.object = armature_obj
-        # In the unlikely case that there was already a modifier with the same name as the new modifier, the new
-        # modifier will have ended up with a different name
-        mod_name = armature_mod.name
-        # Context override to let us run the modifier operators on mesh_obj, even if it's not the active object
-        # Moving the modifier to the first index will prevent an Info message about the applied modifier not being
-        # first and potentially having unexpected results.
-        with bpy.context.temp_override(object= mesh_obj):
-            if bpy.app.version >= (2, 90, 0):
-                # modifier_move_to_index was added in Blender 2.90
-                bpy.ops.object.modifier_move_to_index(modifier=mod_name, index=0)
-            else:
-                # The newly created modifier will be at the bottom of the list
-                armature_mod_index = len(mesh_obj.modifiers) - 1
-                # Move the modifier up until it's at the top of the list
-                for _ in range(armature_mod_index):
-                    bpy.ops.object.modifier_move_up( modifier=mod_name)
-            bpy.ops.object.modifier_apply( modifier=mod_name)
-        
-        
-    
-    @staticmethod
-    def apply_armature_to_mesh_with_shape_keys(armature_obj, mesh_obj, scene):
-        # The active shape key will be changed, so save the current active index, so it can be restored afterwards
-        old_active_shape_key_index = mesh_obj.active_shape_key_index
-
-        # Shape key pinning shows the active shape key in the viewport without blending; effectively what you see when
-        # in edit mode. Combined with an armature modifier, we can use this to figure out the correct positions for all
-        # the shape keys.
-        # Save the current value, so it can be restored afterwards.
-        old_show_only_shape_key = mesh_obj.show_only_shape_key
-        mesh_obj.show_only_shape_key = True
-
-        # Temporarily remove vertex_groups from and disable mutes on shape keys because they affect pinned shape keys
-        me = mesh_obj.data
-        shape_key_vertex_groups = []
-        shape_key_mutes = []
-        key_blocks = me.shape_keys.key_blocks
-        for shape_key in key_blocks:
-            shape_key_vertex_groups.append(shape_key.vertex_group)
-            shape_key.vertex_group = ''
-            shape_key_mutes.append(shape_key.mute)
-            shape_key.mute = False
-
-        # Temporarily disable all modifiers from showing in the viewport so that they have no effect
-        mods_to_reenable_viewport = []
-        for mod in mesh_obj.modifiers:
-            if mod.show_viewport:
-                mod.show_viewport = False
-                mods_to_reenable_viewport.append(mod)
-
-        # Temporarily add a new armature modifier
-        armature_mod = mesh_obj.modifiers.new('PoseToRest', 'ARMATURE')
-        armature_mod.object = armature_obj
-
-        # cos are xyz positions and get flattened when using the foreach_set/foreach_get functions, so the array length
-        # will be 3 times the number of vertices
-        co_length = len(me.vertices) * 3
-        # We can re-use the same array over and over
-        eval_verts_cos_array = np.empty(co_length, dtype=np.single)
-
-
-        # depsgraph lets us evaluate objects and get their state after the effect of modifiers and shape keys
-        depsgraph = None
-        evaluated_mesh_obj = None
-
-        def get_eval_cos_array():
-            nonlocal depsgraph
-            nonlocal evaluated_mesh_obj
-            # Get the depsgraph and evaluate the mesh if we haven't done so already
-            if depsgraph is None or evaluated_mesh_obj is None:
-                depsgraph = bpy.context.evaluated_depsgraph_get()
-                evaluated_mesh_obj = mesh_obj.evaluated_get(depsgraph)
-            else:
-                # If we already have the depsgraph and evaluated mesh, in order for the change to the active shape
-                # key to take effect, the depsgraph has to be updated
-                depsgraph.update()
-            # Get the cos of the vertices from the evaluated mesh
-            evaluated_mesh_obj.data.vertices.foreach_get('co', eval_verts_cos_array)
-            return eval_verts_cos_array
-
-        for i, shape_key in enumerate(key_blocks):
-            # As shape key pinning is enabled, when we change the active shape key, it will change the state of the mesh
-            mesh_obj.active_shape_key_index = i
-            # The cos of the vertices of the evaluated mesh include the effect of the pinned shape key and all the
-            # modifiers (in this case, only the armature modifier we added since all the other modifiers are disabled in
-            # the viewport).
-            # This combination gives the same effect as if we'd applied the armature modifier to a mesh with the same
-            # shape as the active shape key, so we can simply set the shape key to the evaluated mesh position.
-            #
-            # Get the evaluated cos
-            evaluated_cos = get_eval_cos_array()
-            # And set the shape key to those same cos
-            shape_key.data.foreach_set('co', evaluated_cos)
-            # If it's the basis shape key, we also have to set the mesh vertices to match, otherwise the two will be
-            # desynced until Edit mode has been entered and exited, which can cause odd behaviour when creating shape
-            # keys with from_mix=False or when removing all shape keys.
-            if i == 0:
-                mesh_obj.data.vertices.foreach_set('co', evaluated_cos)
-
-        # Restore temporarily changed attributes and remove the added armature modifier
-        for mod in mods_to_reenable_viewport:
-            mod.show_viewport = True
-        mesh_obj.modifiers.remove(armature_mod)
-        for shape_key, vertex_group, mute in zip(me.shape_keys.key_blocks, shape_key_vertex_groups, shape_key_mutes):
-            shape_key.vertex_group = vertex_group
-            shape_key.mute = mute
-        mesh_obj.active_shape_key_index = old_active_shape_key_index
-        mesh_obj.show_only_shape_key = old_show_only_shape_key
 
 #end cats blender plugin code block
 # -------------------------------------------------------------------

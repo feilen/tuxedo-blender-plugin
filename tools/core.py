@@ -171,7 +171,7 @@ def merge_bone_weights_to_respective_parents(context, armature, bone_names, remo
             armature.data.edit_bones.remove(armature.data.edit_bones[bone_name])
 
 def patch_fbx_exporter():
-    from io_scene_fbx import fbx_utils
+    from io_scene_fbx import fbx_utils #type: ignore
     fbx_utils.get_bid_name = get_bid_name
 
 # Blender-specific key generators - monkeypatched to force name if present
@@ -600,7 +600,6 @@ def version_2_79_or_older():
 #This allows us to specify "(4, 0)" and ignore any 4.0.x version patches. - @989onan
 def version_too_new():
     is_too_new = False
-
     for i in range(0,3):
         try:
             if (bpy.app.version[i] > blender[i]):

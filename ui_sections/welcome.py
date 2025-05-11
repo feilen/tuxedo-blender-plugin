@@ -15,7 +15,7 @@ class Tuxedo_PT_ImportingPanel(Panel):
     bl_label = t('Tuxedo.welcome.label')
     bl_idname = "tuxedo.welcome"
     bl_description = t('Tuxedo.welcome.desc')
-    bl_idname = 'VIEW3D_PT_tuximport'
+    bl_idname = 'VIEW3D_PT_tuxwelcome'
     bl_category = 'Tuxedo'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'

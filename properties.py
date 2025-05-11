@@ -21,38 +21,7 @@ def set_steam_library(arg):
     gmod_path["path"] = arg
 
 
-def register_properties():
-    # Bake
-    Scene.bake_use_draft_quality = BoolProperty(
-        name='Draft Quality',
-        description=t('Scene.draft_quality_desc'),
-        default=False
-    )
-
-    Scene.bake_animation_weighting = BoolProperty(
-        name=t('Scene.decimation_animation_weighting.label'),
-        description=t('Scene.decimation_animation_weighting.desc'),
-        default=True
-    )
-
-    Scene.bake_animation_weighting_factor = FloatProperty(
-        name=t('Scene.decimation_animation_weighting_factor.label'),
-        description=t('Scene.decimation_animation_weighting_factor.desc'),
-        default=0.25,
-        min=0,
-        max=1,
-        step=0.05,
-        precision=2,
-        subtype='FACTOR'
-    )
-
-    Scene.bake_animation_weighting_include_shapekeys = BoolProperty(
-        name=t('Tools.anim_weight_incl_shapekeys.name'),
-        description=t('Tools.anim_weight_incl_shapekeys.desc'),
-        default=False
-    )
-    
-    class BakePlatformPropertyGroup(PropertyGroup):
+class BakePlatformPropertyGroup(PropertyGroup):
         name: StringProperty(name='name', default=t('BakePanel.new_plat'))
         use_decimation: BoolProperty(
             name=t('Scene.bake_use_decimation.label'),
@@ -257,6 +226,39 @@ def register_properties():
             default="COPY"
         )
 
+
+def register_properties():
+    # Bake
+    Scene.bake_use_draft_quality = BoolProperty(
+        name='Draft Quality',
+        description=t('Scene.draft_quality_desc'),
+        default=False
+    )
+
+    Scene.bake_animation_weighting = BoolProperty(
+        name=t('Scene.decimation_animation_weighting.label'),
+        description=t('Scene.decimation_animation_weighting.desc'),
+        default=True
+    )
+
+    Scene.bake_animation_weighting_factor = FloatProperty(
+        name=t('Scene.decimation_animation_weighting_factor.label'),
+        description=t('Scene.decimation_animation_weighting_factor.desc'),
+        default=0.25,
+        min=0,
+        max=1,
+        step=0.05,
+        precision=2,
+        subtype='FACTOR'
+    )
+
+    Scene.bake_animation_weighting_include_shapekeys = BoolProperty(
+        name=t('Tools.anim_weight_incl_shapekeys.name'),
+        description=t('Tools.anim_weight_incl_shapekeys.desc'),
+        default=False
+    )
+    
+    
     register_class(BakePlatformPropertyGroup)
 
     Scene.bake_platforms = CollectionProperty(
@@ -275,6 +277,7 @@ def register_properties():
     Scene.section_enum = EnumProperty(
         name="",
         description="",
+        default=0,
         items=tab_enums
     )
     
@@ -480,7 +483,8 @@ def register_properties():
     Scene.bake_steam_library = StringProperty(
         name='Steam Library', 
         default="C:\\Program Files (x86)\\Steam\\",
-        get=get_steam_library
+        get=get_steam_library,
+        set = lambda self,arg: print("steam library is set on startup!!")
     )
 
     Scene.bake_diffuse_indirect = BoolProperty(

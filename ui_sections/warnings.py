@@ -21,7 +21,7 @@ class Bake_PT_warnings:
     def poll(cls, context):
         return True
     
-    def draw_panel(main_panel, context, col):
+    def draw_panel(main_panel: bpy.types.Panel, context: bpy.types.Context, col: bpy.types.UILayout):
         has_error = False
         # Warnings. Ideally these should be dynamically generated but only take up a limited number of rows
         if main_panel.non_node_mat_names:
