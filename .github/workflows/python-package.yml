@@ -37,6 +37,10 @@ jobs:
         sudo snap install blender_35 --channel 3.5/stable --classic
         sudo snap install blender_36 --channel 3.6lts/stable --classic
         sudo snap install blender_40 --channel 4.0/stable --classic
+        sudo snap install blender_41 --channel 4.1/stable --classic
+        sudo snap install blender_42 --channel 4.2lts/stable --classic
+        sudo snap install blender_43 --channel 4.3/stable --classic
+        sudo snap install blender_45 --channel 4.5lts --classic
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
       run: |
@@ -70,6 +74,10 @@ jobs:
         python3 ./tests/run.py --blend=blender_35 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_36 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_40 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_41 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_42 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_43 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_45 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_293 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_30 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
@@ -80,6 +88,10 @@ jobs:
         python3 ./tests/run.py --blend=blender_35 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_36 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_40 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_41 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_42 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_43 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_45 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_293 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_30 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
@@ -90,4 +102,9 @@ jobs:
         python3 ./tests/run.py --blend=blender_35 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_36 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_40 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_41 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_42 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_43 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        python3 ./tests/run.py --blend=blender_45 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+
