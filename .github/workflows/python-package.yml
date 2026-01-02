@@ -44,7 +44,7 @@ jobs:
         sudo snap install blender_latest --stable --classic
     - name: install tuxedo plugin for various versions
       run: |
-        mkdir -p ${HOME}/.config/blender/{2.93,3.0,3.1,3.2,3.3,3.4,3.5,3.6,4.0,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9}/scripts/addons
+        mkdir -p ${HOME}/.config/blender/{2.93,3.0,3.1,3.2,3.3,3.4,3.5,3.6,4.0,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5.0}/scripts/addons
         ln -s ${PWD} ${HOME}/.config/blender/2.93/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.0/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/3.1/scripts/addons/tuxedo-blender-plugin
@@ -63,6 +63,8 @@ jobs:
         ln -s ${PWD} ${HOME}/.config/blender/4.7/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/4.8/scripts/addons/tuxedo-blender-plugin
         ln -s ${PWD} ${HOME}/.config/blender/4.9/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/4.9/scripts/addons/tuxedo-blender-plugin
+        ln -s ${PWD} ${HOME}/.config/blender/5.0/scripts/addons/tuxedo-blender-plugin
     - name: run unit tests for all versions
       run: |
         python3 ./tests/run.py --blend=blender_293 --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
@@ -107,4 +109,5 @@ jobs:
         python3 ./tests/run.py --blend=blender_43 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_45 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+
 
