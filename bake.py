@@ -1114,7 +1114,9 @@ class BakeButton(bpy.types.Operator):
                                 uv_layer = obj.data.uv_layers[layer].data
                                 for poly in obj.data.polygons:
                                     for loop in poly.loop_indices:
-                                        if uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
+                                        # No longer possible to check UV selections in the same way, and there doesn't appear to be a fallback. See:
+                                        # https://projects.blender.org/blender/blender/commit/f4308aa2d06e99f131e5eebbbcf9844d1106b78e#diff-f2a7c8a5fa195b25def41d608136678a533bd2ca
+                                        if bpy.app.version >= (5, 0, 0) or uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
                                             #Here we scale the UV's down to 0 starting at the bottom left corner and going up row by row of solid materials.
                                             uv_layer[loop].uv = Scale2D( uv_layer[loop].uv, (0,0), ((X/resolution),(Y/resolution))  )
                                 bpy.ops.object.mode_set(mode='EDIT')
@@ -1245,7 +1247,9 @@ class BakeButton(bpy.types.Operator):
                         for poly in obj.data.polygons:
                             for loop in poly.loop_indices:
                                 uv_layer = obj.data.uv_layers[layer].data
-                                if uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
+                                # No longer possible to check UV selections in the same way, and there doesn't appear to be a fallback. See:
+                                # https://projects.blender.org/blender/blender/commit/f4308aa2d06e99f131e5eebbbcf9844d1106b78e#diff-f2a7c8a5fa195b25def41d608136678a533bd2ca
+                                if bpy.app.version >= (5, 0, 0) or uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
                                     #scale UV upwards so square stuff below can fit for solid colors
                                     uv_layer[loop].uv = Scale2D( uv_layer[loop].uv, (1,1-((Y+(pixelmargin+squaremargin))/resolution)), (0,1) )
 
@@ -2093,10 +2097,15 @@ class BakeButton(bpy.types.Operator):
                 metallictexnode.image = bpy.data.images[platform_img("metallic")]
                 metallictexnode.location.x -= 300
                 metallictexnode.location.y += 200
-                seprgbnode = tree.nodes.new("ShaderNodeSeparateRGB")
+                if bpy.app.version >= (5, 0, 0):
+                    seprgbnode = tree.nodes.new("ShaderNodeSeparateColor")
+                    tree.links.new(seprgbnode.inputs["Color"], metallictexnode.outputs["Color"])
+                    tree.links.new(bsdfnode.inputs["Metallic"], seprgbnode.outputs["Red"])
+                else:
+                    seprgbnode = tree.nodes.new("ShaderNodeSeparateRGB")
+                    tree.links.new(seprgbnode.inputs["Image"], metallictexnode.outputs["Color"])
+                    tree.links.new(bsdfnode.inputs["Metallic"], seprgbnode.outputs["R"])
 
-                tree.links.new(seprgbnode.inputs["Image"], metallictexnode.outputs["Color"])
-                tree.links.new(bsdfnode.inputs["Metallic"], seprgbnode.outputs["R"])
             if pass_diffuse:
                 diffusetexnode = tree.nodes.new("ShaderNodeTexImage")
                 diffusetexnode.image = bpy.data.images[platform_img("diffuse")]

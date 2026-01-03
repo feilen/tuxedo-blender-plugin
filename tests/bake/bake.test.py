@@ -389,7 +389,7 @@ sampling_lookup = {
 
 # No Second Life on Blender >5.0
 if bpy.app.version >= (5, 0, 0):
-    sampling_lookup = {k: v for k, v in sampling_lookup.items() if "Second Life" not in k}
+    sampling_lookup = {k: {pk: pv for pk, pv in v.items() if "Second Life" not in pk} for k, v in sampling_lookup.items()}
 
 class TestAddon(unittest.TestCase):
 
@@ -522,7 +522,7 @@ class TestAddon(unittest.TestCase):
         if bpy.app.version >= (5, 0, 0):
             self.assertEqual(set([o.name for o in bpy.data.objects]), set([n for n in test_object_names[test_name] if "Second Life" not in n]))
         else:
-            self.assertEqual(set([o.name for o in bpy.data.objects]), test_object_names[test_name])
+            self.assertEqual(set([o.name for o in bpy.data.objects]), set(test_object_names[test_name]))
 
         # TODO: tests props
 
