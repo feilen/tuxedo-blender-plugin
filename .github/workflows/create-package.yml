@@ -21,7 +21,10 @@ jobs:
 
       - name: Package plugin as zip
         run: |
-          zip -r tuxedo-blender-plugin.zip . -x ".git/*" ".github/*"
+          mkdir tuxedo-blender-plugin
+          shopt -s extglob dotglob
+          cp -r !(tuxedo-blender-plugin|.git|.github) tuxedo-blender-plugin/
+          zip -r tuxedo-blender-plugin.zip tuxedo-blender-plugin
 
       - name: Upload plugin zip artifact
         uses: actions/upload-artifact@v4
