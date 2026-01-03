@@ -95,8 +95,9 @@ jobs:
         python3 ./tests/run.py --blend=blender_43 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_45 --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
-        python3 ./tests/run.py --blend=blender_293 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
-        python3 ./tests/run.py --blend=blender_30 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        # Facetracking blend is from a newer blender version.
+        # python3 ./tests/run.py --blend=blender_293 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+        # python3 ./tests/run.py --blend=blender_30 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_31 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_32 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_33 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
@@ -109,5 +110,6 @@ jobs:
         python3 ./tests/run.py --blend=blender_43 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_45 --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
         python3 ./tests/run.py --blend=blender_latest --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
+
 
 
