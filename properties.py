@@ -4,7 +4,210 @@ from bpy.utils import register_class
 
 from .tools import t, get_meshes, get_shapekeys_ft, SRanipal_Labels
 
+class BakePlatformPropertyGroup(PropertyGroup):
+    name: StringProperty(name='name', default=t("New Platform"))
+    use_decimation: BoolProperty(
+        name=t('Scene.bake_use_decimation.label'),
+        description=t('Scene.bake_use_decimation.desc'),
+        default=True
+    )
+    max_tris: IntProperty(
+        name=t('Scene.max_tris.label'),
+        description=t('Scene.max_tris.desc'),
+        default=7500,
+        min=1,
+        max=70000
+    )
+    use_lods: BoolProperty(
+        name=t("generate_lods"),
+        description=t("generate_courser_decimation_levels_for_efficient_rendering"),
+        default=False
+    )
+    lods: FloatVectorProperty(
+        name=t("lods"),
+        description=t('lod_generation_levels_as_a_percent_of_the_max_tris'),
+    )
+    use_physmodel: BoolProperty(
+        name=t("generate_physics_model"),
+        description=t("generate_an_additional_lod_used_for_simplified_physics_interactions"),
+        default=False
+    )
+    physmodel_lod: FloatProperty(
+        name=t("physmodel_percent"),
+        default=0.1,
+        min=0.0,
+        max=1.0
+    )
+    remove_doubles: BoolProperty(
+        name=t('Scene.decimation_remove_doubles.label'),
+        description=t('Scene.decimation_remove_doubles.desc'),
+        default=True
+    )
+    preserve_seams: BoolProperty(
+        name=t('Scene.bake_preserve_seams.label'),
+        description=t('Scene.bake_preserve_seams.desc'),
+        default=False
+    )
+    merge_twistbones: BoolProperty(
+        name=t("merge_twist_bones"),
+        description=t("merge_any_bone_with_twist_in_the_name_useful_as_quest_does_not_support_constraints"),
+        default=False
+    )
+    metallic_alpha_pack: EnumProperty(
+        name=t('Scene.bake_metallic_alpha_pack.label'),
+        description=t('Scene.bake_metallic_alpha_pack.desc'),
+        items=[
+            ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
+            ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), t("Scene.bake_metallic_alpha_pack.smoothness.desc"))
+        ],
+        default="NONE"
+    )
+    metallic_pack_ao: BoolProperty(
+        name=t("pack_ao_to_metallic_green"),
+        description=t("pack_ambient_occlusion_to_the_green_channel_saves_a_texture_as_unity_uses_g_for_ao_r_for_metallic"),
+        default=True
+    )
+    diffuse_vertex_colors: BoolProperty(
+        name=t("bake_to_vertex_colors"),
+        description=t("rebake_to_vertex_colors_after_initial_bake_avoids_an_entire_extra_texture_if_your_colors_are_simple_enough_incorperates_ao"),
+        default=False
+    )
+    diffuse_alpha_pack: EnumProperty(
+        name=t('Scene.bake_diffuse_alpha_pack.label'),
+        description=t('Scene.bake_diffuse_alpha_pack.desc'),
+        items=[
+            ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
+            ("TRANSPARENCY", t("Scene.bake_diffuse_alpha_pack.transparency.label"), t("Scene.bake_diffuse_alpha_pack.transparency.desc")),
+            ("SMOOTHNESS", t("Scene.bake_diffuse_alpha_pack.smoothness.label"), t("Scene.bake_diffuse_alpha_pack.smoothness.desc")),
+            ("EMITMASK", "Emit Mask", "A single-color emission mask, for use with preapplied emission")
+        ],
+        default="NONE"
+    )
+    normal_alpha_pack: EnumProperty(
+        name=t("normal_alpha_pack"),
+        description=t('Scene.bake_diffuse_alpha_pack.desc'),
+        items=[
+            ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
+            ("SPECULAR", "Specular", t("Scene.bake_diffuse_alpha_pack.none.desc")),
+            ("SMOOTHNESS", "Smoothness", t("Scene.bake_diffuse_alpha_pack.none.desc")),
+        ],
+        default="NONE"
+    )
+    normal_invert_g: BoolProperty(
+        name=t("invert_green_channel"),
+        description=t("source_engine_uses_an_inverse_green_channel_this_fixes_that_on_export"),
+        default=False
+    )
+    diffuse_premultiply_ao: BoolProperty(
+        name=t("premultiply_diffuse_w_ao"),
+        description=t('Scene.bake_pass_questdiffuse.desc'),
+        default=False
+    )
+    diffuse_premultiply_opacity: FloatProperty(
+        name=t('Scene.bake_questdiffuse_opacity.label'),
+        description=t('Scene.bake_questdiffuse_opacity.desc'),
+        default=1.0,
+        min=0.0,
+        max=1.0,
+        step=0.05,
+        precision=2,
+        subtype='FACTOR'
+    )
+    smoothness_premultiply_ao: BoolProperty(
+        name=t("premultiply_smoothness_w_ao"),
+        description=t("while_not_technically_accurate_this_avoids_the_shine_effect_on_obscured_portions_of_your_model"),
+        default=False
+    )
+    smoothness_premultiply_opacity: FloatProperty(
+        name=t('Scene.bake_questdiffuse_opacity.label'),
+        description=t('Scene.bake_questdiffuse_opacity.desc'),
+        default=1.0,
+        min=0.0,
+        max=1.0,
+        step=0.05,
+        precision=2,
+        subtype='FACTOR'
+    )
+    translate_bone_names: EnumProperty(
+        name=t("translate_bone_names"),
+        description=t("target_another_bone_naming_standard_when_exporting_requires_standard_bone_names"),
+        items=[
+            ("NONE", "None", "Don't translate any bones"),
+            ("VALVE", "Valve", "Translate to Valve conventions when exporting, for use with Source Engine"),
+            ("SECONDLIFE", "Second Life", "Translate to Second Life conventions when exporting, for use with Second Life")
+        ],
+        default="NONE"
+    )
+    export_format: EnumProperty(
+        name=t('export_format'),
+        description=t('model_format_to_use_when_exporting'),
+        items=[
+            ("FBX", "FBX", "FBX export format, for use with Unity"),
+            ("DAE", "DAE", "Collada DAE, for use with Second Life and older engines"),
+            ("GMOD", "GMOD", "Exports to gmod. Requires TGA image export enabled as well to work")
+        ]
+    )
+    image_export_format: EnumProperty(
+        name=t('image_export_format'),
+        description=t('image_type_to_use_when_exporting'),
+        items=[
+            ("TGA", ".tga", "targa export format, for use with Gmod"),
+            ("PNG", ".png", "png format, for use with most platforms.")
+        ]
+    )
+    specular_setup: BoolProperty(
+        name=t('specular_setup'),
+        description=t("convert_diffuse_and_metallic_to_premultiplied_diffuse_and_specular_compatible_with_older_engines"),
+        default=False
+    )
+    specular_alpha_pack: EnumProperty(
+        name=t("specular_alpha_channel"),
+        description=t("what_to_pack_to_the_alpha_channel_of_specularity"),
+        items=[
+            ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
+            ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), "Smoothness, for use with Second Life")
+        ],
+        default="NONE"
+    )
+    phong_setup: BoolProperty(
+        name=t('phong_setup_source'),
+        description=t("for_source_engine_only_provides_diffuse_lighting_reflections_for_nonmetallic_objects"),
+        default=False
+    )
+    diffuse_emit_overlay: BoolProperty(
+        name=t('diffuse_emission_overlay'),
+        description=t('blends_emission_into_the_diffuse_map_for_engines_without_a_seperate_emission_map'),
+        default=False
+    )
+    specular_smoothness_overlay: BoolProperty(
+        name=t('specular_smoothness_overlay'),
+        description=t('merges_smoothness_into_the_specular_map_for_engines_without_a_seperate_smoothness_map'),
+        default=False
+    )
+    gmod_model_name: StringProperty(name='Gmod Model Name', default="missing no")
+    prop_bone_handling: EnumProperty(
+        name="Prop objects",
+        description="What to do with objects marked as Props",
+        items=[
+            ("NONE", "None", "Treat as ordinary objects and bake in"),
+            ("GENERATE", "Generate Bones/Animations", "Generate prop bones and animations for toggling"),
+            ("REMOVE", "Remove", "Remove completely, for platforms with no animation support"),
+        ],
+        default="GENERATE"
+    )
+    copy_only_handling: EnumProperty(
+        name="Copy Only objects",
+        description="What to do with objects marked as Copy Only",
+        items=[
+            ("COPY", "Copy", "Copy and export, but do not bake in"),
+            ("REMOVE", "Remove", "Remove completely, for e.g. eye shells"),
+        ],
+        default="COPY"
+    )
+
 def register_properties():
+    register_class(BakePlatformPropertyGroup)
+
     # Bake
     Scene.bake_use_draft_quality = BoolProperty(
         name='Draft Quality',
@@ -34,211 +237,6 @@ def register_properties():
         description="Factor shapekeys into animation weighting. Disable if your model has large body shapekeys.",
         default=False
     )
-
-    class BakePlatformPropertyGroup(PropertyGroup):
-        name: StringProperty(name='name', default=t("New Platform"))
-        use_decimation: BoolProperty(
-            name=t('Scene.bake_use_decimation.label'),
-            description=t('Scene.bake_use_decimation.desc'),
-            default=True
-        )
-        max_tris: IntProperty(
-            name=t('Scene.max_tris.label'),
-            description=t('Scene.max_tris.desc'),
-            default=7500,
-            min=1,
-            max=70000
-        )
-        use_lods: BoolProperty(
-            name=t("generate_lods"),
-            description=t("generate_courser_decimation_levels_for_efficient_rendering"),
-            default=False
-        )
-        lods: FloatVectorProperty(
-            name=t("lods"),
-            description=t('lod_generation_levels_as_a_percent_of_the_max_tris'),
-            #min=0.0,
-            #max=1.0
-        )
-        use_physmodel: BoolProperty(
-            name=t("generate_physics_model"),
-            description=t("generate_an_additional_lod_used_for_simplified_physics_interactions"),
-            default=False
-        )
-        physmodel_lod: FloatProperty(
-            name=t("physmodel_percent"),
-            default=0.1,
-            min=0.0,
-            max=1.0
-        )
-        remove_doubles: BoolProperty(
-            name=t('Scene.decimation_remove_doubles.label'),
-            description=t('Scene.decimation_remove_doubles.desc'),
-            default=True
-        )
-        preserve_seams: BoolProperty(
-            name=t('Scene.bake_preserve_seams.label'),
-            description=t('Scene.bake_preserve_seams.desc'),
-            default=False
-        )
-        merge_twistbones: BoolProperty(
-            name=t("merge_twist_bones"),
-            description=t("merge_any_bone_with_twist_in_the_name_useful_as_quest_does_not_support_constraints"),
-            default=False
-        )
-        metallic_alpha_pack: EnumProperty(
-            name=t('Scene.bake_metallic_alpha_pack.label'),
-            description=t('Scene.bake_metallic_alpha_pack.desc'),
-            items=[
-                ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
-                ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), t("Scene.bake_metallic_alpha_pack.smoothness.desc"))
-            ],
-            default="NONE"
-        )
-        metallic_pack_ao: BoolProperty(
-            name=t("pack_ao_to_metallic_green"),
-            description=t("pack_ambient_occlusion_to_the_green_channel_saves_a_texture_as_unity_uses_g_for_ao_r_for_metallic"),
-            default=True
-        )
-        diffuse_vertex_colors: BoolProperty(
-            name=t("bake_to_vertex_colors"),
-            description=t("rebake_to_vertex_colors_after_initial_bake_avoids_an_entire_extra_texture_if_your_colors_are_simple_enough_incorperates_ao"),
-            default=False
-        )
-        diffuse_alpha_pack: EnumProperty(
-            name=t('Scene.bake_diffuse_alpha_pack.label'),
-            description=t('Scene.bake_diffuse_alpha_pack.desc'),
-            items=[
-                ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("TRANSPARENCY", t("Scene.bake_diffuse_alpha_pack.transparency.label"), t("Scene.bake_diffuse_alpha_pack.transparency.desc")),
-                ("SMOOTHNESS", t("Scene.bake_diffuse_alpha_pack.smoothness.label"), t("Scene.bake_diffuse_alpha_pack.smoothness.desc")),
-                ("EMITMASK", "Emit Mask", "A single-color emission mask, for use with preapplied emission")
-            ],
-            default="NONE"
-        )
-        normal_alpha_pack: EnumProperty(
-            name=t("normal_alpha_pack"),
-            description=t('Scene.bake_diffuse_alpha_pack.desc'),
-            items=[
-                ("NONE", t("Scene.bake_diffuse_alpha_pack.none.label"), t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("SPECULAR", "Specular", t("Scene.bake_diffuse_alpha_pack.none.desc")),
-                ("SMOOTHNESS", "Smoothness", t("Scene.bake_diffuse_alpha_pack.none.desc")),
-            ],
-            default="NONE"
-        )
-        normal_invert_g: BoolProperty(
-            name=t("invert_green_channel"),
-            description=t("source_engine_uses_an_inverse_green_channel_this_fixes_that_on_export"),
-            default=False
-        )
-        diffuse_premultiply_ao: BoolProperty(
-            name=t("premultiply_diffuse_w_ao"),
-            description=t('Scene.bake_pass_questdiffuse.desc'),
-            default=False
-        )
-        diffuse_premultiply_opacity: FloatProperty(
-            name=t('Scene.bake_questdiffuse_opacity.label'),
-            description=t('Scene.bake_questdiffuse_opacity.desc'),
-            default=1.0,
-            min=0.0,
-            max=1.0,
-            step=0.05,
-            precision=2,
-            subtype='FACTOR'
-        )
-        smoothness_premultiply_ao: BoolProperty(
-            name=t("premultiply_smoothness_w_ao"),
-            description=t("while_not_technically_accurate_this_avoids_the_shine_effect_on_obscured_portions_of_your_model"),
-            default=False
-        )
-        smoothness_premultiply_opacity: FloatProperty(
-            name=t('Scene.bake_questdiffuse_opacity.label'),
-            description=t('Scene.bake_questdiffuse_opacity.desc'),
-            default=1.0,
-            min=0.0,
-            max=1.0,
-            step=0.05,
-            precision=2,
-            subtype='FACTOR'
-        )
-        translate_bone_names: EnumProperty(
-            name=t("translate_bone_names"),
-            description=t("target_another_bone_naming_standard_when_exporting_requires_standard_bone_names"),
-            items=[
-                ("NONE", "None", "Don't translate any bones"),
-                ("VALVE", "Valve", "Translate to Valve conventions when exporting, for use with Source Engine"),
-                ("SECONDLIFE", "Second Life", "Translate to Second Life conventions when exporting, for use with Second Life")
-            ],
-            default="NONE"
-        )
-        export_format: EnumProperty(
-            name=t('export_format'),
-            description=t('model_format_to_use_when_exporting'),
-            items=[
-                ("FBX", "FBX", "FBX export format, for use with Unity"),
-                ("DAE", "DAE", "Collada DAE, for use with Second Life and older engines"),
-                ("GMOD", "GMOD", "Exports to gmod. Requires TGA image export enabled as well to work")
-            ]
-        )
-        image_export_format: EnumProperty(
-            name=t('image_export_format'),
-            description=t('image_type_to_use_when_exporting'),
-            items=[
-                ("TGA", ".tga", "targa export format, for use with Gmod"),
-                ("PNG", ".png", "png format, for use with most platforms.")
-            ]
-        )
-        specular_setup: BoolProperty(
-            name=t('specular_setup'),
-            description=t("convert_diffuse_and_metallic_to_premultiplied_diffuse_and_specular_compatible_with_older_engines"),
-            default=False
-        )
-        specular_alpha_pack: EnumProperty(
-            name=t("specular_alpha_channel"),
-            description=t("what_to_pack_to_the_alpha_channel_of_specularity"),
-            items=[
-                ("NONE", t("Scene.bake_metallic_alpha_pack.none.label"), t("Scene.bake_metallic_alpha_pack.none.desc")),
-                ("SMOOTHNESS", t("Scene.bake_metallic_alpha_pack.smoothness.label"), "Smoothness, for use with Second Life")
-            ],
-            default="NONE"
-        )
-        phong_setup: BoolProperty(
-            name=t('phong_setup_source'),
-            description=t("for_source_engine_only_provides_diffuse_lighting_reflections_for_nonmetallic_objects"),
-            default=False
-        )
-        diffuse_emit_overlay: BoolProperty(
-            name=t('diffuse_emission_overlay'),
-            description=t('blends_emission_into_the_diffuse_map_for_engines_without_a_seperate_emission_map'),
-            default=False
-        )
-        specular_smoothness_overlay: BoolProperty(
-            name=t('specular_smoothness_overlay'),
-            description=t('merges_smoothness_into_the_specular_map_for_engines_without_a_seperate_smoothness_map'),
-            default=False
-        )
-        gmod_model_name: StringProperty(name='Gmod Model Name', default="missing no")
-        prop_bone_handling: EnumProperty(
-            name="Prop objects",
-            description="What to do with objects marked as Props",
-            items=[
-                ("NONE", "None", "Treat as ordinary objects and bake in"),
-                ("GENERATE", "Generate Bones/Animations", "Generate prop bones and animations for toggling"),
-                ("REMOVE", "Remove", "Remove completely, for platforms with no animation support"),
-            ],
-            default="GENERATE"
-        )
-        copy_only_handling: EnumProperty(
-            name="Copy Only objects",
-            description="What to do with objects marked as Copy Only",
-            items=[
-                ("COPY", "Copy", "Copy and export, but do not bake in"),
-                ("REMOVE", "Remove", "Remove completely, for e.g. eye shells"),
-            ],
-            default="COPY"
-        )
-
-    register_class(BakePlatformPropertyGroup)
 
     Scene.bake_platforms = CollectionProperty(
         type=BakePlatformPropertyGroup
