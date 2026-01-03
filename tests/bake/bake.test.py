@@ -387,11 +387,18 @@ sampling_lookup = {
     }
 }
 
+# No Second Life on Blender >5.0
+if bpy.app.version >= (5, 0, 0):
+    sampling_lookup = {k: v for k, v in sampling_lookup.items() if "Second Life" not in k}
+
 class TestAddon(unittest.TestCase):
 
     def reset_stage(self):
         for colname in ['VRChat Desktop Excellent', 'VRChat Quest Excellent', 'VRChat Quest Good',
                         'Second Life', 'VRChat Desktop Good', 'VRChat Quest Medium']:
+            if bpy.app.version >= (5, 0, 0) and colname == 'Second Life':
+                continue
+
             bpy.data.collections.remove(bpy.data.collections["Tuxedo Bake " + colname],
                                         do_unlink=True)
 
@@ -486,7 +493,11 @@ class TestAddon(unittest.TestCase):
                     'Collection',
                 ])
             }
-            self.assertEqual(set([o.name for o in bpy.data.collections]), test_collection_names[test_name])
+            # No Second Life on Blender >5.0
+            if bpy.app.version >= (5, 0, 0):
+                self.assertEqual(set([o.name for o in bpy.data.collections]), set([n for n in test_collection_names[test_name] if "Second Life" not in n]))
+            else:
+                self.assertEqual(set([o.name for o in bpy.data.collections]), test_collection_names[test_name])
             self.reset_stage()
         test_object_names = {
             'bake.bakematerialtest.blend': [
@@ -508,7 +519,10 @@ class TestAddon(unittest.TestCase):
                 'Sphere.002'
             ]
         }
-        self.assertEqual([o.name for o in bpy.data.objects], test_object_names[test_name])
+        if bpy.app.version >= (5, 0, 0):
+            self.assertEqual(set([o.name for o in bpy.data.objects]), set([n for n in test_object_names[test_name] if "Second Life" not in n]))
+        else:
+            self.assertEqual(set([o.name for o in bpy.data.objects]), test_object_names[test_name])
 
         # TODO: tests props
 

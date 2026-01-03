@@ -252,7 +252,7 @@ class BakePresetQuest(bpy.types.Operator):
 
 class BakePresetSecondlife(bpy.types.Operator):
     bl_idname = 'tuxedo_bake.preset_secondlife'
-    bl_label = 'Second Life'
+    bl_label = 'Second Life' if bpy.app.version < (5, 0, 0) else 'Second Life (Blender <5.0 Only)'
     bl_description = "Preset for producing a single-material Second Life Mesh avatar"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -295,7 +295,8 @@ class BakePresetAll(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.tuxedo_bake.preset_desktop()
         bpy.ops.tuxedo_bake.preset_quest()
-        bpy.ops.tuxedo_bake.preset_secondlife()
+        if bpy.app.version < (5, 0, 0):
+            bpy.ops.tuxedo_bake.preset_secondlife()
         return {'FINISHED'}
 
 class BakeAddCopyOnly(bpy.types.Operator):
@@ -515,17 +516,23 @@ class BakeButton(bpy.types.Operator):
         bpy.data.images[image].save()
         bpy.data.images[image].colorspace_settings.name = 'sRGB'
         # set up compositor
-        context.scene.use_nodes = True
-        tree = context.scene.node_tree
+        if bpy.app.version >= (5, 0, 0):
+            context.scene.render.use_compositing = True
+            tree = context.scene.compositing_node_group = bpy.data.node_groups.new("Filter", "CompositorNodeTree")
+        else:
+            context.scene.use_nodes = True
+            tree = context.scene.node_tree
         for node in tree.nodes:
             tree.nodes.remove(node)
         image_node = tree.nodes.new(type="CompositorNodeImage")
         image_node.image = bpy.data.images[image]
         filter_input, filter_output = filter_create(context, tree)
         tree.links.new(filter_input, image_node.outputs["Image"])
-        viewer_node = tree.nodes.new(type="CompositorNodeComposite")
         if bpy.app.version <= (4, 4, 0):
+            viewer_node = tree.nodes.new(type="CompositorNodeComposite")
             tree.links.new(viewer_node.inputs["Alpha"], image_node.outputs["Alpha"])
+        else:
+            viewer_node = tree.nodes.new(type="CompositorNodeViewer")
         tree.links.new(viewer_node.inputs["Image"], filter_output)
 
         # rerender image
@@ -635,7 +642,8 @@ class BakeButton(bpy.types.Operator):
         context.scene.render.bake.use_clear = clear and bake_type == 'NORMAL'
         context.scene.render.bake.use_selected_to_active = (bake_active != None)
         context.scene.render.bake.margin = bake_margin
-        context.scene.render.use_bake_multires = bake_multires
+        if bpy.app.version < (5, 0, 0):
+            context.scene.render.use_bake_multires = bake_multires
         context.scene.render.bake.normal_space = normal_space
         bpy.ops.object.bake(type=bake_type,
                             # pass_filter=bake_pass_filter,
