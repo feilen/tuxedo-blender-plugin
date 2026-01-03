@@ -311,12 +311,6 @@ def register_properties():
         subtype='FACTOR'
     )
 
-    Scene.bake_sharpen = BoolProperty(
-        name=t("sharpen_bakes"),
-        description=t("sharpen_resampled_images_after_baking_diffusesmoothnessmetallic_reccomended_as_any_sampling_will_cause_blur"),
-        default=True
-    )
-
     Scene.bake_denoise = BoolProperty(
         name=t("denoise_renders"),
         description=t("denoise_the_resulting_image_after_emitao_reccomended_as_this_will_reduce_the_grainy_quality_of_inexpensive_rendering"),

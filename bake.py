@@ -524,7 +524,8 @@ class BakeButton(bpy.types.Operator):
         filter_input, filter_output = filter_create(context, tree)
         tree.links.new(filter_input, image_node.outputs["Image"])
         viewer_node = tree.nodes.new(type="CompositorNodeComposite")
-        tree.links.new(viewer_node.inputs["Alpha"], image_node.outputs["Alpha"])
+        if bpy.app.version <= (4, 4, 0):
+            tree.links.new(viewer_node.inputs["Alpha"], image_node.outputs["Alpha"])
         tree.links.new(viewer_node.inputs["Image"], filter_output)
 
         # rerender image
@@ -544,12 +545,6 @@ class BakeButton(bpy.types.Operator):
             normal_node.image = bpy.data.images["SCRIPT_world.png"]
             tree.links.new(denoise_node.inputs["Normal"], normal_node.outputs["Image"])
         return denoise_node.inputs["Image"], denoise_node.outputs["Image"]
-
-    def sharpen_create(context, tree):
-        sharpen_node = tree.nodes.new(type="CompositorNodeFilter")
-        sharpen_node.filter_type = "SHARPEN"
-        sharpen_node.inputs["Fac"].default_value = 0.1
-        return sharpen_node.inputs["Image"], sharpen_node.outputs["Image"]
 
     def deselect_all_objects():
         bpy.ops.object.select_all(action='DESELECT')
@@ -877,7 +872,6 @@ class BakeButton(bpy.types.Operator):
         diffuse_indirect_opacity = context.scene.bake_diffuse_indirect_opacity
 
         # Filters
-        sharpen_bakes = context.scene.bake_sharpen
         denoise_bakes = context.scene.bake_denoise
 
         #also disable optimize solid materials if other things are enabled that will break it
@@ -1291,10 +1285,6 @@ class BakeButton(bpy.types.Operator):
                     pixel_buffer = img_channels_as_nparray("SCRIPT_" + bake_name + ".png")
                     pixel_buffer[:3] -= 1.0
                     nparray_channels_to_img("SCRIPT_" + bake_name + ".png", np.abs(pixel_buffer))
-
-                if sharpen_bakes:
-                    self.filter_image(context, "SCRIPT_" + bake_name + ".png", BakeButton.sharpen_create,
-                                      use_linear = use_linear)
 
         # Bake displacement sides A and B, make one negative, select greater magnitude, normalize from 0 to 1
         if pass_displacement:

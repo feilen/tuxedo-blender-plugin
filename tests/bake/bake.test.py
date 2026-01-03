@@ -417,7 +417,6 @@ class TestAddon(unittest.TestCase):
         # can introduce an error of +/- 1 value. We should save to a better intermediate format
         for filter_img in [False, True]:
             bpy.context.scene.bake_denoise = filter_img
-            bpy.context.scene.bake_sharpen = filter_img
             result = bpy.ops.tuxedo_bake.bake()
 
 

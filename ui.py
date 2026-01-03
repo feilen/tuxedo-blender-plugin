@@ -466,8 +466,6 @@ class BakePanel(Panel):
             else:
                 row.prop(context.scene, 'bake_show_advanced_general_options', icon="REMOVE", emboss=True, expand=False, toggle=False, event=False)
                 row = col.row(align=True)
-                row.prop(context.scene, 'bake_sharpen', expand=True)
-                row = col.row(align=True)
                 row.prop(context.scene, 'bake_denoise', expand=True)
                 row = col.row(align=True)
                 row.prop(context.scene, 'bake_cleanup_shapekeys', expand=True)
