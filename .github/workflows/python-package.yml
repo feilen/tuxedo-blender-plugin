@@ -37,7 +37,7 @@ jobs:
         # install each version >= 2.93
         echo "$versions" | while read -r channel version; do
           major=$(echo "$version" | cut -d. -f1)
-          minor=$(echo "$version" | cut -d. -f2)
+          minor=$(echo "$version" | cut -d. -f2 | grep -oE '[0-9]+')
           combined=$((major * 100 + minor))
           
           if [ "$combined" -lt 293 ]; then
@@ -58,7 +58,7 @@ jobs:
         
         echo "$versions" | while read -r channel version; do
           major=$(echo "$version" | cut -d. -f1)
-          minor=$(echo "$version" | cut -d. -f2)
+          minor=$(echo "$version" | cut -d. -f2 | grep -oE '[0-9]+')
           combined=$((major * 100 + minor))
           
           if [ "$combined" -lt 293 ]; then
@@ -80,7 +80,7 @@ jobs:
         
         echo "$versions" | sort -t. -k1,1n -k2,2n | while read -r channel version; do
           major=$(echo "$version" | cut -d. -f1)
-          minor=$(echo "$version" | cut -d. -f2)
+          minor=$(echo "$version" | cut -d. -f2 | grep -oE '[0-9]+')
           combined=$((major * 100 + minor))
           
           if [ "$combined" -lt 293 ]; then
