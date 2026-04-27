@@ -32,7 +32,7 @@ jobs:
 
         # parse snap info: extract channel, skip "latest" and "tracking" lines
         # output: channel  version  (e.g. "2.93lts  2.93.18")
-        versions=$(snap info blender | grep -E '^\s+\d+\.\d+' | awk '{gsub(/\/stable:*/, "", $1); print $1, $2}')
+        versions=$(snap info blender | grep '/stable:' | grep -E '^[[:space:]]+[0-9]+\.[0-9]+' | awk '{gsub(/\/stable:.*/, "", $1); print $1, $2}')
 
         # install each version >= 2.93
         echo "$versions" | while read -r channel version; do
@@ -54,7 +54,7 @@ jobs:
 
     - name: Set up plugin symlinks
       run: |
-        versions=$(snap info blender | grep -E '^\s+\d+\.\d+' | awk '{gsub(/\/stable:*/, "", $1); print $1, $2}')
+        versions=$(snap info blender | grep '/stable:' | grep -E '^[[:space:]]+[0-9]+\.[0-9]+' | awk '{gsub(/\/stable:.*/, "", $1); print $1, $2}')
         
         echo "$versions" | while read -r channel version; do
           major=$(echo "$version" | cut -d. -f1)
@@ -76,7 +76,7 @@ jobs:
 
     - name: Run tests
       run: |
-        versions=$(snap info blender | grep -E '^\s+\d+\.\d+' | awk '{gsub(/\/stable:*/, "", $1); print $1, $2}')
+        versions=$(snap info blender | grep '/stable:' | grep -E '^[[:space:]]+[0-9]+\.[0-9]+' | awk '{gsub(/\/stable:.*/, "", $1); print $1, $2}')
         
         echo "$versions" | sort -t. -k1,1n -k2,2n | while read -r channel version; do
           major=$(echo "$version" | cut -d. -f1)
