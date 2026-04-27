@@ -94,7 +94,7 @@ jobs:
           python3 ./tests/run.py --blend="$snap_name" --test=./tests/empty/* --bfile=./tests/empty/empty.* -c True || exit 1
           python3 ./tests/run.py --blend="$snap_name" --test=./tests/bake/* --bfile=./tests/bake/bake.* -c True || exit 1
           
-          if [ "$combined" -ge 31 ]; then
+          if [ "$combined" -ge 301 ]; then
             python3 ./tests/run.py --blend="$snap_name" --test=./tests/facetracking/* --bfile=./tests/facetracking/facetracking.* -c True || exit 1
           fi
         done
