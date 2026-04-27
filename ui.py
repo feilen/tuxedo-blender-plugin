@@ -37,7 +37,7 @@ class Bake_Platform_Delete(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.bake_platforms
+        return len(context.scene.bake_platforms) > 0
 
     def execute(self, context):
         bake_platforms = context.scene.bake_platforms
@@ -54,7 +54,7 @@ class Bake_Lod_New(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.bake_platforms
+        return len(context.scene.bake_platforms) > 0
 
     def execute(self, context):
         bake_platforms = context.scene.bake_platforms
@@ -74,7 +74,7 @@ class Bake_Lod_Delete(Operator):
         bake_platforms = context.scene.bake_platforms
         index = context.scene.bake_platform_index
 
-        return context.scene.bake_platforms and len(bake_platforms[index].lods) > 1
+        return len(bake_platforms) > 0 and len(bake_platforms[index].lods) > 1
 
     def execute(self, context):
         bake_platforms = context.scene.bake_platforms
@@ -107,7 +107,7 @@ class Choose_Steam_Library(Operator, ImportHelper):
         bake_platforms = context.scene.bake_platforms
         index = context.scene.bake_platform_index
 
-        return bake_platforms[index].export_format == "GMOD"
+        return len(bake_platforms) > 0 and bake_platforms[index].export_format == "GMOD"
     def execute(self, context):
         context.scene.bake_steam_library = self.directory
         return{'FINISHED'}
@@ -271,7 +271,7 @@ class BakePanel(Panel):
         row.operator(Bake_Platform_Delete.bl_idname)
         col.separator()
 
-        if context.scene.bake_platform_index >= 0 and context.scene.bake_platforms:
+        if context.scene.bake_platform_index >= 0 and len(context.scene.bake_platforms) > 0:
             item = context.scene.bake_platforms[context.scene.bake_platform_index]
 
             row = col.row(align=True)

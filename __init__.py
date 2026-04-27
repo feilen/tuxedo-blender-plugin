@@ -6,8 +6,13 @@ if "bpy" not in locals():
 else:
     is_reloading = True
 
-if not is_reloading:
-    from . import bake, properties, tools, ui
+from . import bake, properties, tools, ui
+
+if is_reloading:
+    importlib.reload(tools)
+    importlib.reload(bake)
+    importlib.reload(properties)
+    importlib.reload(ui)
 
 from .bake import BakeAddCopyOnly, BakeAddProp, BakeButton, BakePresetAll, BakePresetDesktop, BakePresetGmod, BakePresetGmodPhong, BakePresetQuest, BakePresetSecondlife, BakeRemoveCopyOnly, BakeRemoveProp, BakeTutorialButton
 from .ui import BakePanel, Bake_Lod_Delete, Bake_Lod_New, Bake_Platform_Delete, Bake_Platform_List, Bake_Platform_New, Choose_Steam_Library, Open_GPU_Settings, ToolPanel, SmartDecimation, FT_Shapes_UL
@@ -15,12 +20,6 @@ from .tools import ConvertToSecondlifeButton, FitClothes, GenerateTwistBones, Tw
 from .tools import FT_OT_CreateShapeKeys, SRanipal_Labels
 from .properties import register_properties, BakePlatformPropertyGroup
 from bpy.types import Scene
-
-if is_reloading:
-    importlib.reload(tools)
-    importlib.reload(bake)
-    importlib.reload(properties)
-    importlib.reload(ui)
 
 bl_info = {
     'name': 'Tuxedo Blender Plugin',
@@ -95,7 +94,7 @@ def unregister():
 
     try:
         bpy.utils.unregister_class(BakePlatformPropertyGroup)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, RuntimeError):
         pass
 
     for i, ft_shape in enumerate(SRanipal_Labels):
