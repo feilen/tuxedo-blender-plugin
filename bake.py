@@ -42,6 +42,59 @@ def get_objects(objects, filter_type=set(), filter_func=None):
 def not_copyonly(obj):
     return 'bakeCopyOnly' not in obj or not obj['bakeCopyOnly']
 
+# Scale a 2D vector v, considering a scale s and a pivot point p
+def scale_2d(v, s, p):
+    return (p[0] + s[0] * (v[0] - p[0]), p[1] + s[1] * (v[1] - p[1]))
+
+# Gather all material node trees and node groups from objects
+def gather_material_trees(objects):
+    trees = {slot.material.node_tree for obj in objects
+             for slot in obj.material_slots if slot.material}
+    trees |= set(bpy.data.node_groups)
+    return trees
+
+# Update armature and multires modifiers on an object to target a new armature
+def update_modifiers_for_armature(obj, armature):
+    for modifier in obj.modifiers:
+        if modifier.type == "ARMATURE":
+            modifier.object = armature
+        if modifier.type == "MULTIRES":
+            modifier.render_levels = modifier.total_levels
+
+# Yield (tree, node_name, node) for all nodes in all material trees of given objects
+def iterate_material_tree_nodes(objects):
+    for tree in gather_material_trees(objects):
+        for node_name in [node.name for node in tree.nodes]:
+            yield tree, node_name, tree.nodes[node_name]
+
+# Remove shape keys from MESH objects where predicate(key_name) is True
+def remove_shape_keys_by_predicate(collection, predicate):
+    for mesh in collection.all_objects:
+        if mesh.type == 'MESH' and mesh.data.shape_keys is not None:
+            names = [key.name for key in mesh.data.shape_keys.key_blocks]
+            for name in names:
+                if predicate(name):
+                    mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks[name])
+
+# Remove UV layers from MESH objects where predicate(layer_name) is True
+def remove_uv_layers_by_predicate(collection, predicate):
+    for obj in get_objects(collection.all_objects, {"MESH"}):
+        uv_layers = [layer.name for layer in obj.data.uv_layers]
+        while uv_layers:
+            layer = uv_layers.pop()
+            if predicate(layer):
+                print(f"Removing UV {layer}")
+                obj.data.uv_layers.remove(obj.data.uv_layers[layer])
+
+# Activate a UV layer and enter edit mode with all selected. Returns previous active index.
+def activate_uv_for_edit(obj, layer_name):
+    idx = obj.data.uv_layers.active_index
+    obj.data.uv_layers[layer_name].active = True
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.select_all(action='SELECT')
+    return idx
+
 def autodetect_passes(self, context, item, tricount, platform, use_phong=False):
     item.max_tris = tricount
     # Autodetect passes based on BSDF node inputs
@@ -386,124 +439,100 @@ class BakeButton(bpy.types.Operator):
     # Force displacment normals to go either - or + Y, so we can bake and normalize them
     # This will likely break if 'Normal' is already linked, but that's uncommon for typical material setups.
     def prepare_displacement(self, objects, inverted=False, restore = False):
-        desired_material_trees = {slot.material.node_tree for obj in objects
-                                   for slot in obj.material_slots if slot.material}
-        desired_material_trees |= {node_group for node_group in bpy.data.node_groups}
+        for tree, node_name, node in iterate_material_tree_nodes(objects):
+            if not restore:
+                if node.type == "DISPLACEMENT":
+                    bake_node = tree.nodes.new("ShaderNodeCombineXYZ")
+                    bake_node.name = node.name + ".BAKE"
+                    bake_node.label = "For Tuxedo bake: you should CTRL+Z"
+                    bake_node.inputs["Y"].default_value = 1. if not inverted else -1.
+                    tree.links.new(node.inputs["Normal"], bake_node.outputs["Vector"])
+            else:
+                # Remove created displacement input nodes
+                if node.type == "COMBXYZ" and node.name[-5:] == ".BAKE":
+                    # Make the bake Vector take over all outputs
+                    if node.outputs["Vector"].is_linked:
+                        while node.outputs["Vector"].is_linked:
+                            tree.links.remove(node.outputs["Vector"].links[0])
 
-        for tree in desired_material_trees:
-            for node_name in [node.name for node in tree.nodes]:
-                node = tree.nodes[node_name]
-                if not restore:
-                    if node.type == "DISPLACEMENT":
-                        bake_node = tree.nodes.new("ShaderNodeCombineXYZ")
-                        bake_node.name = node.name + ".BAKE"
-                        bake_node.label = "For Tuxedo bake: you should CTRL+Z"
-                        bake_node.inputs["Y"].default_value = 1. if not inverted else -1.
-                        tree.links.new(node.inputs["Normal"], bake_node.outputs["Vector"])
-                else:
-                    # Remove created displacement input nodes
-                    if node.type == "COMBXYZ" and node.name[-5:] == ".BAKE":
-                        # Make the bake Vector take over all outputs
-                        if node.outputs["Vector"].is_linked:
-                            while node.outputs["Vector"].is_linked:
-                                tree.links.remove(node.outputs["Vector"].links[0])
-
-                        tree.nodes.remove(node)
+                    tree.nodes.remove(node)
 
 
     # For all output nodes, swap selected inputs
     def swap_inputs(self, objects, desired_inputs, node_type):
-        desired_material_trees = {slot.material.node_tree for obj in objects
-                                   for slot in obj.material_slots if slot.material}
-        desired_material_trees |= {node_group for node_group in bpy.data.node_groups}
-
-        for tree in desired_material_trees:
-            for node_name in [node.name for node in tree.nodes]:
-                node = tree.nodes[node_name]
-                if node.type == node_type:
-                    for desired_input, connect_to in desired_inputs.items():
-                        desired_orig = node.inputs[desired_input].links[0].from_socket if node.inputs[desired_input].is_linked else None
-                        connect_orig = node.inputs[connect_to].links[0].from_socket if node.inputs[connect_to].is_linked else None
-                        while node.inputs[desired_input].is_linked:
-                            tree.links.remove(node.inputs[desired_input].links[0])
-                        while node.inputs[connect_to].is_linked:
-                            tree.links.remove(node.inputs[connect_to].links[0])
-                        if desired_orig:
-                            tree.links.new(node.inputs[connect_to], desired_orig)
-                        if connect_orig:
-                            tree.links.new(node.inputs[desired_input], connect_orig)
+        for tree, node_name, node in iterate_material_tree_nodes(objects):
+            if node.type == node_type:
+                for desired_input, connect_to in desired_inputs.items():
+                    desired_orig = node.inputs[desired_input].links[0].from_socket if node.inputs[desired_input].is_linked else None
+                    connect_orig = node.inputs[connect_to].links[0].from_socket if node.inputs[connect_to].is_linked else None
+                    while node.inputs[desired_input].is_linked:
+                        tree.links.remove(node.inputs[desired_input].links[0])
+                    while node.inputs[connect_to].is_linked:
+                        tree.links.remove(node.inputs[connect_to].links[0])
+                    if desired_orig:
+                        tree.links.new(node.inputs[connect_to], desired_orig)
+                    if connect_orig:
+                        tree.links.new(node.inputs[desired_input], connect_orig)
 
     # For every found BSDF, duplicate it, rename the new one to '.BAKE', and set bake-able defaults
     # Attach the links and copy the dv, but only for desired_inputs
     def genericize_bsdfs(self, objects, desired_inputs, base_black=False, flat_ior=False):
-        desired_material_trees = {slot.material.node_tree for obj in objects
-                                   for slot in obj.material_slots if slot.material}
-        desired_material_trees |= {node_group for node_group in bpy.data.node_groups}
+        for tree, node_name, node in iterate_material_tree_nodes(objects):
+            if node.type == "BSDF_PRINCIPLED":
+                bake_node = tree.nodes.new("ShaderNodeBsdfPrincipled")
+                bake_node.name = node.name + ".BAKE"
+                bake_node.label = "For Tuxedo bake: you should CTRL+Z"
+                for desired_input, connect_to in desired_inputs.items():
+                    if node.inputs[desired_input].is_linked:
+                        tree.links.new(bake_node.inputs[connect_to],
+                                       node.inputs[desired_input].links[0].from_socket)
 
-        for tree in desired_material_trees:
-            for node_name in [node.name for node in tree.nodes]:
-                node = tree.nodes[node_name]
-                if node.type == "BSDF_PRINCIPLED":
-                    bake_node = tree.nodes.new("ShaderNodeBsdfPrincipled")
-                    bake_node.name = node.name + ".BAKE"
-                    bake_node.label = "For Tuxedo bake: you should CTRL+Z"
-                    for desired_input, connect_to in desired_inputs.items():
-                        if node.inputs[desired_input].is_linked:
-                            tree.links.new(bake_node.inputs[connect_to],
-                                           node.inputs[desired_input].links[0].from_socket)
+                # Make the bake BSDF take over all outputs
+                if node.outputs["BSDF"].is_linked:
+                    to_sockets = [link.to_socket for link in node.outputs["BSDF"].links]
+                    while node.outputs["BSDF"].is_linked:
+                        tree.links.remove(node.outputs["BSDF"].links[0])
+                    for to_socket in to_sockets:
+                        tree.links.new(to_socket, bake_node.outputs["BSDF"])
 
-                    # Make the bake BSDF take over all outputs
-                    if node.outputs["BSDF"].is_linked:
-                        to_sockets = [link.to_socket for link in node.outputs["BSDF"].links]
-                        while node.outputs["BSDF"].is_linked:
-                            tree.links.remove(node.outputs["BSDF"].links[0])
-                        for to_socket in to_sockets:
-                            tree.links.new(to_socket, bake_node.outputs["BSDF"])
+                if base_black:
+                    bake_node.inputs["Base Color"].default_value = [0., 0., 0., 1.]
+                else:
+                    bake_node.inputs["Base Color"].default_value = [1., 1., 1., 1.]
+                if bpy.app.version < (4, 0, 0):
+                    bake_node.inputs["Subsurface"].default_value = 0.0
+                elif flat_ior:
+                    bake_node.inputs["IOR"].default_value = 1.0 # Without this, diffuse color gets all messed up
+                bake_node.inputs["Metallic"].default_value = 0.0
+                bake_node.inputs[SPECULAR_INPUT].default_value = 0.5
+                bake_node.inputs["Roughness"].default_value = 0.5
+                bake_node.inputs["Alpha"].default_value = 1.0
 
-                    if base_black:
-                        bake_node.inputs["Base Color"].default_value = [0., 0., 0., 1.]
+                for desired_input, connect_to in desired_inputs.items():
+                    if type(bake_node.inputs[connect_to].default_value) != type(node.inputs[desired_input].default_value):
+                        # Assume for color
+                        assert connect_to == "Base Color"
+                        dv = node.inputs[desired_input].default_value
+                        bake_node.inputs[connect_to].default_value = [dv, dv, dv, 1.]
                     else:
-                        bake_node.inputs["Base Color"].default_value = [1., 1., 1., 1.]
-                    if bpy.app.version < (4, 0, 0):
-                        bake_node.inputs["Subsurface"].default_value = 0.0
-                    elif flat_ior:
-                        bake_node.inputs["IOR"].default_value = 1.0 # Without this, diffuse color gets all messed up
-                    bake_node.inputs["Metallic"].default_value = 0.0
-                    bake_node.inputs[SPECULAR_INPUT].default_value = 0.5
-                    bake_node.inputs["Roughness"].default_value = 0.5
-                    bake_node.inputs["Alpha"].default_value = 1.0
-
-                    for desired_input, connect_to in desired_inputs.items():
-                        if type(bake_node.inputs[connect_to].default_value) != type(node.inputs[desired_input].default_value):
-                            # Assume for color
-                            assert connect_to == "Base Color"
-                            dv = node.inputs[desired_input].default_value
-                            bake_node.inputs[connect_to].default_value = [dv, dv, dv, 1.]
-                        else:
-                            bake_node.inputs[connect_to].default_value = node.inputs[desired_input].default_value
+                        bake_node.inputs[connect_to].default_value = node.inputs[desired_input].default_value
 
     # Find generated bakenodes and restore their outputs, then delete them
     def restore_bsdfs(self, objects):
-        desired_material_trees = {slot.material.node_tree for obj in objects
-                                   for slot in obj.material_slots if slot.material}
-        desired_material_trees |= {node_group for node_group in bpy.data.node_groups}
+        for tree, bake_node_name, bake_node in iterate_material_tree_nodes(objects):
+            if bake_node.type == "BSDF_PRINCIPLED" and bake_node.name[-5:] == ".BAKE":
+                # we've found a bake node, restore the outputs to their rightful owner and del
+                original_node = tree.nodes[bake_node.name[:-5]]
 
-        for tree in desired_material_trees:
-            for bake_node_name in [node.name for node in tree.nodes]:
-                bake_node = tree.nodes[bake_node_name]
-                if bake_node.type == "BSDF_PRINCIPLED" and bake_node.name[-5:] == ".BAKE":
-                    # we've found a bake node, restore the outputs to their rightful owner and del
-                    node = tree.nodes[bake_node.name[:-5]]
+                # Make the bake BSDF take over all outputs
+                if bake_node.outputs["BSDF"].is_linked:
+                    to_sockets = [link.to_socket for link in bake_node.outputs["BSDF"].links]
+                    while bake_node.outputs["BSDF"].is_linked:
+                        tree.links.remove(bake_node.outputs["BSDF"].links[0])
+                    for to_socket in to_sockets:
+                        tree.links.new(to_socket, original_node.outputs["BSDF"])
 
-                    # Make the bake BSDF take over all outputs
-                    if bake_node.outputs["BSDF"].is_linked:
-                        to_sockets = [link.to_socket for link in bake_node.outputs["BSDF"].links]
-                        while bake_node.outputs["BSDF"].is_linked:
-                            tree.links.remove(bake_node.outputs["BSDF"].links[0])
-                        for to_socket in to_sockets:
-                            tree.links.new(to_socket, node.outputs["BSDF"])
-
-                    tree.nodes.remove(bake_node)
+                tree.nodes.remove(bake_node)
 
     # filter_node_create is a function which, given a tree, returns a tuple of
     # (input, output)
@@ -597,13 +626,13 @@ class BakeButton(bpy.types.Operator):
         for obj in objects:
             obj.select_set(True)
 
-    def change_value_node_for_materials(objects, bake_name):
+    def set_value_node_for_materials(objects, bake_name, value):
         for obj in objects:
             for slot in obj.material_slots:
                 if slot.material:
                     for node in obj.active_material.node_tree.nodes:
                         if node.type == "VALUE" and node.label == "bake_" + bake_name:
-                            node.outputs["Value"].default_value = 1
+                            node.outputs["Value"].default_value = value
 
     def assign_bake_node_for_materials(objects, bake_name):
         for obj in objects:
@@ -653,14 +682,6 @@ class BakeButton(bpy.types.Operator):
                             cage_extrusion=bake_ray_distance,
                             normal_space=normal_space
                             )
-
-    def reset_value_node_for_materials(objects, bake_name):
-        for obj in objects:
-            for slot in obj.material_slots:
-                if slot.material:
-                    for node in obj.active_material.node_tree.nodes:
-                        if node.type == "VALUE" and node.label == "bake_" + bake_name:
-                            node.outputs["Value"].default_value = 0
 
     def optimize_solid_materials(context, objects, bake_size, solidmaterialcolors, bake_name, image):
         #solid material optimization making 4X4 squares of solid color for this pass - @989onan
@@ -713,10 +734,10 @@ class BakeButton(bpy.types.Operator):
         BakeButton.select_objects_for_baking(objects)
         for obj in objects:
             BakeButton.select_and_set_active_object(context, obj)
-        BakeButton.change_value_node_for_materials(objects, bake_name)
+        BakeButton.set_value_node_for_materials(objects, bake_name, 1)
         BakeButton.assign_bake_node_for_materials(objects, bake_name)
         BakeButton.run_bake(context, bake_type, bake_pass_filter, bake_samples, clear, bake_active, bake_margin, bake_multires, normal_space, bake_ray_distance)
-        BakeButton.reset_value_node_for_materials(objects, bake_name)
+        BakeButton.set_value_node_for_materials(objects, bake_name, 0)
         BakeButton.optimize_solid_materials(context, objects, bake_size, solidmaterialcolors, bake_name, image)
 
     def copy_ob(self, ob, parent, collection):
@@ -921,11 +942,7 @@ class BakeButton(bpy.types.Operator):
 
         # Make sure all armature modifiers target the new armature
         for obj in get_objects(collection.all_objects):
-            for modifier in obj.modifiers:
-                if modifier.type == "ARMATURE":
-                    modifier.object = arm_copy
-                if modifier.type == "MULTIRES":
-                    modifier.render_levels = modifier.total_levels
+            update_modifiers_for_armature(obj, arm_copy)
             #moved weight paint cleanup to inside the platforms because this interferes with Gmod needing a certain weight cleanup method - @989onan
 
         # Copy default values from the largest diffuse BSDF
@@ -1097,11 +1114,6 @@ class BakeButton(bpy.types.Operator):
                                 bpy.ops.object.material_slot_select() #select our material on mesh
                                 bpy.ops.uv.select_all(action='SELECT') #select all uv
 
-                                #https://blender.stackexchange.com/a/75095
-                                #Scale a 2D vector v, considering a scale s and a pivot point p
-                                def Scale2D( v, s, p ):
-                                    return ( p[0] + s[0]*(v[0] - p[0]), p[1] + s[1]*(v[1] - p[1]) )
-
                                 bpy.ops.object.mode_set(mode='OBJECT')#idk why this has to be here but it breaks without it - @989onan
                                 index = solidmaterialnames[material.name]
 
@@ -1118,7 +1130,7 @@ class BakeButton(bpy.types.Operator):
                                         # https://projects.blender.org/blender/blender/commit/f4308aa2d06e99f131e5eebbbcf9844d1106b78e#diff-f2a7c8a5fa195b25def41d608136678a533bd2ca
                                         if bpy.app.version >= (5, 0, 0) or uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
                                             #Here we scale the UV's down to 0 starting at the bottom left corner and going up row by row of solid materials.
-                                            uv_layer[loop].uv = Scale2D( uv_layer[loop].uv, (0,0), ((X/resolution),(Y/resolution))  )
+                                            uv_layer[loop].uv = scale_2d(uv_layer[loop].uv, (0, 0), ((X / resolution), (Y / resolution)))
                                 bpy.ops.object.mode_set(mode='EDIT')
                                 #deselect UV's and hide mesh for scaling uv's out the way later. this also prevents the steps for averaging islands and prioritizing head size from going bad later.
                                 bpy.ops.uv.select_all(action='DESELECT')
@@ -1224,17 +1236,7 @@ class BakeButton(bpy.types.Operator):
                 #unhide geometry from step before pack islands that fixed solid material uvs, then scale uv's to be short enough to avoid color squares at top right. - @989onan
                 for obj in get_objects(collection.all_objects, {"MESH"}):
                     for layer in tuxedo_uv_layers:
-                        idx = obj.data.uv_layers.active_index
-                        obj.data.uv_layers[layer].active = True
-                        bpy.ops.object.mode_set(mode='EDIT')
-
-                        bpy.ops.mesh.select_all(action='SELECT')
-                        bpy.ops.uv.select_all(action='SELECT')
-
-                        #https://blender.stackexchange.com/a/75095
-                        #Scale a 2D vector v, considering a scale s and a pivot point p
-                        def Scale2D( v, s, p ):
-                            return ( p[0] + s[0]*(v[0] - p[0]), p[1] + s[1]*(v[1] - p[1]) )
+                        activate_uv_for_edit(obj, layer)
 
                         last_index = len(solidmaterialnames)
 
@@ -1251,15 +1253,11 @@ class BakeButton(bpy.types.Operator):
                                 # https://projects.blender.org/blender/blender/commit/f4308aa2d06e99f131e5eebbbcf9844d1106b78e#diff-f2a7c8a5fa195b25def41d608136678a533bd2ca
                                 if bpy.app.version >= (5, 0, 0) or uv_layer[loop].select: #make sure that it is selected (only visible will be selected in this case)
                                     #scale UV upwards so square stuff below can fit for solid colors
-                                    uv_layer[loop].uv = Scale2D( uv_layer[loop].uv, (1,1-((Y+(pixelmargin+squaremargin))/resolution)), (0,1) )
+                                    uv_layer[loop].uv = scale_2d(uv_layer[loop].uv, (1, 1 - ((Y + (pixelmargin + squaremargin)) / resolution)), (0, 1))
 
                     #unhide all mesh polygons from our material hiding for scaling
                     for layer in tuxedo_uv_layers:
-                        idx = obj.data.uv_layers.active_index
-                        obj.data.uv_layers[layer].active = True
-                        bpy.ops.object.mode_set(mode='EDIT')
-                        bpy.ops.mesh.select_all(action='SELECT')
-                        bpy.ops.uv.select_all(action='SELECT')
+                        activate_uv_for_edit(obj, layer)
                         bpy.ops.mesh.reveal(select=True)
                         bpy.ops.object.mode_set(mode='OBJECT') #below will error if it isn't in object because of poll error
 
@@ -1300,28 +1298,20 @@ class BakeButton(bpy.types.Operator):
 
         # Bake displacement sides A and B, make one negative, select greater magnitude, normalize from 0 to 1
         if pass_displacement:
+            def bake_displacement_side(bake_name, inverted):
+                objects = get_objects(collection.all_objects, {"MESH"})
+                self.prepare_displacement(objects, inverted=inverted)
+                self.bake_pass(context, bake_name, "EMIT", {},
+                               objects,
+                               (resolution, resolution), 1 if draft_render else 32, 0,
+                               [0., 0., 0., 1.], True, pixelmargin,
+                               solidmaterialcolors=solidmaterialcolors)
+                self.prepare_displacement(objects, restore=True)
+
             self.swap_inputs(get_objects(collection.all_objects, {"MESH"}),
                               {"Surface": "Displacement"}, "OUTPUT_MATERIAL")
-
-            self.prepare_displacement(get_objects(collection.all_objects, {"MESH"}),
-                                      inverted=False)
-            self.bake_pass(context, "displacement", "EMIT", {},
-                           get_objects(collection.all_objects, {"MESH"}),
-                           (resolution, resolution), 1 if draft_render else 32, 0,
-                           [0., 0., 0., 1.], True, pixelmargin,
-                           solidmaterialcolors=solidmaterialcolors)
-            self.prepare_displacement(get_objects(collection.all_objects, {"MESH"}),
-                                      restore=True)
-
-            self.prepare_displacement(get_objects(collection.all_objects, {"MESH"}),
-                                      inverted=True)
-            self.bake_pass(context, "displacement_inverse", "EMIT", {},
-                           get_objects(collection.all_objects, {"MESH"}),
-                           (resolution, resolution), 1 if draft_render else 32, 0,
-                           [0., 0., 0., 1.], True, pixelmargin,
-                           solidmaterialcolors=solidmaterialcolors)
-            self.prepare_displacement(get_objects(collection.all_objects, {"MESH"}),
-                                      restore=True)
+            bake_displacement_side("displacement", False)
+            bake_displacement_side("displacement_inverse", True)
             # TODO: we could also account for multires displacement by adding the bake result to the
             # above, but detaching displacements first
 
@@ -1614,11 +1604,7 @@ class BakeButton(bpy.types.Operator):
 
             # Make sure all armature modifiers target the new armature
             for obj in get_objects(plat_collection.all_objects):
-                for modifier in obj.modifiers:
-                    if modifier.type == "ARMATURE":
-                        modifier.object = plat_arm_copy
-                    if modifier.type == "MULTIRES":
-                        modifier.render_levels = modifier.total_levels
+                update_modifiers_for_armature(obj, plat_arm_copy)
                 # Do a little weight painting cleanup here
                 if obj.type == "MESH" and export_format != "GMOD": #wanna exclude gmod since gmod does this itself.
                     obj.select_set(True)
@@ -1743,34 +1729,22 @@ class BakeButton(bpy.types.Operator):
 
                 for orig_obj_name, path_strings in all_path_strings.items():
                     # A bit of a hacky string manipulation, just create a curve for each bone based on the editor path. Output file is YAML
-                    # {EDITOR_VALUE} = 1
-                    # {SCALE_VALUE} = {x: 1, y: 1, z: 1}
-                    with open(os.path.dirname(os.path.abspath(__file__)) + "/enable.anim", 'r') as infile:
-                        newname = "Enable " + orig_obj_name
+                    def write_anim_file(template_name, name_prefix, scale_value, editor_value):
+                        newname = f"{name_prefix} {orig_obj_name}"
                         editor_curves = ""
                         scale_curves = ""
                         for path_string in sorted(path_strings):
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_ScaleCurves.anim.part", 'r') as infilepart:
-                                scale_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{SCALE_VALUE}", "{x: 1, y: 1, z: 1}") for line in infilepart])
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_EditorCurves.anim.part", 'r') as infilepart:
-                                editor_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{EDITOR_VALUE}", "1") for line in infilepart])
-
+                            with open(script_dir + "/m_ScaleCurves.anim.part", 'r') as infilepart:
+                                scale_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{SCALE_VALUE}", scale_value) for line in infilepart])
+                            with open(script_dir + "/m_EditorCurves.anim.part", 'r') as infilepart:
+                                editor_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{EDITOR_VALUE}", editor_value) for line in infilepart])
                         with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + newname + ".anim"), 'w') as outfile:
-                            for line in infile:
-                                outfile.write(line.replace("{NAME_STRING}", newname).replace("{EDITOR_CURVES}", editor_curves).replace("{SCALE_CURVES}", scale_curves))
-                    with open(os.path.dirname(os.path.abspath(__file__)) + "/disable.anim", 'r') as infile:
-                        newname = "Disable " + orig_obj_name
-                        editor_curves = ""
-                        scale_curves = ""
-                        for path_string in sorted(path_strings):
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_ScaleCurves.anim.part", 'r') as infilepart:
-                                scale_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{SCALE_VALUE}", "{x: 0, y: 0, z: 0}") for line in infilepart])
-                            with open(os.path.dirname(os.path.abspath(__file__)) + "/m_EditorCurves.anim.part", 'r') as infilepart:
-                                editor_curves += "".join([line.replace("{PATH_STRING}", path_string).replace("{EDITOR_VALUE}", "0") for line in infilepart])
+                            with open(script_dir + "/" + template_name, 'r') as infile:
+                                for line in infile:
+                                    outfile.write(line.replace("{NAME_STRING}", newname).replace("{EDITOR_CURVES}", editor_curves).replace("{SCALE_CURVES}", scale_curves))
 
-                        with open(bpy.path.abspath("//Tuxedo Bake/" + platform_name + "/" + newname + ".anim"), 'w') as outfile:
-                            for line in infile:
-                                outfile.write(line.replace("{NAME_STRING}", newname).replace("{EDITOR_CURVES}", editor_curves).replace("{SCALE_CURVES}", scale_curves))
+                    write_anim_file("enable.anim", "Enable", "{x: 1, y: 1, z: 1}", "1")
+                    write_anim_file("disable.anim", "Disable", "{x: 0, y: 0, z: 0}", "0")
 
             if translate_bone_names == "SECONDLIFE":
                 bpy.ops.tuxedo.convert_to_secondlife()
@@ -1916,13 +1890,7 @@ class BakeButton(bpy.types.Operator):
 
             # Remove old UV maps (if we created new ones)
             if generate_uvmap:
-                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                    uv_layers = [layer.name for layer in obj.data.uv_layers]
-                    while uv_layers:
-                        layer = uv_layers.pop()
-                        if layer != "Tuxedo UV Super" and layer != "Tuxedo UV" and layer != "Detail Map":
-                            print("Removing UV {}".format(layer))
-                            obj.data.uv_layers.remove(obj.data.uv_layers[layer])
+                remove_uv_layers_by_predicate(plat_collection, lambda n: n not in {"Tuxedo UV Super", "Tuxedo UV", "Detail Map"})
                 for obj in get_objects(plat_collection.all_objects, {"MESH"}):
                     obj.data.uv_layers.active = obj.data.uv_layers["Tuxedo UV"]
                 # Ensure 'Detail Map' is at the end, if it exists here
@@ -2069,13 +2037,7 @@ class BakeButton(bpy.types.Operator):
 
             # Remove Tuxedo UV Super
             if generate_uvmap and supersample_normals:
-                for obj in get_objects(plat_collection.all_objects, {"MESH"}):
-                    uv_layers = [layer.name for layer in obj.data.uv_layers]
-                    while uv_layers:
-                        layer = uv_layers.pop()
-                        if layer == "Tuxedo UV Super":
-                            print("Removing UV {}".format(layer))
-                            obj.data.uv_layers.remove(obj.data.uv_layers[layer])
+                remove_uv_layers_by_predicate(plat_collection, lambda n: n == "Tuxedo UV Super")
 
             # Always remove existing vertex colors here
             for obj in get_objects(plat_collection.all_objects, {"MESH"}):
@@ -2234,20 +2196,10 @@ class BakeButton(bpy.types.Operator):
                     shutil.move(images_path+"materials/"+sanitized_name(image.name).replace(".tga",".vtf"), target_dir)
 
             if cleanup_shapekeys:
-                for mesh in plat_collection.all_objects:
-                    if mesh.type == 'MESH' and mesh.data.shape_keys is not None:
-                        names = [key.name for key in mesh.data.shape_keys.key_blocks]
-                        for name in names:
-                            if name[-4:] == "_old" or name[-11:] == " - Reverted":
-                                mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks[name])
+                remove_shape_keys_by_predicate(plat_collection, lambda n: n.endswith("_old") or n.endswith(" - Reverted"))
 
             # '_bake' shapekeys are always applied and removed.
-            for mesh in plat_collection.all_objects:
-                if mesh.type == 'MESH' and mesh.data.shape_keys is not None:
-                    names = [key.name for key in mesh.data.shape_keys.key_blocks]
-                    for name in names:
-                        if name[-5:] == "_bake":
-                            mesh.shape_key_remove(key=mesh.data.shape_keys.key_blocks[name])
+            remove_shape_keys_by_predicate(plat_collection, lambda n: n.endswith("_bake"))
 
             # Remove all materials for export - blender will try to embed materials but it doesn't work with our setup
             #exception is Gmod because Gmod needs textures to be applied to work - @989onan
@@ -2286,11 +2238,7 @@ class BakeButton(bpy.types.Operator):
                     new_obj['tuxedoForcedExportName'] = obj.name
 
                     # Make sure all armature modifiers target the new armature
-                    for modifier in new_obj.modifiers:
-                        if modifier.type == "ARMATURE":
-                            modifier.object = plat_arm_copy
-                        if modifier.type == "MULTIRES":
-                            modifier.render_levels = modifier.total_levels
+                    update_modifiers_for_armature(new_obj, plat_arm_copy)
 
                 bpy.ops.object.select_all(action='DESELECT')
                 for obj in get_objects(get_children_recursive(plat_arm_copy), {"MESH"}):
