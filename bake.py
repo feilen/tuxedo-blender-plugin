@@ -562,6 +562,10 @@ class BakeButton(bpy.types.Operator):
             tree.links.new(viewer_node.inputs["Alpha"], image_node.outputs["Alpha"])
         else:
             viewer_node = tree.nodes.new(type="CompositorNodeViewer")
+        if bpy.app.version >= (5, 0, 0):
+            output_node = tree.nodes.new(type="NodeGroupOutput")
+            output_socket = tree.interface.new_socket(name="Image", in_out='OUTPUT', socket_type='NodeSocketColor')
+            tree.links.new(output_node.inputs["Image"], filter_output)
         tree.links.new(viewer_node.inputs["Image"], filter_output)
 
         # rerender image
